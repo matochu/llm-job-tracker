@@ -1,0 +1,24 @@
+# Project-local Codex command rules.
+#
+# Codex loads rules from .codex/rules/ for trusted projects.
+# These rules are the Codex equivalent of narrow Bash command allow entries.
+
+prefix_rule(
+    pattern = ["curl"],
+    decision = "allow",
+    justification = "Allow read-only HTTP checks for public job boards and ATS APIs during job-search verification.",
+    match = [
+        "curl -s https://api.greenhouse.io/v1/boards/example/jobs?content=true",
+        "curl -L https://example.com",
+    ],
+)
+
+prefix_rule(
+    pattern = ["python3"],
+    decision = "allow",
+    justification = "Allow local Python helper scripts and dependency checks used by this workspace.",
+    match = [
+        "python3 scripts/llm-hooks/validate_skill_footers.py",
+        "python3 scripts/generate_pdf.py data/companies/example/resume.md",
+    ],
+)

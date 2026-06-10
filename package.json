@@ -1,0 +1,42 @@
+{
+  "name": "job-tracker",
+  "version": "0.1.0",
+  "description": "Scaffold an LLM-assisted job search tracker workspace.",
+  "type": "module",
+  "bin": {
+    "job-tracker": "bin/job-tracker.js"
+  },
+  "files": [
+    "bin/",
+    "config/",
+    "candidate/",
+    "strategy/",
+    "style/",
+    "templates/",
+    "data/",
+    "skills/",
+    "scripts/check-deps.sh",
+    "scripts/check-workspace.py",
+    "scripts/export-starter.sh",
+    "scripts/generate_pdf.py",
+    "scripts/install.sh",
+    "scripts/llm-hooks/",
+    "scripts/resume.css",
+    "START_HERE.md",
+    ".gitignore",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "check": "node --check bin/job-tracker.js && bash -n scripts/install.sh && bash -n scripts/check-deps.sh && scripts/check-public.sh && npm_config_cache=/tmp/job-tracker-npm-cache npm pack --dry-run"
+  },
+  "keywords": [
+    "job-search",
+    "resume",
+    "llm",
+    "claude",
+    "codex",
+    "tracker"
+  ],
+  "license": "MIT"
+}

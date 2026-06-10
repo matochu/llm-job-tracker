@@ -1,0 +1,79 @@
+---
+name: job:status
+description: Reviews the configured tracker and prep notes, summarizes current pipeline status, and proposes letter-key next actions that can trigger follow-up skills or tracker updates.
+argument-hint: [company-or-section]
+---
+
+Review job-search status and propose next actions.
+
+## Load Config
+
+Before starting, read:
+
+1. `candidate/candidate.md`
+2. `config/settings.md`
+3. the resolved profile from the Profile Resolution rules below
+4. `config/language.md`
+5. `config/paths.md`
+6. `strategy/criteria.md`
+7. `config/tracker-schema.md`
+8. `config/next-actions.md`
+
+## Profile Resolution
+
+1. Read the active profile from `config/settings.md`.
+2. For new job discovery or untracked targets, use the active profile from settings.
+3. For existing tracked vacancies, use the `Profile` value from the matching `data/tracker.md` row.
+4. Treat all arguments as normal skill arguments; profiles are not passed in commands.
+
+## Scope
+
+This skill is an orchestrator. It should not perform heavy research, job search, CV tailoring, or outreach unless the user chooses a next action.
+
+## Inspection Tooling
+
+When inspecting prep notes, resumes, PDFs, or tracker state across multiple companies, prefer one batch search command over generated shell loops.
+
+Use patterns like:
+
+```bash
+rg -n "Manual Message Drafts|Outreach status|PDF|fit|blocked|ready" data/companies/*/prep-notes.md data/tracker.md
+```
+
+or targeted `rg`/glob reads for the relevant files.
+
+Do not generate ad hoc `for company in ...; do ...; done` shell loops for status checks. If the needed information cannot be collected with `rg`/glob reads, inspect the specific files directly.
+
+## Workflow
+
+1. Read the configured tracker.
+2. If `$ARGUMENTS` names a company or section, focus there. Otherwise review the whole pipeline.
+3. Inspect relevant `data/companies/[slug]/prep-notes.md`, `resume.md`, and PDFs when needed to determine readiness.
+4. Classify items against tracker state and resolved profile priorities:
+   - CV/PDF prepared and awaiting user action
+   - needs company research
+   - needs outreach
+   - needs tailored CV
+   - needs PDF export
+   - needs verification
+   - should be deferred or archived
+5. Produce a concise status summary.
+6. Provide a footer with `Active profile: <slug>` and a context-specific `job:action` menu using `config/next-actions.md`. If multiple companies need the same `job:action`, group them into one next action instead of repeating separate single-company actions.
+
+## Action Handling
+
+If the user replies with a shortcut letter, map it to the action shown in the most recent `Next actions` footer. Shortcuts are generated per response and are not globally fixed.
+
+When the selected action is ambiguous, ask one concise follow-up question. When it is clear, run or propose the named skill/action.
+
+## Output
+
+Reply in the configured assistant language and include:
+
+- top priorities
+- blocked/stale items
+- ready-to-act items
+- manual user actions, when relevant, without shortcut letters
+- recommended next action first
+- grouped next action when several companies need the same `job:action`
+- footer with `Active profile: <slug>` and context-specific `job:action` next actions; `Next actions` must contain only agent-runnable `job:*` actions

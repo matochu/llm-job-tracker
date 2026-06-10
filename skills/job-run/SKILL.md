@@ -1,0 +1,290 @@
+---
+name: job:run
+description: Orchestrates a full job-search pass: discovery or selected company, company prep, manual message drafts, CV, fit review, PDF when appropriate, tracker updates, and final summary.
+argument-hint: [profile-slug] [company-or-search-filter]
+---
+
+Run a complete job-search pass by coordinating existing `job:*` skills.
+
+## Load Config
+
+Before starting, read:
+
+1. `candidate/candidate.md`
+2. `config/settings.md`
+3. the resolved profile from the Profile Resolution rules below
+4. `config/language.md`
+5. `config/paths.md`
+6. `strategy/criteria.md`
+7. `strategy/sources.md`
+8. `config/tracker-schema.md`
+9. `config/next-actions.md`
+10. `config/session-reports.md`
+
+Also get the current date and timezone from the execution environment or system context before creating Session Reports or updating tracker dates.
+
+Do not read `candidate/stories.md` directly in `job:run`. Story-bank inspection and mapping belongs to `job:stories`; `job:run` should call `job:stories [company]` and consume its result.
+
+## Profile Resolution
+
+The first argument is an optional profile slug. Passing it here is a deliberate exception to the no-profile-argument rule: `job:run` does not honor a per-command profile silently, it switches the global active profile via `job:profile use`.
+
+1. Read available profile slugs from `config/settings.md`.
+2. If the first argument matches an available profile slug, run `job:profile use <slug>` before any other step.
+3. After switching, re-read `config/settings.md` and the resolved profile file.
+4. Treat remaining arguments as a company name, section, vacancy URL, or search filter.
+5. For profile resolution per stage, follow the Profile Rules in `config/settings.md` (new discovery uses the active profile; tracked jobs use the row-level `Profile`).
+
+## Scope
+
+This skill is an orchestrator. It should not duplicate the implementation logic of `job:find`, `job:company`, `job:draft`, `job:cv`, `job:fit`, `job:stories`, or `job:pdf`.
+
+It should run autonomously by default: run skills in sequence, inspect their results, update `data/tracker.md` between stages, and continue as far as safely possible without asking for confirmation after each step.
+
+Do not stop for soft uncertainty. Record soft issues in `data/tracker.md` and the final summary, then continue with the next useful step or next company.
+
+It never sends applications, emails, LinkedIn messages, connection requests, or outreach. `job:draft` prepares manual message drafts only.
+
+Use `job:verify` as a coarse reviewer pass, not as per-step micro-gates. When subagent execution or a fresh context is available, run `job:verify` reviewer passes in that subagent.
+
+Do not bypass child skills by reconstructing their expected artifacts manually. `job:run` must call `job:company` for prep-note research, `job:draft` for `### Manual Message Drafts`, `job:cv` for CV tailoring, `job:fit` for fit review, `job:stories` for interview story mapping, and `job:pdf` for PDF export.
+
+## Orchestrator Mode
+
+During `job:run`, do not stop after child skills just to ask for the next action. Child-skill outputs are internal progress signals, not user-facing stop points.
+
+Treat `job:run` as a resumable state machine. Every response from `job:run` must be one of these states:
+
+- `running`: internal work remains and no hard blocker exists. Continue executing; do not return control to the user.
+- `paused-resumable`: the turn must stop even though the run can continue automatically from the Session Report.
+- `blocked`: a hard blocker or required manual user action prevents the next internal step.
+- `done`: the run plan is complete and final verification/summary are done.
+
+Use a run plan and progress updates instead of intermediate `Next actions`:
+
+- `Run plan`: the intended sequence for this run.
+- `Run progress`: completed internal steps, tracker/prep/CV/PDF updates, and current blockers.
+- `Next internal step`: the next child skill or tracker update that `job:run` will execute.
+
+When a child skill returns a result inside `job:run`, rewrite that result as `Run progress` and continue with `Next internal step` whenever runnable internal work remains. Do not let child-skill result text become the final user-facing response unless the run is complete or blocked.
+
+Do not print a `Next actions:` footer after profile switching, `job:find`, `job:verify intake`, or a per-company child step unless the response state is `paused-resumable`, `blocked`, or `done`.
+
+Only show user-facing `Next actions:` in the final summary, in a hard-blocker response, or in a `paused-resumable` response.
+
+If there is any runnable internal step remaining, do not output final `Next actions`; continue the run.
+
+When `job:verify` returns `Continue: yes`, immediately execute its reported `Next internal step` or derive the next step from the internal action queue. A verifier summary that says `Continue: yes` is not a stopping point and must not become the final response.
+
+Runnable internal steps include:
+
+- `job:verify intake`
+- `job:company`
+- `job:draft`
+- `job:cv`
+- `job:fit`
+- `job:stories`
+- `job:pdf`
+- tracker/prep-note updates
+- `job:verify prep`
+- `job:verify final`
+
+Never list `job:fit` or `job:pdf` as final `Next actions` when `job:run` has enough inputs to run them internally.
+
+Never end a `job:run` response with vague continuation prose such as `Next step: job:fit`, `Наступний крок: job:fit`, or `Continue with job:cv`. Use `Next internal step: run ...` while continuing internally, or the `paused-resumable` footer below if control must return to the user.
+
+## Resumable Pause UX
+
+Use `paused-resumable` only when the current turn must end even though the latest Session Report says `Can continue automatically: yes`. This is an interruption/resume state, not normal workflow completion.
+
+A `paused-resumable` response must include:
+
+- `Run plan` copied from the latest Session Report, with every item marked `[done]`, `[current]`, `[pending]`, `[skipped]`, or `[blocked]`.
+- `Resume point` copied from the latest Session Report.
+- `Run progress` with the last completed child step and files/artifacts changed.
+- `Active profile: <slug>`.
+- exactly one user-facing `Next actions` item:
+  `- [n] Continue Run (Recommended) — resume `job:run` from the latest Session Report and execute the next internal step`
+
+Do not list child skills such as `job:company`, `job:draft`, `job:cv`, `job:fit`, `job:stories`, or `job:pdf` as user-facing `Next actions` in `paused-resumable`. They belong inside the plan, `Resume point`, or `Next internal step`.
+
+Template:
+
+```md
+Run plan:
+1. [done] Verify ExampleCo roles
+2. [done] Company research
+3. [done] Manual message drafts
+4. [done] CV tailoring
+5. [current] Fit review
+6. [pending] Story mapping if fit gaps appear
+7. [pending] PDF export if fit is strong
+8. [pending] Final verification
+
+Resume point:
+- Last completed step: `job:cv ExampleCo`
+- Next safe step: `job:fit data/companies/exampleco/resume.md ExampleCo`
+- Required input: none
+- Can continue automatically: yes
+
+Active profile: ai
+
+Next actions:
+- [n] Continue Run (Recommended) — resume `job:run` from the latest Session Report and execute the next internal step
+```
+
+## Internal Action Queue
+
+Maintain an internal action queue during the run.
+
+For each queued item, track:
+
+- action: the exact `job:*` child skill or tracker update
+- target: company, file path, vacancy URL, or tracker section
+- status: pending / running / done / skipped / blocked
+- reason: why it is queued, skipped, or blocked
+- dependency: previous item or condition, such as fit score threshold before PDF export
+
+Show the queue in progress updates when useful, but do not present it as user-facing `Next actions`.
+
+When a child skill output suggests a next action that is already part of `job:run`, add it to the internal action queue and continue. Do not ask the user to choose it.
+
+## Plan Tracking
+
+At the start of the run, write a compact numbered run plan with the current profile, mode, target/filter, expected stages, and planned company work set when known. Use status markers in the Session Report and user-visible paused/final summaries: `[done]`, `[current]`, `[pending]`, `[skipped]`, `[blocked]`.
+
+During the run, repeat and update the plan periodically:
+
+- after profile switching
+- after `job:find`
+- after `job:verify intake`
+- after selecting the work set
+- after every 2-3 company steps, or after each company when the run is small
+- after any hard blocker or major soft-blocker cluster
+- before the final summary
+
+Each plan check-in should include:
+
+- completed plan items
+- current item
+- next internal step
+- changed assumptions or scope
+- skipped/blocked companies with short reasons
+
+If actual progress diverges from the plan, update the plan and continue. Do not ask the user to approve routine plan adjustments unless a hard blocker appears or the next action would send/apply/connect.
+
+After every child step, update the Session Report plan markers so exactly one runnable item is `[current]` unless the run is `done` or `blocked`.
+
+## Pause Rules
+
+Pause only when:
+
+- a hard blocker prevents the next internal action
+- a manual user action is required before the next internal action can safely run
+- a required input is missing and cannot be inferred from tracker, prep notes, vacancy source, or configured paths
+- the next action would send/apply/connect or otherwise act outside draft-only/manual boundaries
+
+Do not pause for fit risks, stack gaps, missing nice-to-have keywords, weak contact path, or uncertainty that `job:fit`, `job:verify`, or tracker notes can handle.
+
+## Session Report
+
+`job:run` writes one Session Report per run, following `config/session-reports.md`.
+
+- At run start, create `.sessions/reports/[id].run.md` with `Status: running` and fill `Goal`, `Plan`, and `Resume Point`. Use a local-timezone timestamp `YYYY-MM-DDTHHMMSS` as the `ID`.
+- Update the report after every child skill and tracker update, including `job:find`, `job:verify`, `job:company`, `job:draft`, `job:cv`, `job:fit`, `job:stories`, and `job:pdf`: refresh `Updated`, `Plan`, `Progress`, `Tracker Updates`, `Files Changed`, `Artifacts`, and `Resume Point`.
+- `Resume Point` must always match the latest completed work. Do not leave `Last completed step` or `Next safe step` pointing to an older step after progress has advanced.
+- Record `Decisions` and `Blockers` when they happen, not only at the end.
+- On the final summary, set `Status: done` (or `blocked`/`abandoned`) and fill `Summary`, `Resume Point`, and `Agent Insights`.
+- This report is internal run state, not a user-facing artifact. Do not list it in `Next actions`.
+
+## Workflow
+
+1. Determine mode:
+   - no remaining arguments: broad run using the active profile
+   - company-like argument: run for that company
+   - source/filter-like argument: broad run with that filter
+2. If no company is specified, run `job:find [filter]`.
+3. Update `data/tracker.md` immediately after discovery:
+   - add accepted leads to `Raw Pipeline`
+   - store the active profile in `Profile`
+   - record skipped/blocked sources when relevant
+4. If discovery added or changed leads, run `job:verify intake` as a reviewer pass before selecting the work set. Prefer subagent execution when available.
+5. Select the work set:
+   - prefer P1/P2, active roles, reachable contacts, and strong fit
+   - mark closed, rejected, unclear, or low-ROI roles as skipped in `data/tracker.md` and continue with the next candidate
+6. For each selected company:
+   - run `job:company [company]`
+   - update `data/tracker.md` after company research: active/monitoring/archive, verified date, prep status, role status
+   - if useful contacts exist, run `job:draft [company]` so `### Manual Message Drafts` is prepared in prep notes
+   - update `data/tracker.md` or prep notes after outreach draft preparation: mark manual drafts prepared, not sent
+   - if the role remains active and worth applying to, run `job:cv [company]`
+   - update `data/tracker.md` after CV tailoring: CV ready or blocked
+   - run `job:fit [resume.md] [vacancy]`; `job:fit` must use subagent execution when supported
+   - update `data/tracker.md` after fit review: score, risks, and recommended next state
+   - run `job:stories [company]` when the fit review exposes important interview themes, gaps, or role-specific behavioral risks
+   - run `job:pdf [resume.md]` only when the fit is strong enough and the Markdown CV is ready
+   - update `data/tracker.md` after PDF export: PDF ready or skipped with reason
+7. After a selected company or batch is processed, run `job:verify prep [company-or-batch]` as a reviewer pass. Prefer subagent execution when available. Apply narrow tracker/note fixes when the verdict is `needs_fix`, then continue unless the verdict is `blocked`.
+8. Before the final summary, run `job:verify final` as a reviewer pass. Prefer subagent execution when available. The final summary must reflect its warnings, blockers, and continuation verdict.
+
+## Autonomy And Blockers
+
+Default behavior is to continue autonomously.
+
+Hard blockers may pause the whole run:
+
+- required login is not available after opening the source in browser MCP and waiting for the user
+- browser MCP, source access, or network access blocks required verification
+- vacancy text/source of truth is unavailable and no reliable role data exists
+- the next required action would send/apply/connect or otherwise act outside draft-only/manual boundaries
+- repository state prevents safe tracker/prep/CV edits
+
+Soft blockers should not pause the whole run. Record them, skip the affected step or company when needed, and continue:
+
+- no active verified role exists
+- profile fit is weak or rejected
+- role would benefit from clarification before CV work
+- contact path is useful but no CV should be prepared yet
+- `job:fit` reports a low score or serious truthfulness/style risk
+
+When a soft blocker appears, update `data/tracker.md` with the reason and include the item in the final summary. Ask clarification questions only in the final summary unless the whole run is blocked by a hard blocker.
+
+## Tracker Update Rules
+
+Update `data/tracker.md` frequently, not only at the end:
+
+- after `job:find`
+- after each `job:company`
+- after each `job:draft`
+- after each `job:cv`
+- after each `job:fit`
+- after each `job:pdf`
+- whenever a role is skipped, blocked, moved to Monitoring, or archived
+
+Keep updates narrow and preserve user-authored notes.
+
+## Output
+
+Reply in the configured assistant language and include:
+
+- active profile and whether it was switched at the start
+- run state: `running`, `paused-resumable`, `blocked`, or `done`
+- run plan with status markers
+- internal action queue when runnable internal work remains
+- run progress and next internal step for intermediate updates
+- run mode and selection criteria
+- source/search summary
+- per-company table with company, profile, role, status, prep notes, manual message drafts, CV, fit score, PDF, tracker update, and next step
+- files changed
+- skipped or blocked items with reasons
+- manual user actions, when relevant, without shortcut letters
+- clarification options for unresolved soft decisions, such as:
+  - choose whether to continue weak-fit role
+  - choose contact/message variant
+  - choose whether to export PDF despite fit risk
+  - choose whether to move a company to Monitoring or Archive
+- final recommended next action
+- for `paused-resumable`, the exact single `[n] Continue Run` footer from the Resumable Pause UX section
+- for `blocked` or `done`, a footer with `Active profile: <slug>` and context-specific `job:action` next actions using `config/next-actions.md`; `Next actions` must contain only agent-runnable `job:*` actions, while user-side LinkedIn/email/application work must be listed separately under `Manual user actions`
+
+Never treat message drafts as permission to apply, submit, send, or contact anyone. Use wording like `manual message draft prepared`; the user still writes/sends manually outside the skill.

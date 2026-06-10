@@ -1,0 +1,123 @@
+@page {
+  size: A4;
+  margin: 18mm 20mm 18mm 20mm;
+  @top-right {
+    content: counter(page);
+    color: #e84040;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    padding-top: 10px;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  color: #1a1a1a;
+  line-height: 1.55;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Header block ── */
+.resume-name {
+  font-size: 22px;
+  font-weight: bold;
+  margin: 0 0 3px;
+}
+
+.resume-subtitle {
+  font-size: 13px;
+  font-weight: bold;
+  margin: 0 0 10px;
+}
+
+.resume-contact {
+  margin: 0 0 2px;
+  font-size: 11px;
+}
+
+.resume-contact a {
+  color: #1155cc;
+  text-decoration: underline;
+}
+
+/* ── Section headings ── */
+h2 {
+  font-size: 15px;
+  font-weight: bold;
+  color: #e84040;
+  margin: 18px 0 6px;
+  padding: 0;
+}
+
+/* ── Experience entries ── */
+h3 {
+  font-size: 12px;
+  font-weight: bold;
+  margin: 14px 0 2px;
+  padding: 0;
+}
+
+h3 em {
+  font-weight: normal;
+  font-style: italic;
+}
+
+/* Date paragraph immediately after h3 */
+h3 + p {
+  color: #666666;
+  font-size: 10px;
+  margin: 0 0 4px;
+}
+
+/* ── Body paragraphs ── */
+p {
+  margin: 0 0 5px;
+}
+
+/* ── Lists ── */
+ul {
+  margin: 3px 0 6px;
+  padding-left: 20px;
+  list-style-type: disc;
+}
+
+li {
+  margin-bottom: 2px;
+}
+
+/* ── Bold labels (Responsibilities:, Achievements:, etc.) ── */
+p > strong:only-child {
+  display: block;
+  margin-top: 5px;
+}
+
+/* ── Technologies Used line ── */
+.tech-used {
+  margin-top: 5px;
+  font-size: 11px;
+}
+
+/* ── Links ── */
+a {
+  color: #1155cc;
+  text-decoration: underline;
+}
+
+/* ── Horizontal rules ── */
+hr {
+  border: none;
+  border-top: 1px solid #e0e0e0;
+  margin: 10px 0;
+}
+
+/* ── Education / Hobbies: override h3+p gray rule ── */
+p.section-sub {
+  color: #1a1a1a;
+  font-size: 11px;
+  font-style: italic;
+  margin: 0 0 8px;
+}

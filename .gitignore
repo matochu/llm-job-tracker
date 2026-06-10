@@ -1,0 +1,22 @@
+# Browser MCP
+.playwright-mcp/*
+# Codex/Claude project directories  
+.codex/
+.claude/
+# Agent instructions
+CLAUDE.md
+AGENTS.md
+# Python cache
+__pycache__/
+*.pyc
+# Backup files
+*.backup.*
+# Session artifacts (runtime, not content)
+.sessions/
+
+# Local export/review artifacts
+tmp/
+.DS_Store
+
+# Local private/publication scan patterns
+.public-scan-patterns.local
