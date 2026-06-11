@@ -26,6 +26,7 @@
     "START_HERE.md",
     ".gitignore",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
   "scripts": {
@@ -43,5 +44,13 @@
     "career",
     "claude-code"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/matochu/llm-job-tracker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/matochu/llm-job-tracker/issues"
+  },
+  "homepage": "https://github.com/matochu/llm-job-tracker#readme"
 }
