@@ -1,11 +1,37 @@
 #!/usr/bin/env node
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, readdirSync, statSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '..');
+const defaultGitignore = `# Browser MCP
+.playwright-mcp/*
+
+# Codex/Claude project directories
+.codex/
+.claude/
+
+# Agent instructions
+CLAUDE.md
+AGENTS.md
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Backup files
+*.backup.*
+
+# Session artifacts (runtime, not content)
+.sessions/
+
+# Local export/review artifacts
+tmp/
+.DS_Store
+`;
+
 const workspaceEntries = [
   '.gitignore',
   'README.md',
@@ -23,7 +49,7 @@ const excludedScriptEntries = new Set(['check-public.sh']);
 
 function usage() {
   console.log(`Usage:
-  npx job-tracker <target-dir> [--no-install] [--force]
+  npx llm-job-tracker <target-dir> [--no-install] [--force]
 
 Options:
   --no-install  Copy the workspace template without running scripts/install.sh all
@@ -101,6 +127,8 @@ function runInstall(target) {
 }
 
 function copyWorkspace(target, force) {
+  let copiedGitignore = false;
+
   for (const entry of workspaceEntries) {
     const src = resolve(repoRoot, entry);
     if (!existsSync(src)) continue;
@@ -123,6 +151,13 @@ function copyWorkspace(target, force) {
       force,
       errorOnExist: !force,
     });
+    if (entry === '.gitignore') {
+      copiedGitignore = true;
+    }
+  }
+
+  if (!copiedGitignore && !existsSync(resolve(target, '.gitignore'))) {
+    writeFileSync(resolve(target, '.gitignore'), defaultGitignore);
   }
 
   mkdirSync(resolve(target, 'data', 'companies'), { recursive: true });
@@ -142,7 +177,7 @@ try {
   }
 
   console.log(`
-Job tracker workspace created:
+LLM job tracker workspace created:
 ${target}
 
 Next steps:
@@ -152,7 +187,7 @@ Next steps:
   4. In your LLM tool, run: job:setup
 `);
 } catch (err) {
-  console.error(`job-tracker: ${err.message}`);
+  console.error(`llm-job-tracker: ${err.message}`);
   console.error('');
   usage();
   process.exit(1);

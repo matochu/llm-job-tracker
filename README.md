@@ -1,35 +1,82 @@
-# Job Search Workspace
+# LLM Job Tracker
 
-A configurable workspace for AI-assisted job discovery, company research, CV tailoring, manual message draft preparation, fit review, interview story preparation, application form preparation, workspace health checks, and PDF export.
+A local-first job-search workspace for LLM agents. Everything is Markdown, everything stays on your machine.
 
-The repository separates reusable workflows from candidate-specific data:
+The npm package scaffolds the workspace and installs Claude and Codex integrations. Your agent then runs the workflows: find jobs, research companies, tailor CVs, draft outreach, review fit, prepare interview stories, fill application forms, and export PDFs.
+
+## Contents
+
+- [Create a workspace](#create-a-workspace)
+- [What it creates](#what-it-creates)
+- [Quick start](#quick-start-inside-the-workspace)
+- [Local LLM integrations](#local-llm-integrations)
+- [LLM hooks](#llm-hooks)
+- [Dependency check](#dependency-check)
+- [Typical workflow](#typical-workflow)
+- [Hard rules](#hard-rules)
+- [Skills / commands](#skills--commands)
+- [Profile mechanics](#profile-mechanics)
+- [Configuration](#configuration)
+- [Repository layout](#repository-layout)
+- [Tracker rules](#tracker-rules)
+- [Safety rules](#safety-rules)
+- [Porting to another candidate](#porting-to-another-candidate)
+- [Using with other LLMs](#using-with-other-llms)
+
+## Create A Workspace
+
+```bash
+npx llm-job-tracker my-job-search
+cd my-job-search
+```
+
+A global install exposes a shorter `job-tracker` binary:
+
+```bash
+npm install -g llm-job-tracker
+job-tracker my-job-search
+```
+
+Flags:
+
+- `--no-install` copies files only and skips `scripts/install.sh all`.
+- `--force` copies into a non-empty target directory. Use it only when you mean to.
+
+## What It Creates
+
+The workspace separates reusable workflows from candidate-specific data:
 
 - `skills/` contains generic agent workflows.
-- The workspace is split into role-based zones: `config/` (settings, paths, language, next-actions, tracker and session schemas), `candidate/` (candidate facts, stories, base CVs under `candidate/cv/`), `strategy/` (search profiles, sources, criteria), `style/` (CV and outreach house style), and `templates/`.
-- `data/companies/` and `data/tracker.md` contain the live job-search artifacts.
+- `config/` contains settings, paths, language, next-actions, tracker schema, session report schema, and durable agent instructions.
+- `candidate/` contains candidate facts, stories, and base CVs under `candidate/cv/`.
+- `strategy/` contains search profiles, sources, and scoring criteria.
+- `style/` contains CV and outreach house style.
+- `templates/` contains reusable document templates.
+- `data/companies/` and `data/tracker.md` contain live job-search artifacts.
 
-## Quick Start
+## Quick Start Inside The Workspace
 
 1. Review and update the candidate configuration:
    - `candidate/candidate.md`
+   - `candidate/cv/cv-base.md`
    - `config/language.md`
+   - `strategy/search-profiles/default.md`
    - `strategy/criteria.md`
    - `strategy/sources.md`
-   - `config/paths.md`
    - `config/settings.md`
-2. Install local LLM integrations when needed:
+2. Install local LLM integrations if you used `--no-install`:
 
    ```bash
-   scripts/install.sh
+   scripts/install.sh all
    ```
 
-3. Verify local script, hook, and PDF dependencies:
+3. Verify local script, hook, browser MCP, and PDF dependencies:
 
    ```bash
    scripts/check-deps.sh
    ```
 
-4. Run the interactive workspace readiness check:
+4. Run the interactive workspace readiness check in your LLM tool:
 
    ```text
    job:setup
@@ -41,7 +88,7 @@ The repository separates reusable workflows from candidate-specific data:
    job:status
    ```
 
-## Installing LLM Integrations
+## Local LLM Integrations
 
 Use `scripts/install.sh` to install the canonical skills, instructions, and hook configs for a tool:
 
@@ -52,7 +99,7 @@ scripts/install.sh codex
 scripts/install.sh all
 ```
 
-By default the script creates symlinks where possible. Use `--copy` if the target tool cannot follow symlinks:
+The script creates symlinks where possible. Use `--copy` when the target tool cannot follow symlinks:
 
 ```bash
 scripts/install.sh codex --copy

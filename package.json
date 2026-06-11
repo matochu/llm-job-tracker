@@ -1,9 +1,10 @@
 {
-  "name": "job-tracker",
+  "name": "llm-job-tracker",
   "version": "0.1.0",
-  "description": "Scaffold an LLM-assisted job search tracker workspace.",
+  "description": "Scaffold a local job-search workspace for LLM agents.",
   "type": "module",
   "bin": {
+    "llm-job-tracker": "bin/job-tracker.js",
     "job-tracker": "bin/job-tracker.js"
   },
   "files": [
@@ -36,7 +37,11 @@
     "llm",
     "claude",
     "codex",
-    "tracker"
+    "tracker",
+    "agent",
+    "ai",
+    "career",
+    "claude-code"
   ],
   "license": "MIT"
 }
