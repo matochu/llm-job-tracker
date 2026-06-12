@@ -85,7 +85,8 @@ const protectedEntries = [
   'config/paths.md',
 ];
 
-const excludedScriptEntries = new Set(['check-public.js', 'cv.css']);
+const excludedScriptEntries = new Set(['check-public.js']);
+const updateExcludedScriptEntries = new Set(['check-public.js', 'cv.css']);
 const workspaceMarkers = ['config/paths.md', 'config/settings.md', 'data/tracker.md', 'candidate/candidate.md'];
 
 function usage() {
@@ -172,12 +173,12 @@ function copyEntry(src, dest, force = true) {
   });
 }
 
-function copyScripts(target, force, dryRun = false) {
+function copyScripts(target, force, dryRun = false, excluded = excludedScriptEntries) {
   const src = resolve(repoRoot, 'scripts');
   const dest = resolve(target, 'scripts');
   if (!dryRun) mkdirSync(dest, { recursive: true });
   for (const scriptEntry of readdirSync(src)) {
-    if (excludedScriptEntries.has(scriptEntry)) continue;
+    if (excluded.has(scriptEntry)) continue;
     const from = resolve(src, scriptEntry);
     const to = resolve(dest, scriptEntry);
     if (dryRun) console.log(`update ${resolve('scripts', scriptEntry)}`);
@@ -216,7 +217,7 @@ function updateWorkspace(target, dryRun = false) {
     const src = resolve(repoRoot, entry);
     if (!existsSync(src)) continue;
     if (entry === 'scripts') {
-      copyScripts(target, true, dryRun);
+      copyScripts(target, true, dryRun, updateExcludedScriptEntries);
       continue;
     }
     const dest = resolve(target, entry);

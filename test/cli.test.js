@@ -196,3 +196,57 @@ test('installer updates Claude hooks while preserving local permissions', () => 
   assert.deepEqual(settings.permissions, { allow: ['WebSearch'] });
   assert.match(JSON.stringify(settings.hooks), /pre-tool-guard\.js/);
 });
+
+test('init copies cv.css and does not copy resume.css', () => {
+  const parent = makeTempDir();
+  const target = join(parent, 'workspace');
+
+  const result = runCli([target, '--no-install']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(existsSync(join(target, 'scripts', 'cv.css')), true);
+  assert.equal(existsSync(join(target, 'scripts', 'resume.css')), false);
+});
+
+test('update removes stale resume.css', () => {
+  const parent = makeTempDir();
+  const target = join(parent, 'workspace');
+  const scaffold = runCli([target, '--no-install']);
+  assert.equal(scaffold.status, 0, scaffold.stderr);
+  writeFileSync(join(target, 'scripts', 'resume.css'), 'old css');
+
+  const result = runCli(['update', target, '--no-install']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(existsSync(join(target, 'scripts', 'resume.css')), false);
+});
+
+test('update does not overwrite user-modified cv.css', () => {
+  const parent = makeTempDir();
+  const target = join(parent, 'workspace');
+  const scaffold = runCli([target, '--no-install']);
+  assert.equal(scaffold.status, 0, scaffold.stderr);
+  writeFileSync(join(target, 'scripts', 'cv.css'), '/* my custom css */');
+
+  const result = runCli(['update', target, '--no-install']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(readFileSync(join(target, 'scripts', 'cv.css'), 'utf8'), '/* my custom css */');
+});
+
+test('install.js defaults to all in non-TTY mode', () => {
+  const parent = makeTempDir();
+  const target = join(parent, 'workspace');
+  const scaffold = runCli([target, '--no-install']);
+  assert.equal(scaffold.status, 0, scaffold.stderr);
+
+  const result = spawnSync(process.execPath, ['scripts/install.js', '--copy'], {
+    cwd: target,
+    encoding: 'utf8',
+    input: '',
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(existsSync(join(target, 'CLAUDE.md')), true);
+  assert.equal(existsSync(join(target, 'AGENTS.md')), true);
+});
