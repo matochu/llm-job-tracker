@@ -25,7 +25,7 @@ Notes:
   - Codex installs AGENTS.md in the current repository.
   - Codex installs .codex/hooks.json hooks when available.
   - Codex installs project-local .codex/rules/ command rules when available.
-  - Run scripts/check-deps.sh after setup to verify hook and PDF dependencies.
+  - Run node scripts/check-deps.js after setup to verify hook and PDF dependencies.
   - The repository-local .codex/ directory is intended to stay untracked.
 USAGE
 }

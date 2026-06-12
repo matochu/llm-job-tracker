@@ -10,7 +10,7 @@ This is a sanitized starter workspace for a new candidate.
 
 ```bash
 scripts/install.sh all
-scripts/check-deps.sh
+node scripts/check-deps.js
 ```
 
 Then in the LLM tool run:

@@ -6,7 +6,7 @@ If a tool expects skills in a tool-specific directory, use `scripts/install.sh` 
 
 Minimal LLM command hooks live in `scripts/llm-hooks/`. `scripts/install.sh` syncs `.codex/hooks.json` and `.codex/rules/`, and only creates `.claude/settings.json` when local Claude settings are missing.
 
-Use `scripts/check-deps.sh` when hook, script, or PDF dependencies need verification.
+Use `node scripts/check-deps.js` when hook, script, or PDF dependencies need verification.
 
 Read `config/settings.md` before job-search skills that depend on positioning or search strategy. New job discovery uses the active profile from settings. Existing tracked vacancies use the `Profile` value stored in `data/tracker.md`.
 

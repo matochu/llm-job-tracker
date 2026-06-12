@@ -2,10 +2,10 @@
 """Shared parsing for job-search profile configuration.
 
 Single source of truth for reading `config/settings.md` and
-`strategy/search-profiles/*.md`, so the validators, hooks, and check-deps.sh all
+`strategy/search-profiles/*.md`, so the validators, hooks, and check-deps.js all
 agree on the profile format instead of each re-implementing a fragile regex.
 
-CLI (for shell callers such as scripts/check-deps.sh):
+CLI (for script callers such as scripts/check-deps.js):
 
     profile_utils.py active-slug    # active profile slug
     profile_utils.py active-file    # active profile file path

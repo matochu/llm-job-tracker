@@ -73,7 +73,7 @@ The workspace separates reusable workflows from candidate-specific data:
 3. Verify local script, hook, browser MCP, and PDF dependencies:
 
    ```bash
-   scripts/check-deps.sh
+   node scripts/check-deps.js
    ```
 
 4. Run the interactive workspace readiness check in your LLM tool:
@@ -151,7 +151,7 @@ Shared implementation lives in `scripts/llm-hooks/*.py`.
 Run:
 
 ```bash
-scripts/check-deps.sh
+node scripts/check-deps.js
 ```
 
 The check verifies:
@@ -174,7 +174,7 @@ It reports missing dependencies without installing anything.
 For Claude MCP verification the script runs `claude mcp list`. If `claude` is not in the non-interactive shell `PATH`, pass an explicit binary path:
 
 ```bash
-CLAUDE_BIN=/path/to/claude scripts/check-deps.sh
+CLAUDE_BIN=/path/to/claude node scripts/check-deps.js
 ```
 
 PDF export uses `scripts/generate_pdf.py`. The generator looks for `weasyprint` in the current Python, then `scripts/.venv/bin/python3`, then `/tmp/resume-venv/bin/python3`.
@@ -300,8 +300,8 @@ All configured paths are relative to the repository root.
 │           ├── resume.md
 │           └── pr-backlog.md
 └── scripts/
-    ├── check-deps.sh
-    ├── check-workspace.py
+    ├── check-deps.js
+    ├── check-workspace.js
     ├── generate_pdf.py
     ├── install.sh
     ├── llm-hooks/

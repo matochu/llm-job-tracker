@@ -34,7 +34,7 @@ This skill always performs the full setup review. It has no quick/fix modes.
 
 Allowed actions:
 
-- run `scripts/check-deps.sh`
+- run `node scripts/check-deps.js`
 - inspect configuration files and configured paths
 - inspect installed hook/skill sync status reported by dependency checks
 - ask the user for missing information
@@ -54,7 +54,7 @@ Forbidden actions:
 
 Check:
 
-- dependencies and hook sync via `scripts/check-deps.sh`
+- dependencies and hook sync via `node scripts/check-deps.js`
 - active profile exists in `config/settings.md`
 - every listed profile has a corresponding `strategy/search-profiles/*.md` file
 - active profile has usable fit, reject, priority, and search/source guidance

@@ -2,7 +2,7 @@
 
 ## Assistant Replies
 
-- Default reply language to the user: **Ukrainian**.
+- Default reply language to the user: **English**.
 - Use English when the user explicitly asks for English or when producing an artifact intended for English-speaking recruiters/hiring teams.
 - Keep status updates and summaries concise.
 

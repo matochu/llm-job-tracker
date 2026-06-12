@@ -29,11 +29,11 @@ Use it when the user asks whether the workspace is consistent, when tracker stat
 
 ## Workflow
 
-1. Run `python3 scripts/check-workspace.py`.
+1. Run `node scripts/check-workspace.js`.
 2. Run these validators when available:
    - `python3 scripts/llm-hooks/validate_tracker_profiles.py`
    - `python3 scripts/llm-hooks/validate_skill_footers.py`
-3. Optionally run `scripts/check-deps.sh` only when the user asks for dependency/hook/MCP readiness too. Do not treat expected local MCP warnings as tracker integrity issues.
+3. Optionally run `node scripts/check-deps.js` only when the user asks for dependency/hook/MCP readiness too. Do not treat expected local MCP warnings as tracker integrity issues.
 4. Inspect specific files only when needed to explain a reported issue.
 5. Classify findings:
    - `critical`: blocks safe job workflow execution

@@ -45,7 +45,7 @@ const workspaceEntries = [
   'skills',
   'scripts',
 ];
-const excludedScriptEntries = new Set(['check-public.sh']);
+const excludedScriptEntries = new Set(['check-public.js']);
 
 function usage() {
   console.log(`Usage:
