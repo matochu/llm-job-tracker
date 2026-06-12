@@ -229,13 +229,13 @@ function updateWorkspace(target, dryRun = false) {
 }
 
 function runInstall(target) {
-  const result = spawnSync(process.execPath, ['scripts/install.js', 'all'], {
+  const result = spawnSync(process.execPath, ['scripts/install.js'], {
     cwd: target,
     stdio: 'inherit',
     shell: false,
   });
   if (result.error) throw result.error;
-  if (result.status !== 0) throw new Error(`node scripts/install.js all failed with exit code ${result.status}`);
+  if (result.status !== 0) throw new Error(`node scripts/install.js failed with exit code ${result.status}`);
 }
 
 function modeFor(opts, target) {
