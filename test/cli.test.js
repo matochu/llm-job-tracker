@@ -24,7 +24,7 @@ test('prints help', () => {
 
   assert.equal(result.status, 0);
   assert.match(result.stdout, /Usage:/);
-  assert.match(result.stdout, /npx llm-job-tracker <target-dir>/);
+  assert.match(result.stdout, /npx llm-job-tracker \[target-dir\]/);
 });
 
 test('scaffolds a workspace without install', () => {
@@ -34,7 +34,7 @@ test('scaffolds a workspace without install', () => {
   const result = runCli([target, '--no-install']);
 
   assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /LLM job tracker workspace created:/);
+  assert.match(result.stdout, /LLM job tracker workspace initialized:/);
   assert.equal(existsSync(join(target, 'config', 'settings.md')), true);
   assert.equal(existsSync(join(target, 'candidate', 'candidate.md')), true);
   assert.equal(existsSync(join(target, 'candidate', 'cv', 'cv-base.md')), true);
@@ -55,7 +55,7 @@ test('refuses a non-empty target without --force', () => {
   const result = runCli([target, '--no-install']);
 
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /Target directory is not empty/);
+  assert.match(result.stderr, /Target directory is not empty and is not a job-tracker workspace/);
   assert.deepEqual(readdirSync(target), ['existing.txt']);
 });
 
@@ -101,4 +101,98 @@ test('installs local agent integrations with JS installer', () => {
   assert.equal(existsSync(join(target, '.codex', 'skills', 'job-setup', 'SKILL.md')), true);
   assert.equal(existsSync(join(target, '.codex', 'hooks.json')), true);
   assert.equal(existsSync(join(target, '.codex', 'rules', 'default.rules')), true);
+});
+
+
+test('defaults to current directory for init', () => {
+  const target = makeTempDir();
+
+  const result = runCli(['--no-install'], { cwd: target });
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /workspace initialized/);
+  assert.equal(existsSync(join(target, 'config', 'settings.md')), true);
+  assert.equal(existsSync(join(target, 'scripts', 'install.js')), true);
+});
+
+test('updates an existing workspace by default and preserves protected files', () => {
+  const parent = makeTempDir();
+  const target = join(parent, 'workspace');
+  const scaffold = runCli([target, '--no-install']);
+  assert.equal(scaffold.status, 0, scaffold.stderr);
+
+  writeFileSync(join(target, 'config', 'settings.md'), 'PRIVATE SETTINGS\n');
+  writeFileSync(join(target, 'candidate', 'candidate.md'), 'PRIVATE CANDIDATE\n');
+  writeFileSync(join(target, 'skills', 'job-setup', 'SKILL.md'), 'OLD MANAGED SKILL\n');
+
+  const result = runCli([target, '--no-install']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /workspace updated/);
+  assert.equal(readFileSync(join(target, 'config', 'settings.md'), 'utf8'), 'PRIVATE SETTINGS\n');
+  assert.equal(readFileSync(join(target, 'candidate', 'candidate.md'), 'utf8'), 'PRIVATE CANDIDATE\n');
+  assert.notEqual(readFileSync(join(target, 'skills', 'job-setup', 'SKILL.md'), 'utf8'), 'OLD MANAGED SKILL\n');
+});
+
+test('update dry-run does not write files', () => {
+  const parent = makeTempDir();
+  const target = join(parent, 'workspace');
+  const scaffold = runCli([target, '--no-install']);
+  assert.equal(scaffold.status, 0, scaffold.stderr);
+  writeFileSync(join(target, 'skills', 'job-setup', 'SKILL.md'), 'OLD MANAGED SKILL\n');
+
+  const result = runCli(['update', target, '--dry-run']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /update skills/);
+  assert.match(result.stdout, /preserve candidate/);
+  assert.equal(readFileSync(join(target, 'skills', 'job-setup', 'SKILL.md'), 'utf8'), 'OLD MANAGED SKILL\n');
+});
+
+test('explicit update refuses a non-workspace target', () => {
+  const target = makeTempDir();
+  writeFileSync(join(target, 'file.txt'), 'not a workspace');
+
+  const result = runCli(['update', target]);
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Refusing to update non-workspace target/);
+});
+
+
+test('removes stale managed files during update', () => {
+  const parent = makeTempDir();
+  const target = join(parent, 'workspace');
+  const scaffold = runCli([target, '--no-install']);
+  assert.equal(scaffold.status, 0, scaffold.stderr);
+  writeFileSync(join(target, 'scripts', 'install.sh'), 'old shell installer');
+  writeFileSync(join(target, 'scripts', 'llm-hooks', 'pre_tool_guard.py'), 'old python hook');
+
+  const result = runCli(['update', target, '--no-install']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(existsSync(join(target, 'scripts', 'install.sh')), false);
+  assert.equal(existsSync(join(target, 'scripts', 'llm-hooks', 'pre_tool_guard.py')), false);
+});
+
+test('installer updates Claude hooks while preserving local permissions', () => {
+  const parent = makeTempDir();
+  const target = join(parent, 'workspace');
+  const scaffold = runCli([target, '--no-install']);
+  assert.equal(scaffold.status, 0, scaffold.stderr);
+  mkdirSync(join(target, '.claude'), { recursive: true });
+  writeFileSync(join(target, '.claude', 'settings.json'), JSON.stringify({
+    permissions: { allow: ['WebSearch'] },
+    hooks: { PreToolUse: [] },
+  }, null, 2));
+
+  const result = spawnSync(process.execPath, ['scripts/install.js', 'claude', '--copy'], {
+    cwd: target,
+    encoding: 'utf8',
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+  const settings = JSON.parse(readFileSync(join(target, '.claude', 'settings.json'), 'utf8'));
+  assert.deepEqual(settings.permissions, { allow: ['WebSearch'] });
+  assert.match(JSON.stringify(settings.hooks), /pre-tool-guard\.js/);
 });

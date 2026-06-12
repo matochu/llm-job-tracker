@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { cpSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, unlinkSync } from 'node:fs';
+import { cpSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -139,6 +139,28 @@ function installOptionalFile(src, dest) {
   console.log(`Installed ${dest}`);
 }
 
+
+function installClaudeSettings(src, dest) {
+  if (!existsSync(src)) return;
+  mkdirSync(dirname(dest), { recursive: true });
+
+  if (!existsSync(dest) && !isSymlink(dest)) {
+    cpSync(src, dest);
+    console.log(`Installed ${dest}`);
+    return;
+  }
+
+  try {
+    const source = JSON.parse(readFileSync(src, 'utf8'));
+    const local = JSON.parse(readFileSync(dest, 'utf8'));
+    local.hooks = source.hooks;
+    writeFileSync(dest, `${JSON.stringify(local, null, 2)}\n`);
+    console.log(`Updated hooks in ${dest}; preserved local settings`);
+  } catch {
+    console.log(`${dest} exists; preserving local settings`);
+  }
+}
+
 function installOptionalFileIfMissing(src, dest) {
   if (!existsSync(src)) return;
   mkdirSync(dirname(dest), { recursive: true });
@@ -155,7 +177,7 @@ function installOptionalFileIfMissing(src, dest) {
 function installClaudeProject(mode) {
   mkdirSync(join(repoRoot, '.claude'), { recursive: true });
   linkOrCopyDir(join(repoRoot, 'skills'), join(repoRoot, '.claude', 'skills'), mode);
-  installOptionalFileIfMissing(join(repoRoot, 'scripts/llm-hooks/claude-settings.json'), join(repoRoot, '.claude/settings.json'));
+  installClaudeSettings(join(repoRoot, 'scripts/llm-hooks/claude-settings.json'), join(repoRoot, '.claude/settings.json'));
   installAgentFile(join(repoRoot, 'CLAUDE.md'));
   console.log('Installed Claude project skills in .claude/');
 }

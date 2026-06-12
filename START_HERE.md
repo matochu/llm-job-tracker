@@ -9,7 +9,6 @@ This is a sanitized starter workspace for a new candidate.
 5. Run:
 
 ```bash
-node scripts/install.js all
 node scripts/check-deps.js
 ```
 

@@ -23,24 +23,53 @@ The npm package scaffolds the workspace and installs Claude and Codex integratio
 - [Porting to another candidate](#porting-to-another-candidate)
 - [Using with other LLMs](#using-with-other-llms)
 
-## Create A Workspace
+## Create Or Update A Workspace
+
+Create a new workspace in a named directory:
 
 ```bash
 npx llm-job-tracker my-job-search
 cd my-job-search
 ```
 
+Create in the current directory:
+
+```bash
+mkdir my-job-search
+cd my-job-search
+npx llm-job-tracker
+```
+
+Update an existing workspace in place:
+
+```bash
+cd my-job-search
+npx llm-job-tracker
+```
+
+The CLI defaults to the current directory. Without an explicit command, it initializes empty/non-workspace targets and updates existing job-tracker workspaces.
+
+Explicit commands are also available:
+
+```bash
+npx llm-job-tracker init .
+npx llm-job-tracker update .
+npx llm-job-tracker update . --dry-run
+```
+
 A global install exposes a shorter `job-tracker` binary:
 
 ```bash
 npm install -g llm-job-tracker
-job-tracker my-job-search
+job-tracker
+job-tracker update .
 ```
 
 Flags:
 
-- `--no-install` copies files only and skips `node scripts/install.js all`.
-- `--force` copies into a non-empty target directory. Use it only when you mean to.
+- `--no-install` copies or updates files only and skips `node scripts/install.js all`.
+- `--force` allows init into a non-empty non-workspace target. Use it only when you mean to.
+- `--dry-run` shows update actions without writing files.
 
 ## What It Creates
 
