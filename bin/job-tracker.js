@@ -52,7 +52,7 @@ function usage() {
   npx llm-job-tracker <target-dir> [--no-install] [--force]
 
 Options:
-  --no-install  Copy the workspace template without running scripts/install.sh all
+  --no-install  Copy the workspace template without running node scripts/install.js all
   --force       Allow using a non-empty target directory
   --help        Show this help
 `);
@@ -113,7 +113,7 @@ Use --force to copy into it.`);
 }
 
 function runInstall(target) {
-  const result = spawnSync('scripts/install.sh', ['all'], {
+  const result = spawnSync(process.execPath, ['scripts/install.js', 'all'], {
     cwd: target,
     stdio: 'inherit',
     shell: false,
@@ -122,7 +122,7 @@ function runInstall(target) {
     throw result.error;
   }
   if (result.status !== 0) {
-    throw new Error(`scripts/install.sh all failed with exit code ${result.status}`);
+    throw new Error(`node scripts/install.js all failed with exit code ${result.status}`);
   }
 }
 

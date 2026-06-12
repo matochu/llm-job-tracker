@@ -39,7 +39,7 @@ job-tracker my-job-search
 
 Flags:
 
-- `--no-install` copies files only and skips `scripts/install.sh all`.
+- `--no-install` copies files only and skips `node scripts/install.js all`.
 - `--force` copies into a non-empty target directory. Use it only when you mean to.
 
 ## What It Creates
@@ -67,7 +67,7 @@ The workspace separates reusable workflows from candidate-specific data:
 2. Install local LLM integrations if you used `--no-install`:
 
    ```bash
-   scripts/install.sh all
+   node scripts/install.js all
    ```
 
 3. Verify local script, hook, browser MCP, and PDF dependencies:
@@ -90,19 +90,19 @@ The workspace separates reusable workflows from candidate-specific data:
 
 ## Local LLM Integrations
 
-Use `scripts/install.sh` to install the canonical skills, instructions, and hook configs for a tool:
+Use `node scripts/install.js` to install the canonical skills, instructions, and hook configs for a tool:
 
 ```bash
-scripts/install.sh
-scripts/install.sh claude
-scripts/install.sh codex
-scripts/install.sh all
+node scripts/install.js
+node scripts/install.js claude
+node scripts/install.js codex
+node scripts/install.js all
 ```
 
 The script creates symlinks where possible. Use `--copy` when the target tool cannot follow symlinks:
 
 ```bash
-scripts/install.sh codex --copy
+node scripts/install.js codex --copy
 ```
 
 Targets:
@@ -144,7 +144,7 @@ Installed hooks:
 - remind the agent about CV/tracker/prep-note rules after edits;
 - remind the agent at turn end to report changed files, verification status, and relevant next actions.
 
-Shared implementation lives in `scripts/llm-hooks/*.py`.
+Shared implementation lives in `scripts/llm-hooks/*.js`.
 
 ## Dependency Check
 
@@ -303,7 +303,7 @@ All configured paths are relative to the repository root.
     ├── check-deps.js
     ├── check-workspace.js
     ├── generate_pdf.py
-    ├── install.sh
+    ├── install.js
     ├── llm-hooks/
     └── resume.css
 ```
@@ -339,7 +339,7 @@ To reuse this workspace for another person:
 4. Adjust `strategy/sources.md`.
 5. Update `config/paths.md` only if the repository layout differs.
 6. Replace `candidate/cv/cv-base.md` and company-specific CVs.
-7. Run `scripts/install.sh all`.
+7. Run `node scripts/install.js all`.
 8. Run `job:setup`.
 
 The skill files should stay generic.

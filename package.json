@@ -19,9 +19,8 @@
     "scripts/check-public.js",
     "scripts/check-deps.js",
     "scripts/check-workspace.js",
-    "scripts/export-starter.sh",
     "scripts/generate_pdf.py",
-    "scripts/install.sh",
+    "scripts/install.js",
     "scripts/llm-hooks/",
     "scripts/resume.css",
     "START_HERE.md",
@@ -31,11 +30,12 @@
     "LICENSE"
   ],
   "scripts": {
-    "check": "node --check bin/job-tracker.js && node --check scripts/check-public.js && node --check scripts/check-workspace.js && node --check scripts/check-deps.js && npm test && bash -n scripts/install.sh && npm run check:public && npm run check:workspace && npm_config_cache=/tmp/job-tracker-npm-cache npm pack --dry-run",
+    "check": "node --check bin/job-tracker.js && node --check scripts/check-public.js && node --check scripts/check-workspace.js && node --check scripts/check-deps.js && npm test && npm run check:public && npm run check:workspace && npm_config_cache=/tmp/job-tracker-npm-cache npm pack --dry-run",
     "test": "node --test",
     "check:public": "node scripts/check-public.js",
     "check:workspace": "node scripts/check-workspace.js",
-    "check:deps": "node scripts/check-deps.js"
+    "check:deps": "node scripts/check-deps.js",
+    "install:agents": "node scripts/install.js all"
   },
   "keywords": [
     "job-search",

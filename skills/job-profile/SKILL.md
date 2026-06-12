@@ -129,8 +129,8 @@ When validating, check:
 - every `strategy/search-profiles/*.md` file has a settings entry
 - no profile file is named `default.md`
 - `data/tracker.md` job rows use only known profile slugs
-- `scripts/llm-hooks/validate_tracker_profiles.py` passes when available
-- `scripts/llm-hooks/validate_skill_footers.py` passes when available
+- `scripts/llm-hooks/validate-tracker-profiles.js` passes when available
+- `scripts/llm-hooks/validate-skill-footers.js` passes when available
 
 ## Output
 

@@ -2,9 +2,9 @@
 
 This repository is a configurable job-search workspace. The skills in `skills/` are generic workflows; candidate-specific behavior lives in the `config/`, `candidate/`, `strategy/`, `style/`, and `templates/` zones.
 
-If a tool expects skills in a tool-specific directory, use `scripts/install.sh` to install local symlinks or copies from the canonical `skills/` directory.
+If a tool expects skills in a tool-specific directory, use `node scripts/install.js` to install local symlinks or copies from the canonical `skills/` directory.
 
-Minimal LLM command hooks live in `scripts/llm-hooks/`. `scripts/install.sh` syncs `.codex/hooks.json` and `.codex/rules/`, and only creates `.claude/settings.json` when local Claude settings are missing.
+Minimal LLM command hooks live in `scripts/llm-hooks/`. `node scripts/install.js` syncs `.codex/hooks.json` and `.codex/rules/`, and only creates `.claude/settings.json` when local Claude settings are missing.
 
 Use `node scripts/check-deps.js` when hook, script, or PDF dependencies need verification.
 

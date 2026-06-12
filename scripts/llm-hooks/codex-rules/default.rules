@@ -18,7 +18,7 @@ prefix_rule(
     decision = "allow",
     justification = "Allow local Python helper scripts and dependency checks used by this workspace.",
     match = [
-        "python3 scripts/llm-hooks/validate_skill_footers.py",
+        "node scripts/llm-hooks/validate-skill-footers.js",
         "python3 scripts/generate_pdf.py data/companies/example/resume.md",
     ],
 )

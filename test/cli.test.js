@@ -41,7 +41,7 @@ test('scaffolds a workspace without install', () => {
   assert.equal(existsSync(join(target, 'strategy', 'search-profiles', 'default.md')), true);
   assert.equal(existsSync(join(target, 'data', 'tracker.md')), true);
   assert.equal(existsSync(join(target, 'skills', 'job-setup', 'SKILL.md')), true);
-  assert.equal(existsSync(join(target, 'scripts', 'install.sh')), true);
+  assert.equal(existsSync(join(target, 'scripts', 'install.js')), true);
   assert.equal(existsSync(join(target, 'scripts', 'check-public.js')), false);
 
   const gitignore = readFileSync(join(target, '.gitignore'), 'utf8');
@@ -78,4 +78,27 @@ test('creates missing parent directories', () => {
 
   assert.equal(result.status, 0, result.stderr);
   assert.equal(existsSync(join(target, 'START_HERE.md')), true);
+});
+
+
+test('installs local agent integrations with JS installer', () => {
+  const parent = makeTempDir();
+  const target = join(parent, 'workspace');
+
+  const scaffold = runCli([target, '--no-install']);
+  assert.equal(scaffold.status, 0, scaffold.stderr);
+
+  const result = spawnSync(process.execPath, ['scripts/install.js', 'all', '--copy'], {
+    cwd: target,
+    encoding: 'utf8',
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(existsSync(join(target, 'CLAUDE.md')), true);
+  assert.equal(existsSync(join(target, 'AGENTS.md')), true);
+  assert.equal(existsSync(join(target, '.claude', 'skills', 'job-setup', 'SKILL.md')), true);
+  assert.equal(existsSync(join(target, '.claude', 'settings.json')), true);
+  assert.equal(existsSync(join(target, '.codex', 'skills', 'job-setup', 'SKILL.md')), true);
+  assert.equal(existsSync(join(target, '.codex', 'hooks.json')), true);
+  assert.equal(existsSync(join(target, '.codex', 'rules', 'default.rules')), true);
 });

@@ -6,7 +6,7 @@ argument-hint:
 
 Check whether the workspace is ready for `job:run`.
 
-This is an interactive setup assistant. It performs a full preflight and asks the user concrete questions for missing or weak configuration. It does not install the skill system and does not run `scripts/install.sh`.
+This is an interactive setup assistant. It performs a full preflight and asks the user concrete questions for missing or weak configuration. It does not install the skill system and does not run `node scripts/install.js`.
 
 ## Load Config
 
@@ -43,7 +43,7 @@ Allowed actions:
 
 Forbidden actions:
 
-- do not run `scripts/install.sh`
+- do not run `node scripts/install.js`
 - do not invent candidate experience, metrics, contacts, job requirements, or source strategy
 - do not create a full base CV from scratch without user-provided resume content
 - do not change the active profile without explicit user confirmation

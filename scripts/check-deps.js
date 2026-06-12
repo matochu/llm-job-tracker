@@ -72,8 +72,8 @@ function checkPythonImport(pythonBin, module) {
   return result.status === 0;
 }
 
-function pythonHelper(args) {
-  const result = run('python3', ['scripts/llm-hooks/profile_utils.py', ...args]);
+function profileHelper(args) {
+  const result = run(process.execPath, ['scripts/llm-hooks/profile-utils.js', ...args]);
   return result.status === 0 ? result.stdout.trim() : '';
 }
 
@@ -87,8 +87,8 @@ function checkSearchProfile() {
   }
   ok('Search settings: config/settings.md');
 
-  const profileSlug = pythonHelper(['active-slug']);
-  const profileFile = pythonHelper(['active-file']);
+  const profileSlug = profileHelper(['active-slug']);
+  const profileFile = profileHelper(['active-file']);
 
   if (!profileSlug) {
     fail('Active profile slug not found in config/settings.md');
@@ -104,7 +104,7 @@ function checkSearchProfile() {
     fail(`Active profile file missing: ${profileFile}`);
   }
 
-  const listed = pythonHelper(['list-slugs']);
+  const listed = profileHelper(['list-slugs']);
   for (const listedSlug of listed.split(/\r?\n/).filter(Boolean)) {
     if (existsSync(join(repoRoot, 'strategy', 'search-profiles', `${listedSlug}.md`))) {
       ok(`Listed profile exists: ${listedSlug}`);
@@ -206,28 +206,17 @@ function checkBrowserMcp() {
 function compilePythonScripts() {
   if (!hasCommand('python3')) return;
 
-  const files = [
-    'scripts/generate_pdf.py',
-    'scripts/llm-hooks/hooklib.py',
-    'scripts/llm-hooks/pre_tool_guard.py',
-    'scripts/llm-hooks/post_tool_check.py',
-    'scripts/llm-hooks/validate_tracker_profiles.py',
-    'scripts/llm-hooks/validate_skill_footers.py',
-    'scripts/llm-hooks/stop_check.py',
-  ];
   const result = run('python3', [
     '-c',
-    'import pathlib, sys; [compile(pathlib.Path(p).read_text(encoding="utf-8"), p, "exec") for p in sys.argv[1:]]',
-    ...files,
+    'import pathlib; compile(pathlib.Path("scripts/generate_pdf.py").read_text(encoding="utf-8"), "scripts/generate_pdf.py", "exec")',
   ]);
 
-  if (result.status === 0) ok('Python scripts compile');
-  else fail('Python script compile check failed');
+  if (result.status === 0) ok('Python PDF generator compiles');
+  else fail('Python PDF generator compile check failed');
 }
 
-function runPythonValidator(path, okMessage, failMessage) {
-  if (!hasCommand('python3')) return;
-  const result = run('python3', [path]);
+function runNodeValidator(path, okMessage, failMessage) {
+  const result = run(process.execPath, [path]);
   if (result.status === 0) {
     ok(okMessage);
   } else {
@@ -236,7 +225,6 @@ function runPythonValidator(path, okMessage, failMessage) {
     if (result.stderr) process.stderr.write(result.stderr);
   }
 }
-
 function compareFiles(a, b) {
   if (!existsSync(a) || !existsSync(b)) return false;
   return readFileSync(a).equals(readFileSync(b));
@@ -248,10 +236,10 @@ function checkInstalledHooks() {
     if (compareFiles(join(repoRoot, 'scripts/llm-hooks/codex-hooks.json'), codexHooks)) {
       ok('Codex hooks installed and in sync');
     } else {
-      fail('Codex hooks installed but out of sync; run scripts/install.sh codex');
+      fail('Codex hooks installed but out of sync; run node scripts/install.js codex');
     }
   } else {
-    note('Codex hooks not installed locally; run scripts/install.sh codex if needed');
+    note('Codex hooks not installed locally; run node scripts/install.js codex if needed');
   }
 
   const codexRules = join(repoRoot, 'scripts/llm-hooks/codex-rules/default.rules');
@@ -261,10 +249,10 @@ function checkInstalledHooks() {
       if (compareFiles(codexRules, installedRules)) {
         ok('Codex command rules installed and in sync');
       } else {
-        fail('Codex command rules installed but out of sync; run scripts/install.sh codex');
+        fail('Codex command rules installed but out of sync; run node scripts/install.js codex');
       }
     } else {
-      note('Codex command rules not installed locally; run scripts/install.sh codex if needed');
+      note('Codex command rules not installed locally; run node scripts/install.js codex if needed');
     }
   }
 
@@ -272,16 +260,16 @@ function checkInstalledHooks() {
   if (existsSync(claudeSettings)) {
     const text = readFileSync(claudeSettings, 'utf8');
     if (
-      text.includes('scripts/llm-hooks/pre_tool_guard.py') &&
-      text.includes('scripts/llm-hooks/post_tool_check.py') &&
-      text.includes('scripts/llm-hooks/stop_check.py')
+      text.includes('scripts/llm-hooks/pre-tool-guard.js') &&
+      text.includes('scripts/llm-hooks/post-tool-check.js') &&
+      text.includes('scripts/llm-hooks/stop-check.js')
     ) {
       ok('Claude hooks present in local settings');
     } else {
       fail('Claude settings exist but required job-search hooks are missing');
     }
   } else {
-    note('Claude hooks not installed locally; run scripts/install.sh claude if needed');
+    note('Claude hooks not installed locally; run node scripts/install.js claude if needed');
   }
 }
 
@@ -317,18 +305,18 @@ function main() {
 
   checkFile('scripts/generate_pdf.py', 'PDF generator');
   checkFile('scripts/resume.css', 'PDF CSS');
-  checkFile('scripts/llm-hooks/pre_tool_guard.py', 'PreToolUse hook');
-  checkFile('scripts/llm-hooks/post_tool_check.py', 'PostToolUse hook');
-  checkFile('scripts/llm-hooks/stop_check.py', 'Stop hook');
-  checkFile('scripts/llm-hooks/validate_tracker_profiles.py', 'Tracker profile validator');
-  checkFile('scripts/llm-hooks/validate_skill_footers.py', 'Skill output validator');
+  checkFile('scripts/llm-hooks/pre-tool-guard.js', 'PreToolUse hook');
+  checkFile('scripts/llm-hooks/post-tool-check.js', 'PostToolUse hook');
+  checkFile('scripts/llm-hooks/stop-check.js', 'Stop hook');
+  checkFile('scripts/llm-hooks/validate-tracker-profiles.js', 'Tracker profile validator');
+  checkFile('scripts/llm-hooks/validate-skill-footers.js', 'Skill output validator');
   checkFile('scripts/check-workspace.js', 'Workspace health checker');
   checkJson('scripts/llm-hooks/codex-hooks.json');
   checkJson('scripts/llm-hooks/claude-settings.json');
 
   compilePythonScripts();
-  runPythonValidator('scripts/llm-hooks/validate_skill_footers.py', 'Skill output requires active profile and job:action next actions', 'Skill output validation failed');
-  runPythonValidator('scripts/llm-hooks/validate_tracker_profiles.py', 'Tracker Profile columns are valid', 'Tracker Profile column validation failed');
+  runNodeValidator('scripts/llm-hooks/validate-skill-footers.js', 'Skill output requires active profile and job:action next actions', 'Skill output validation failed');
+  runNodeValidator('scripts/llm-hooks/validate-tracker-profiles.js', 'Tracker Profile columns are valid', 'Tracker Profile column validation failed');
   checkInstalledHooks();
 
   if (status === 0) {
