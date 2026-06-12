@@ -27,6 +27,17 @@ This skill checks integrity. It does not perform job discovery, company research
 
 Use it when the user asks whether the workspace is consistent, when tracker state looks suspicious, after large `job:run` batches, or before fixing confusing pipeline state.
 
+## Version Check
+
+Before running workspace checks, check for outdated installation:
+
+1. Read `config/.installed-version`. If the file is missing, report `warning: installed version unknown — workspace may predate version tracking`.
+2. Run `npm view llm-job-tracker version --json` to get the latest published version. If the command fails (offline or npm unavailable), skip silently and note it.
+3. Compare versions. If installed < latest:
+   - Report as `warning` in the issue table.
+   - Show relevant sections from `CHANGELOG.md` between the installed version and latest (read the file, extract entries for versions newer than installed).
+   - Propose: `npx llm-job-tracker update .`
+
 ## Workflow
 
 1. Run `node scripts/check-workspace.js`.

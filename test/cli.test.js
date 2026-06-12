@@ -197,6 +197,46 @@ test('installer updates Claude hooks while preserving local permissions', () => 
   assert.match(JSON.stringify(settings.hooks), /pre-tool-guard\.js/);
 });
 
+test('init writes installed version to config/.installed-version', () => {
+  const parent = makeTempDir();
+  const target = join(parent, 'workspace');
+
+  const result = runCli([target, '--no-install']);
+
+  assert.equal(result.status, 0, result.stderr);
+  const versionFile = join(target, 'config', '.installed-version');
+  assert.equal(existsSync(versionFile), true);
+  assert.match(readFileSync(versionFile, 'utf8'), /^\d+\.\d+\.\d+$/);
+});
+
+test('update overwrites installed version', () => {
+  const parent = makeTempDir();
+  const target = join(parent, 'workspace');
+  const scaffold = runCli([target, '--no-install']);
+  assert.equal(scaffold.status, 0, scaffold.stderr);
+  writeFileSync(join(target, 'config', '.installed-version'), '0.0.1');
+
+  const result = runCli(['update', target, '--no-install']);
+
+  assert.equal(result.status, 0, result.stderr);
+  const written = readFileSync(join(target, 'config', '.installed-version'), 'utf8');
+  assert.notEqual(written, '0.0.1');
+  assert.match(written, /^\d+\.\d+\.\d+$/);
+});
+
+test('update dry-run does not overwrite installed version', () => {
+  const parent = makeTempDir();
+  const target = join(parent, 'workspace');
+  const scaffold = runCli([target, '--no-install']);
+  assert.equal(scaffold.status, 0, scaffold.stderr);
+  writeFileSync(join(target, 'config', '.installed-version'), '0.0.1');
+
+  const result = runCli(['update', target, '--dry-run']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(readFileSync(join(target, 'config', '.installed-version'), 'utf8'), '0.0.1');
+});
+
 test('init copies cv.css and does not copy resume.css', () => {
   const parent = makeTempDir();
   const target = join(parent, 'workspace');

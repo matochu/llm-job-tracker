@@ -99,6 +99,7 @@ Dialog order (highest to lowest priority):
 6. **Sources** — if `strategy/sources.md` has no usable entries for the active profile, ask which job boards/platforms the user wants to search.
 7. **Tracker** — if `data/tracker.md` is missing, offer to create a scaffold with one confirmation question.
 8. **Dependencies** — run `node scripts/check-deps.js` and report results.
+9. **Version check** — read `config/.installed-version`. Run `npm view llm-job-tracker version --json` to get the latest. If installed < latest, show what changed (read relevant sections from `CHANGELOG.md`) and suggest: `npx llm-job-tracker update .` If `.installed-version` is missing, note it as a warning but do not block setup.
 
 Do not ask more than three questions in one response. After writing, always confirm: "Saved to `<path>`. Moving to next item."
 
@@ -119,7 +120,7 @@ During the dialog, each response includes:
 - what was just written (confirmation + file path)
 - the next missing item being addressed
 - up to three concrete questions
-- progress indicator: `Setup: N/9 areas complete`
+- progress indicator: `Setup: N/10 areas complete`
 
 Final response (after all items resolved) includes:
 

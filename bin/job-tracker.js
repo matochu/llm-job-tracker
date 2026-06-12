@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, statSync, writeFileSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '..');
+const { version: pkgVersion } = createRequire(import.meta.url)(resolve(repoRoot, 'package.json'));
 const defaultGitignore = `# Browser MCP
 .playwright-mcp/*
 
@@ -252,10 +254,12 @@ try {
   if (mode === 'init') {
     ensureInitTarget(target, opts.force);
     copyWorkspace(target, opts.force || isWorkspace(target));
+    writeFileSync(resolve(target, 'config', '.installed-version'), pkgVersion);
     if (opts.install) runInstall(target);
     console.log(`\nLLM job tracker workspace initialized:\n${target}`);
   } else {
     updateWorkspace(target, opts.dryRun);
+    if (!opts.dryRun) writeFileSync(resolve(target, 'config', '.installed-version'), pkgVersion);
     if (opts.install && !opts.dryRun) runInstall(target);
     console.log(`\nLLM job tracker workspace ${opts.dryRun ? 'update plan checked' : 'updated'}:\n${target}`);
   }
