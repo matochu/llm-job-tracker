@@ -3,7 +3,7 @@
   margin: 18mm 20mm 18mm 20mm;
   @top-right {
     content: counter(page);
-    color: #e84040;
+    color: #888888; /* accent color — customize */
     font-family: Arial, sans-serif;
     font-size: 11px;
     padding-top: 10px;
@@ -13,7 +13,7 @@
 * { box-sizing: border-box; }
 
 body {
-  font-family: Arial, sans-serif;
+  font-family: Arial, sans-serif; /* swap to your preferred font */
   font-size: 11px;
   color: #1a1a1a;
   line-height: 1.55;
@@ -48,7 +48,7 @@ body {
 h2 {
   font-size: 15px;
   font-weight: bold;
-  color: #e84040;
+  color: #888888; /* accent color — customize */
   margin: 18px 0 6px;
   padding: 0;
 }

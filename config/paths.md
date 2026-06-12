@@ -25,7 +25,7 @@ path registry; skills embed literal paths but must match the values listed here.
 - **Templates directory:** `templates/`
 - **Resume template reference:** `templates/resume-template.md`
 - **PDF generator:** `scripts/generate_pdf.py`
-- **PDF CSS:** `scripts/resume.css`
+- **PDF CSS:** `scripts/cv.css`
 - **Session reports:** `.sessions/reports/[id].run.md`
 - **Session logs:** `.sessions/logs/[id].log`
 

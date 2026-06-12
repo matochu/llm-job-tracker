@@ -70,10 +70,32 @@ When the selected action is ambiguous, ask one concise follow-up question. When 
 
 Reply in the configured assistant language and include:
 
-- top priorities
-- blocked/stale items
-- ready-to-act items
-- manual user actions, when relevant, without shortcut letters
+### Pipeline Board
+
+Open with a compact board showing counts per tracker status and a mini-table of up to 10 active items:
+
+```
+Active   │ N   Applied  │ N   Interview │ N   Offer  │ N
+Stale    │ N   Rejected │ N   Archived  │ N
+```
+
+Then a mini-table (company, role, status, last update, next action) sorted by priority — active and stale items only, skip archived/rejected unless user asked.
+
+Flag **stale** items: rows with no tracker update in 14+ days. Mark them visually (e.g. `⚠ stale`).
+
+Flag **blocked** items: rows explicitly marked blocked or missing required artifacts (no CV, no research, no outreach drafted).
+
+### Summary sections
+
+After the board:
+
+- top priorities (max 5, with the single most important next action each)
+- stale/blocked items with concrete reason
+- ready-to-act items (CV done, research done, just needs send/apply)
+- manual user actions when relevant, without shortcut letters
+
+### Footer
+
 - recommended next action first
 - grouped next action when several companies need the same `job:action`
 - footer with `Active profile: <slug>` and context-specific `job:action` next actions; `Next actions` must contain only agent-runnable `job:*` actions

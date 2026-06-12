@@ -30,16 +30,17 @@ Before starting, read existing files when present:
 
 Run `job:setup` as the first user-facing step after installing this workspace.
 
-This skill always performs the full setup review. It has no quick/fix modes.
+This skill runs as an interactive setup dialog. It does not just report — it asks questions and immediately writes the answers into the appropriate config files.
 
 Allowed actions:
 
 - run `node scripts/check-deps.js`
 - inspect configuration files and configured paths
 - inspect installed hook/skill sync status reported by dependency checks
-- ask the user for missing information
-- propose specific next files/actions to complete setup
-- create only narrow scaffolds after explicit user confirmation
+- ask the user for missing information (max 3 questions per response)
+- write user answers directly into `candidate/candidate.md`, the active profile, `config/settings.md`, or other config files as appropriate
+- create narrow scaffolds (tracker, profile, CV skeleton) after one confirmation question
+- after writing, confirm what was saved and continue to the next missing item
 
 Forbidden actions:
 
@@ -69,41 +70,61 @@ Check:
 - browser MCP readiness is reported for Codex and, when available, Claude
 - hard rules are present in `config/agent-instructions.md`, `CLAUDE.md`, and `AGENTS.md`
 
-## Interactive Questions
+## Interactive Dialog
 
-When a critical setup item is missing, ask the minimum concrete questions needed to proceed.
+Work iteratively. Each round: identify the highest-priority missing item, ask up to 3 concrete questions, wait for the user's answer, write it to the appropriate file, confirm what was saved, then move to the next missing item.
 
-Use questions like:
+Dialog order (highest to lowest priority):
 
-- Missing base CV: ask for a path to an existing PDF/DOCX/MD resume, pasted resume text, or permission to create an empty scaffold.
-- Missing active profile: list available profile files and ask which slug should be active.
-- Missing profile file: ask whether to create a profile scaffold and what search direction it should represent.
-- Weak profile: ask for target roles, reject rules, priority rules, location/work-mode limits, and preferred sources.
-- Missing sources: ask where to search for vacancies and which sources require browser login.
-- Missing tracker: ask whether to create a tracker scaffold using the configured schema.
-- Browser MCP or login issue: ask the user to authenticate manually in the opened browser or provide the missing CLI path when relevant.
+0. **PDF import** — at the start of the dialog, ask once: "Do you have an existing resume PDF? If so, paste the path or drag the file here." If the user provides a path:
+   - Read the PDF using the Read tool (Claude can parse PDFs natively).
+   - Extract all text content: name, contact details, work experience, education, skills, summary, languages.
+   - Populate `candidate/candidate.md` and create/overwrite `candidate/cv/cv-base.md` with the extracted content converted to the repo Markdown resume format (see `templates/resume-template.md`).
+   - Attempt visual style extraction: open the PDF in the browser via browser MCP (if available) and take a screenshot; otherwise describe what you can infer from the PDF structure. Extract: font family names if visible in metadata (`pdfinfo <path>` or `strings <path> | grep -i font`), color palette (background, text, accent), layout type (single/two-column, header style), section order.
+   - Update `style/cv-style.md` with a `## Imported Style Notes` section describing the detected style. Do not overwrite the House Style rules — append only.
+   - Based on extracted style, propose concrete changes to `scripts/cv.css`: accent color (`h2 color` and `@top-right color`), font family (`body font-family`), font size if different. Show the user a short diff-style preview, e.g.:
+     ```
+     h2 { color: #2563eb; }   /* was #888888 */
+     body { font-family: 'Calibri', sans-serif; }  /* was Arial */
+     ```
+     Ask: "Apply these style changes to `scripts/cv.css`? (yes / no / edit)" — and wait for confirmation before writing. If the user says "edit", ask what to change. Write only after explicit yes.
+   - After import confirm: "Imported from `<path>`. Created/updated `candidate/cv/cv-base.md`, `style/cv-style.md`" and, if CSS was updated, "`scripts/cv.css`."
+   - If the user says no PDF or skips, proceed to step 1. Still mention: "`scripts/cv.css` controls PDF appearance — edit it any time to change fonts, colors, or spacing."
 
-Do not ask more than three questions in one response. Prioritize blockers over warnings.
+1. **Candidate identity** — if `candidate/candidate.md` has empty fields, ask: full name, location/timezone, primary email. Write answers into `candidate/candidate.md` immediately.
+2. **Skills and constraints** — ask: core skills (comma-separated), hard-no rules (company types, work modes, locations to avoid), compensation expectations, English level. Write to `candidate/candidate.md`.
+3. **Active profile** — if missing or default profile is empty, ask: target role family (e.g. "Senior Frontend Engineer"), preferred work mode (remote/hybrid/on-site), one-sentence positioning. Write to the active profile file.
+4. **Profile fit rules** — ask: strong-fit signals (3-5 bullet points), reject signals. Write to profile.
+5. **Base CV** — if still missing after step 0: ask for a path to an existing resume (PDF/DOCX/MD) or offer to paste content. If user pastes content, create `candidate/cv/cv-base.md` from it. Do not invent content.
+6. **Sources** — if `strategy/sources.md` has no usable entries for the active profile, ask which job boards/platforms the user wants to search.
+7. **Tracker** — if `data/tracker.md` is missing, offer to create a scaffold with one confirmation question.
+8. **Dependencies** — run `node scripts/check-deps.js` and report results.
+
+Do not ask more than three questions in one response. After writing, always confirm: "Saved to `<path>`. Moving to next item."
 
 ## Verdicts
 
-Return:
+After completing all dialog rounds, return a final verdict:
 
 - `pass`: ready for `job:run`
 - `warning`: ready for `job:run`, but warnings should be addressed soon
-- `blocked`: not ready for `job:run`; user input is required
+- `blocked`: not ready for `job:run`; user input is required (shown mid-dialog when a blocker cannot be resolved automatically)
 
 ## Output
 
 Reply in the configured assistant language when `config/language.md` exists, otherwise Ukrainian.
 
-Include:
+During the dialog, each response includes:
+
+- what was just written (confirmation + file path)
+- the next missing item being addressed
+- up to three concrete questions
+- progress indicator: `Setup: N/9 areas complete`
+
+Final response (after all items resolved) includes:
 
 - `Verdict: pass|warning|blocked`
 - `Ready for job:run: yes|no`
-- critical blockers
-- warnings
-- checked areas with pass/warning/blocked status
-- up to three concrete questions when blocked
-- files that should be created or updated next
+- summary of what was configured this session
+- warnings for items skipped or partially filled
 - footer with `Active profile: <slug-or-missing>` and context-specific `job:action` next actions using `config/next-actions.md`

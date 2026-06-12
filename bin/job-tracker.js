@@ -52,7 +52,6 @@ const managedEntries = [
   'skills',
   'scripts',
   'templates',
-  'style',
   'config/agent-instructions.md',
   'config/next-actions.md',
   'config/tracker-schema.md',
@@ -61,6 +60,7 @@ const managedEntries = [
 
 
 const removedManagedEntries = [
+  'scripts/resume.css',
   'scripts/check-deps.sh',
   'scripts/check-public.sh',
   'scripts/check-workspace.py',
@@ -85,7 +85,7 @@ const protectedEntries = [
   'config/paths.md',
 ];
 
-const excludedScriptEntries = new Set(['check-public.js']);
+const excludedScriptEntries = new Set(['check-public.js', 'cv.css']);
 const workspaceMarkers = ['config/paths.md', 'config/settings.md', 'data/tracker.md', 'candidate/candidate.md'];
 
 function usage() {

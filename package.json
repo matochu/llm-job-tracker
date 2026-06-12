@@ -22,7 +22,7 @@
     "scripts/generate_pdf.py",
     "scripts/install.js",
     "scripts/llm-hooks/",
-    "scripts/resume.css",
+    "scripts/cv.css",
     "START_HERE.md",
     ".gitignore",
     "README.md",

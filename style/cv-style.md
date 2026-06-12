@@ -7,17 +7,9 @@
 
 ## House Style
 
-- Do not add a `Target Role` section.
-- `Career Expectations` should be a meta professional preference, not a cover letter.
-- Do not over-name the target company in generic CV sections.
-- Avoid long dash punctuation in prose.
-- Avoid LLM filler such as:
-  - "what drives me is"
-  - "force multiplier"
-  - "at home in"
-  - "holds up under real-world scale"
-  - "leaving things better than I found them"
-- Use plain evidence and real outcomes.
+- Keep prose direct and evidence-based.
+- Avoid LLM filler phrases.
+- Use plain outcomes and real metrics.
 
 ## CV Positioning
 

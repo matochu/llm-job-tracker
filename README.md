@@ -334,7 +334,7 @@ All configured paths are relative to the repository root.
     ├── generate_pdf.py
     ├── install.js
     ├── llm-hooks/
-    └── resume.css
+    └── cv.css
 ```
 
 ## Tracker Rules

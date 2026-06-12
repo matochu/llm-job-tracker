@@ -300,11 +300,15 @@ function main() {
     }
   }
 
+  const pdfinfoPath = commandPath('pdfinfo');
+  if (pdfinfoPath) ok(`pdfinfo: ${pdfinfoPath} (optional; used for PDF resume import style extraction)`);
+  else note('pdfinfo not found (optional; macOS: brew install poppler)');
+
   checkSearchProfile();
   checkBrowserMcp();
 
   checkFile('scripts/generate_pdf.py', 'PDF generator');
-  checkFile('scripts/resume.css', 'PDF CSS');
+  checkFile('scripts/cv.css', 'PDF CSS');
   checkFile('scripts/llm-hooks/pre-tool-guard.js', 'PreToolUse hook');
   checkFile('scripts/llm-hooks/post-tool-check.js', 'PostToolUse hook');
   checkFile('scripts/llm-hooks/stop-check.js', 'Stop hook');

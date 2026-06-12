@@ -14,7 +14,7 @@ import os
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).parent
-CSS_FILE = SCRIPT_DIR / "resume.css"
+CSS_FILE = SCRIPT_DIR / "cv.css"
 REPO_VENV_PYTHON = SCRIPT_DIR / ".venv" / "bin" / "python3"
 TMP_VENV_PYTHON = Path("/tmp/resume-venv/bin/python3")
 
