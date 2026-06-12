@@ -1,10 +1,26 @@
 #!/usr/bin/env node
 import { cpSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
+import { createInterface } from 'node:readline';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(scriptDir, '..');
+
+function promptTarget() {
+  return new Promise((resolve) => {
+    if (!process.stdin.isTTY) {
+      resolve('all');
+      return;
+    }
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    rl.question('Install for: [1] Claude (default)  [2] Codex  [3] Both\n> ', (answer) => {
+      rl.close();
+      const map = { '': 'claude', '1': 'claude', '2': 'codex', '3': 'all' };
+      resolve(map[answer.trim()] ?? 'claude');
+    });
+  });
+}
 
 function usage() {
   console.log(`Usage:
@@ -13,7 +29,7 @@ function usage() {
 Targets:
   claude   Link/copy skills into .claude/ and install CLAUDE.md
   codex    Link/copy skills into local .codex/skills/
-  all      Install both targets
+  all      Install both targets (non-interactive / CI)
 
 Options:
   --copy   Copy directories instead of symlinking
@@ -57,9 +73,7 @@ function parseArgs(argv) {
     target = arg;
   }
 
-  target ??= 'all';
-
-  if (!['claude', 'codex', 'all'].includes(target)) {
+  if (target !== null && !['claude', 'codex', 'all'].includes(target)) {
     throw new Error(`Unknown install target: ${target}`);
   }
 
@@ -201,7 +215,9 @@ function installCodexProject(mode) {
 }
 
 try {
-  const { target, mode } = parseArgs(process.argv.slice(2));
+  const parsed = parseArgs(process.argv.slice(2));
+  const target = parsed.target ?? await promptTarget();
+  const { mode } = parsed;
 
   if (target === 'claude') {
     installClaudeProject(mode);
