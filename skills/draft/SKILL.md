@@ -1,7 +1,7 @@
 ---
-name: job:draft
-description: Prepares recruiter, engineering-manager, founder, or referral manual message drafts in company prep notes. The user writes/sends them manually outside the skill.
-argument-hint: <company-slug-or-name> [contact-name-or-role]
+name: job-tracker:draft
+description: "Prepares recruiter, engineering-manager, founder, or referral manual message drafts in company prep notes. The user writes/sends them manually outside the skill."
+argument-hint: "<company-slug-or-name> [contact-name-or-role]"
 ---
 
 Prepare manual message drafts. This skill never sends messages, connection requests, emails, LinkedIn messages, or applications. The user is the only one who writes/sends messages.
@@ -45,19 +45,19 @@ Before starting, read:
 
 This skill is the required path for producing or updating `### Manual Message Drafts`.
 
-Do not bypass `job:draft` by writing manual message drafts directly from `job:company`, `job:run`, or general context. Having contacts or draft text already in context is not a valid reason to skip this skill.
+Do not bypass `job-tracker:draft` by writing manual message drafts directly from `job-tracker:company`, `job-tracker:run`, or general context. Having contacts or draft text already in context is not a valid reason to skip this skill.
 
 Manual message drafts are prep material only. They must never be represented as sent, submitted, applied, connected, or contacted by the agent.
 
-If this skill is called by `job:run`, its output is an internal draft-preparation result for the orchestrator. Follow-up CV, fit, PDF, verification, or tracker work must be added to the `job:run` internal action queue when inputs are available, not treated as user-facing stop points. Report `Run progress` and the exact `Next internal step:` instead of ending with only the draft summary.
+If this skill is called by `job-tracker:run`, its output is an internal draft-preparation result for the orchestrator. Follow-up CV, fit, PDF, verification, or tracker work must be added to the `job-tracker:run` internal action queue when inputs are available, not treated as user-facing stop points. Report `Run progress` and the exact `Next internal step:` instead of ending with only the draft summary.
 
-Example inside `job:run`:
+Example inside `job-tracker:run`:
 
 ```md
 Run progress:
-- `job:draft ExampleCo` done; manual message drafts prepared, not sent.
+- `job-tracker:draft ExampleCo` done; manual message drafts prepared, not sent.
 
-Next internal step: run `job:cv ExampleCo`
+Next internal step: run `job-tracker:cv ExampleCo`
 
 Active profile: ai
 ```
@@ -70,5 +70,5 @@ Reply in the configured assistant language and include:
 - best first contact
 - missing info the user may need before manually writing/sending
 - manual user actions, when relevant, without shortcut letters
-- when called by `job:run` and runnable internal work remains, `Run progress` plus `Next internal step` instead of a user-facing stop
-- footer with `Active profile: <slug>` and context-specific `job:action` next actions using `config/next-actions.md`
+- when called by `job-tracker:run` and runnable internal work remains, `Run progress` plus `Next internal step` instead of a user-facing stop
+- footer with `Active profile: <slug>` and context-specific `job-tracker:action` next actions using `config/next-actions.md`

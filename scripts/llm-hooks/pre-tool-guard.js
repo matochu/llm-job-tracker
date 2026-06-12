@@ -66,7 +66,7 @@ function main() {
       if (pattern.test(normalized)) return deny('Blocked by job-search hook: sent/applied/contacted outreach claims require explicit user confirmation and must not be created by direct prep-notes edits.');
     }
     for (const pattern of prepNotesDraftWarningPatterns) {
-      if (pattern.test(combinedText)) warn('Job-search hook reminder: Manual Message Drafts should be produced by job:draft, not reconstructed directly from context.');
+      if (pattern.test(combinedText)) warn('Job-search hook reminder: Manual Message Drafts should be produced by job-tracker:draft, not reconstructed directly from context.');
     }
   }
   return 0;

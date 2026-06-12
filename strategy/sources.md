@@ -1,6 +1,6 @@
 # Job Sources
 
-Use this file as the source checklist for `job:find`. Do not silently skip sources. If a source cannot be checked because of login, MCP/browser failure, rate limits, or network issues, record it in the final source report.
+Use this file as the source checklist for `job-tracker:find`. Do not silently skip sources. If a source cannot be checked because of login, MCP/browser failure, rate limits, or network issues, record it in the final source report.
 
 ## Search Modes
 
@@ -275,7 +275,7 @@ When a watched company has a known ATS URL or slug, check the ATS directly befor
 | ExampleCo | company careers / ATS page | workflow automation, AI agents, frontend/fullstack |
 | ExampleCo | company careers / ATS page | observability and dashboard-heavy frontend |
 
-Keep this table lightweight. It is a routing aid for `job:find`, not a complete company database.
+Keep this table lightweight. It is a routing aid for `job-tracker:find`, not a complete company database.
 
 ## 7. AI / DevEx Sources
 
@@ -360,7 +360,7 @@ Search for recent European and Spanish startup funding:
 - `AI workflow startup Europe funding`
 - `developer tools startup Europe funding`
 
-When a strong company appears, add it to monitoring or suggest `job:company`, even if no frontend job is currently public.
+When a strong company appears, add it to monitoring or suggest `job-tracker:company`, even if no frontend job is currently public.
 
 ### Hacker News "Who is hiring?"
 
@@ -395,7 +395,7 @@ Use when required sources are weak or when the user asks for a wider pass:
 
 ## Source Report
 
-Every `job:find` run must end with a source report:
+Every `job-tracker:find` run must end with a source report:
 
 | Source group | Status | Method | Findings | Notes |
 |---|---|---|---|---|

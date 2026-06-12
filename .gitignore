@@ -18,5 +18,9 @@ __pycache__/
 tmp/
 .DS_Store
 
+# Build artifacts
+dist/
+release-notes.md
+
 # Local private/publication scan patterns
 .public-scan-patterns.local

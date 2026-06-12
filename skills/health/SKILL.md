@@ -1,6 +1,6 @@
 ---
-name: job:health
-description: Checks job-search workspace integrity, tracker/profile schema, orphan company artifacts, CV/PDF consistency, duplicate URLs, Session Reports, hook/install sync signals, and reports concrete fixes without doing search or preparation work.
+name: job-tracker:health
+description: "Checks job-search workspace integrity, tracker/profile schema, orphan company artifacts, CV/PDF consistency, duplicate URLs, Session Reports, hook/install sync signals, and reports concrete fixes without doing search or preparation work."
 argument-hint:
 ---
 
@@ -25,17 +25,30 @@ Also get the current date and timezone from the execution environment or system 
 
 This skill checks integrity. It does not perform job discovery, company research, manual message draft preparation, CV tailoring, fit review, PDF export, or outreach/application actions.
 
-Use it when the user asks whether the workspace is consistent, when tracker state looks suspicious, after large `job:run` batches, or before fixing confusing pipeline state.
+Use it when the user asks whether the workspace is consistent, when tracker state looks suspicious, after large `job-tracker:run` batches, or before fixing confusing pipeline state.
 
 ## Version Check
 
-Before running workspace checks, check for outdated installation:
+Before running workspace checks, detect the install mode and check for an outdated installation.
+
+First detect the mode by checking whether the `CLAUDE_PLUGIN_ROOT` environment variable is set (run `echo "$CLAUDE_PLUGIN_ROOT"`).
+
+**Plugin mode** (`CLAUDE_PLUGIN_ROOT` is set):
+
+1. Read the installed version from `$CLAUDE_PLUGIN_ROOT/.claude-plugin/plugin.json` (the `version` field).
+2. Get the latest published version: `gh release list --repo matochu/llm-job-tracker --limit 1` (or curl `https://api.github.com/repos/matochu/llm-job-tracker/releases/latest`). If it fails (offline or no `gh`), skip silently and note it.
+3. If installed < latest:
+   - Report as `warning` in the issue table.
+   - Show what changed (read `CHANGELOG.md` entries newer than installed).
+   - Tell the user to update the plugin: in Claude Cowork, open Plugins, remove and re-upload the latest zip from the GitHub release; in Claude Code CLI, reinstall from the marketplace/zip URL. The agent cannot self-update an installed plugin.
+
+**Workspace mode** (`CLAUDE_PLUGIN_ROOT` is not set):
 
 1. Read `config/.installed-version`. If the file is missing, report `warning: installed version unknown — workspace may predate version tracking`.
 2. Run `npm view llm-job-tracker version --json` to get the latest published version. If the command fails (offline or npm unavailable), skip silently and note it.
 3. Compare versions. If installed < latest:
    - Report as `warning` in the issue table.
-   - Show relevant sections from `CHANGELOG.md` between the installed version and latest (read the file, extract entries for versions newer than installed).
+   - Show relevant sections from `CHANGELOG.md` between the installed version and latest.
    - Propose: `npx llm-job-tracker update .`
 
 ## Workflow
@@ -81,6 +94,6 @@ Reply in the configured assistant language and include:
 - what was checked
 - what was not checked, if any
 - recommended narrow fixes in priority order
-- footer with `Active profile: <slug>` and context-specific `job:action` next actions from `config/next-actions.md`
+- footer with `Active profile: <slug>` and context-specific `job-tracker:action` next actions from `config/next-actions.md`
 
 `Next actions` must contain only agent-runnable `job:*` actions. Manual user work, if any, belongs under `Manual user actions`.

@@ -264,7 +264,7 @@ try {
     console.log(`\nLLM job tracker workspace ${opts.dryRun ? 'update plan checked' : 'updated'}:\n${target}`);
   }
 
-  console.log(`\nNext steps:\n  1. Review candidate/candidate.md and candidate/cv/cv-base.md.\n  2. Review config/settings.md and strategy/search-profiles/default.md.\n  3. In your LLM tool, run: job:setup\n`);
+  console.log(`\nNext steps:\n  1. Review candidate/candidate.md and candidate/cv/cv-base.md.\n  2. Review config/settings.md and strategy/search-profiles/default.md.\n  3. In your LLM tool, run: job-tracker:setup\n`);
 } catch (err) {
   console.error(`llm-job-tracker: ${err.message}`);
   console.error('');

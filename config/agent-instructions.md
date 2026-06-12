@@ -24,12 +24,12 @@ Search-specific targets, fit signals, reject rules, priority rules, application 
 ## Hard Rules
 
 - Do not bypass `job:*` skills by writing their expected artifacts directly.
-- Company research sections in `data/companies/*/prep-notes.md` must be produced through `job:company`.
-- `### Manual Message Drafts` must be produced through `job:draft`.
+- Company research sections in `data/companies/*/prep-notes.md` must be produced through `job-tracker:company`.
+- `### Manual Message Drafts` must be produced through `job-tracker:draft`.
 - Having research, contact, or draft data already in context is not a valid reason to skip the relevant skill.
-- `job:run` must call the relevant `job:*` skill instead of reconstructing that skill's output manually.
+- `job-tracker:run` must call the relevant `job:*` skill instead of reconstructing that skill's output manually.
 - Never mark outreach, applications, LinkedIn messages, connection requests, or email as sent/submitted unless the user explicitly says they did it outside the tool and asks to update status.
-- `job:apply` is the only workflow that may submit an ATS/job application from the browser, and only after explicit user confirmation in the same run. It must never send LinkedIn messages, connection requests, emails, or referral outreach.
+- `job-tracker:apply` is the only workflow that may submit an ATS/job application from the browser, and only after explicit user confirmation in the same run. It must never send LinkedIn messages, connection requests, emails, or referral outreach.
 
 ## Configuration Files
 
@@ -48,20 +48,20 @@ Search-specific targets, fit signals, reject rules, priority rules, application 
 
 ## Skill Map
 
-- `job:find` — find new leads, verify them at source, add to Raw Pipeline.
-- `job:setup` — run the first-step interactive readiness check before `job:run`.
-- `job:health` — check tracker/profile/company/CV/PDF consistency and recommend narrow fixes.
-- `job:run` — orchestrate the full search/prep/draft/CV/fit/stories/PDF path with frequent tracker updates and final summary.
-- `job:verify` — verify tracked roles and run coarse intake/prep/final reviewer passes for `job:run`.
-- `job:company` — research one company, roles, ATS, contacts, tech stack, prep notes.
-- `job:draft` — prepare recruiter/engineering/referral manual message drafts and save them in prep notes.
-- `job:status` — inspect tracker/prep-notes status and propose letter-key next actions.
-- `job:profile` — show, switch, validate, add, or remove profile configuration.
-- `job:cv` — create or update company-specific Markdown CV.
-- `job:fit` — score a CV against a vacancy via subagent when supported and suggest edits.
-- `job:stories` — maintain and map factual STAR stories for interview preparation.
-- `job:pdf` — export Markdown CV/cover letter to PDF.
-- `job:apply` — scout, prepare, fill, and optionally submit an ATS application after explicit user confirmation.
+- `job-tracker:find` — find new leads, verify them at source, add to Raw Pipeline.
+- `job-tracker:setup` — run the first-step interactive readiness check before `job-tracker:run`.
+- `job-tracker:health` — check tracker/profile/company/CV/PDF consistency and recommend narrow fixes.
+- `job-tracker:run` — orchestrate the full search/prep/draft/CV/fit/stories/PDF path with frequent tracker updates and final summary.
+- `job-tracker:verify` — verify tracked roles and run coarse intake/prep/final reviewer passes for `job-tracker:run`.
+- `job-tracker:company` — research one company, roles, ATS, contacts, tech stack, prep notes.
+- `job-tracker:draft` — prepare recruiter/engineering/referral manual message drafts and save them in prep notes.
+- `job-tracker:status` — inspect tracker/prep-notes status and propose letter-key next actions.
+- `job-tracker:profile` — show, switch, validate, add, or remove profile configuration.
+- `job-tracker:cv` — create or update company-specific Markdown CV.
+- `job-tracker:fit` — score a CV against a vacancy via subagent when supported and suggest edits.
+- `job-tracker:stories` — maintain and map factual STAR stories for interview preparation.
+- `job-tracker:pdf` — export Markdown CV/cover letter to PDF.
+- `job-tracker:apply` — scout, prepare, fill, and optionally submit an ATS application after explicit user confirmation.
 
 ## Porting To Another Candidate
 
@@ -90,7 +90,7 @@ The skill files should not need candidate-specific edits.
 
 ## Session Reports
 
-- Long-running skills may write one Session Report per pass; the report is the resumable source of truth. `job:run` must write one.
+- Long-running skills may write one Session Report per pass; the report is the resumable source of truth. `job-tracker:run` must write one.
 - Format, paths, and lifecycle live in `config/session-reports.md`.
 - `.sessions/` is runtime output and is gitignored; do not commit it.
 - The latest report is the newest file by timestamp; there is no index or `current` pointer.
@@ -101,8 +101,8 @@ The skill files should not need candidate-specific edits.
 - If login is required, open the page in the browser and wait for the user to log in manually.
 - Do not replace LinkedIn, Djinni, or browser-required checks with plain web search snippets.
 - Outreach workflows prepare manual message drafts only and save them in prep notes. The user writes/sends manually. Do not send connection requests, emails, or LinkedIn messages from these skills.
-- ATS/job application submission is allowed only through `job:apply` after explicit user confirmation in the same run.
-- When `job:company` finds useful contacts, run `job:draft [company]` after saving prep notes so manual message drafts are prepared immediately. If another skill cannot run in the same turn, make `job:draft [company]` the first next action.
+- ATS/job application submission is allowed only through `job-tracker:apply` after explicit user confirmation in the same run.
+- When `job-tracker:company` finds useful contacts, run `job-tracker:draft [company]` after saving prep notes so manual message drafts are prepared immediately. If another skill cannot run in the same turn, make `job-tracker:draft [company]` the first next action.
 
 ## PDF Export
 
@@ -113,8 +113,8 @@ The skill files should not need candidate-specific edits.
 
 - Skills should end with a concise, context-specific `Next actions` footer when useful.
 - Footer must include the active profile, for example `Active profile: frontend`.
-- User-facing next actions should use `job:action` commands, such as `job:find`, `job:company ExampleCo`, `job:cv ExampleCo`, `job:draft ExampleCo`, `job:stories ExampleCo`, `job:apply ExampleCo`, `job:health`, `job:verify`, and `job:status`.
+- User-facing next actions should use `job-tracker:action` commands, such as `job-tracker:find`, `job-tracker:company ExampleCo`, `job-tracker:cv ExampleCo`, `job-tracker:draft ExampleCo`, `job-tracker:stories ExampleCo`, `job-tracker:apply ExampleCo`, `job-tracker:health`, `job-tracker:verify`, and `job-tracker:status`.
 - Generate shortcuts dynamically using `config/next-actions.md`; do not treat shortcut hints as a fixed menu.
 - Show only relevant actions for the current result; do not show the full action dictionary.
 - Wait for the user to choose an action before running another workflow.
-- Exception: internal child-skill steps inside `job:run` are not user-facing next actions. `job:run` should continue through its run plan until final summary or a hard blocker.
+- Exception: internal child-skill steps inside `job-tracker:run` are not user-facing next actions. `job-tracker:run` should continue through its run plan until final summary or a hard blocker.

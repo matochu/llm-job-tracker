@@ -1,7 +1,7 @@
 ---
-name: job:verify
-description: Reviews tracked jobs and prepared artifacts, verifies role/source status, and audits tracker, prep notes, manual message drafts, CV, fit, and PDF state.
-argument-hint: [mode] [company-or-section]
+name: job-tracker:verify
+description: "Reviews tracked jobs and prepared artifacts, verifies role/source status, and audits tracker, prep notes, manual message drafts, CV, fit, and PDF state."
+argument-hint: "[mode] [company-or-section]"
 ---
 
 Verify existing tracked jobs or review a job-search run stage.
@@ -32,24 +32,24 @@ Also get the current date and timezone from the execution environment or system 
 
 This skill is a reviewer/verifier. It does not do broad job discovery, company research, outreach drafting, CV tailoring, fit scoring, or PDF export. Use the corresponding `job:*` skill to fix findings.
 
-Default mode checks existing tracked roles. Run-stage modes are larger reviewer passes for `job:run`, not per-step micro-gates.
+Default mode checks existing tracked roles. Run-stage modes are larger reviewer passes for `job-tracker:run`, not per-step micro-gates.
 
 ## Subagent Use
 
-When this skill is called by `job:run` or another workflow and a fresh context/subagent is available, run `job:verify` in that subagent so review context stays independent from the producing step.
+When this skill is called by `job-tracker:run` or another workflow and a fresh context/subagent is available, run `job-tracker:verify` in that subagent so review context stays independent from the producing step.
 
 If subagent execution is not available, run it in the current context, but keep the reviewer stance: inspect artifacts, produce findings, and avoid rewriting unrelated work.
 
-If this skill is called by `job:run`, its output is a reviewer signal for the orchestrator and must not be treated as a user-facing stop point unless the verdict is `blocked`.
+If this skill is called by `job-tracker:run`, its output is a reviewer signal for the orchestrator and must not be treated as a user-facing stop point unless the verdict is `blocked`.
 
-When this skill is called by `job:run` in `intake`, `prep`, or `final` mode and returns `Continue: yes`, include `Next internal step:` with the exact child skill or tracker update the orchestrator should run next. If more than one runnable internal step remains, include a compact `Internal action queue:`. Do not rely on user-facing `Next actions` for work that `job:run` can still perform internally.
+When this skill is called by `job-tracker:run` in `intake`, `prep`, or `final` mode and returns `Continue: yes`, include `Next internal step:` with the exact child skill or tracker update the orchestrator should run next. If more than one runnable internal step remains, include a compact `Internal action queue:`. Do not rely on user-facing `Next actions` for work that `job-tracker:run` can still perform internally.
 
 ## Modes
 
 Supported modes:
 
 - default / `status`: role liveness and tracker verification for active tracked jobs.
-- `intake`: after `job:find`, review newly added or selected leads before prep work.
+- `intake`: after `job-tracker:find`, review newly added or selected leads before prep work.
 - `prep`: after company prep, manual message drafts, CV, fit, and PDF work for a company or batch.
 - `final`: end-of-run audit across tracker, notes, CV/PDF state, and next actions.
 
@@ -77,11 +77,11 @@ If the first argument is not one of these modes, treat it as a company, section,
    - move closed roles to Archive with date and reason
    - move companies with useful contacts but no active role to Monitoring
    - update checked/updated dates
-6. Suggest `job:company [company]` when an active role has no prep notes.
+6. Suggest `job-tracker:company [company]` when an active role has no prep notes.
 
 ## Intake Review
 
-Use `intake` after `job:find` or before processing a batch.
+Use `intake` after `job-tracker:find` or before processing a batch.
 
 Review each candidate lead for:
 
@@ -102,7 +102,7 @@ Do not create prep notes, draft messages, tailor CVs, or export PDFs in this mod
 
 ## Prep Review
 
-Use `prep` after `job:run` has processed a company or batch.
+Use `prep` after `job-tracker:run` has processed a company or batch.
 
 Review prepared state for each company:
 
@@ -114,7 +114,7 @@ Review prepared state for each company:
 - if contacts were found, `### Manual Message Drafts` exists or the missing draft is listed as a next action
 - message drafts are clearly manual drafts only
 - no artifact says or implies that the agent sent, applied, connected, submitted, or contacted anyone
-- prep-note research and manual message draft sections appear to come from the required `job:company` and `job:draft` workflow, not from manual reconstruction by `job:run`
+- prep-note research and manual message draft sections appear to come from the required `job-tracker:company` and `job-tracker:draft` workflow, not from manual reconstruction by `job-tracker:run`
 - CV exists only when the role is active and worth CV work
 - fit review result is recorded when CV work was done
 - PDF exists only when Markdown CV exists and PDF export was appropriate
@@ -123,13 +123,13 @@ Allowed updates:
 
 - correct tracker statuses that overstate readiness
 - add reviewer notes for missing prep/CV/PDF/manual-draft artifacts
-- mark blockers or warnings for `job:run` final summary
+- mark blockers or warnings for `job-tracker:run` final summary
 
 Do not write new outreach text, rewrite CV content, or perform application/contact actions in this mode.
 
 ## Final Review
 
-Use `final` at the end of `job:run`.
+Use `final` at the end of `job-tracker:run`.
 
 Audit the full run result:
 
@@ -137,11 +137,11 @@ Audit the full run result:
 - statuses, prep notes, CV, fit, PDF, and next actions agree with each other
 - companies are not described as ready to apply, submit, send, or contact merely because artifacts exist
 - manual message drafts are represented as `manual message draft prepared`; the user still writes/sends manually outside the skill
-- prep notes and manual message drafts are not reported as produced by `job:run` directly; they must be attributed to `job:company` and `job:draft`
+- prep notes and manual message drafts are not reported as produced by `job-tracker:run` directly; they must be attributed to `job-tracker:company` and `job-tracker:draft`
 - manual user work is listed under `Manual user actions`, not as shortcut-based `Next actions`
 - closed roles are archived or marked with a clear reason
 - monitoring candidates have a reason and next check path
-- remaining agent work is expressed as `job:action` next actions, not vague prose; manual user work is kept in `Manual user actions`
+- remaining agent work is expressed as `job-tracker:action` next actions, not vague prose; manual user work is kept in `Manual user actions`
 
 Return one reviewer verdict for the run and only the highest-signal issues.
 
@@ -156,12 +156,12 @@ For each reviewed scope, return:
 
 Include `Continue: yes` or `Continue: no` for `intake`, `prep`, and `final` modes.
 
-If `Continue: yes` and the reviewed scope has runnable `job:run` work remaining, include the next executable internal action. Example:
+If `Continue: yes` and the reviewed scope has runnable `job-tracker:run` work remaining, include the next executable internal action. Example:
 
 ```md
 Verdict: pass
 Continue: yes
-Next internal step: run `job:company ExampleCo`
+Next internal step: run `job-tracker:company ExampleCo`
 ```
 
 ## Output
@@ -173,7 +173,7 @@ Reply in the configured assistant language and include:
 - exact tracker changes made
 - roles needing login or manual verification
 - reviewer mode and verdict when using `intake`, `prep`, or `final`
-- whether `job:run` may continue
-- when `job:run` may continue and runnable internal work remains, the exact `Next internal step: run job:* ...` or tracker update
-- highest-signal issues and the responsible `job:action` for each fix
-- footer with `Active profile: <slug>` and context-specific `job:action` next actions using `config/next-actions.md`
+- whether `job-tracker:run` may continue
+- when `job-tracker:run` may continue and runnable internal work remains, the exact `Next internal step: run job:* ...` or tracker update
+- highest-signal issues and the responsible `job-tracker:action` for each fix
+- footer with `Active profile: <slug>` and context-specific `job-tracker:action` next actions using `config/next-actions.md`

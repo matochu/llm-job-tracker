@@ -228,7 +228,7 @@ try {
     installCodexProject(mode);
   }
 
-  console.log('Next: run job:setup in your LLM tool to verify workspace readiness.');
+  console.log('Next: run job-tracker:setup in your LLM tool to verify workspace readiness.');
 } catch (err) {
   console.error(`install: ${err.message}`);
   console.error('');

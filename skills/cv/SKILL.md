@@ -1,7 +1,7 @@
 ---
-name: job:cv
-description: Creates or updates a company-specific Markdown CV from configured profile, prep notes, vacancy text, and CV style, then suggests PDF export.
-argument-hint: <company-slug-or-name> [vacancy-url-or-path]
+name: job-tracker:cv
+description: "Creates or updates a company-specific Markdown CV from configured profile, prep notes, vacancy text, and CV style, then suggests PDF export."
+argument-hint: "<company-slug-or-name> [vacancy-url-or-path]"
 ---
 
 Tailor a CV for one target vacancy.
@@ -38,10 +38,10 @@ Also read `data/companies/[slug]/prep-notes.md` when available.
 6. Use the configured document language.
 7. Preserve truthfulness: do not invent stack, scale, metrics, or domain experience.
 8. Follow configured CV style and house rules.
-9. Suggest `job:fit [resume.md] [job]` when the fit is risky or the vacancy is detailed.
-10. Suggest `job:pdf [resume.md]` after the Markdown is ready.
+9. Suggest `job-tracker:fit [resume.md] [job]` when the fit is risky or the vacancy is detailed.
+10. Suggest `job-tracker:pdf [resume.md]` after the Markdown is ready.
 
-If this skill is called by `job:run`, its output is an internal CV result for the orchestrator. Suggested `job:fit` or `job:pdf` follow-ups must be added to the `job:run` internal action queue when inputs are available, not treated as user-facing stop points. Report `Run progress` and the exact `Next internal step:` instead of ending with a user-facing follow-up menu.
+If this skill is called by `job-tracker:run`, its output is an internal CV result for the orchestrator. Suggested `job-tracker:fit` or `job-tracker:pdf` follow-ups must be added to the `job-tracker:run` internal action queue when inputs are available, not treated as user-facing stop points. Report `Run progress` and the exact `Next internal step:` instead of ending with a user-facing follow-up menu.
 
 ## Output
 
@@ -50,5 +50,5 @@ Reply in the configured assistant language and include:
 - CV path
 - main tailoring choices
 - unresolved risks or missing vacancy keywords
-- when called by `job:run` and runnable internal work remains, `Run progress` plus `Next internal step`
-- footer with `Active profile: <slug>` and context-specific `job:action` next actions using `config/next-actions.md`
+- when called by `job-tracker:run` and runnable internal work remains, `Run progress` plus `Next internal step`
+- footer with `Active profile: <slug>` and context-specific `job-tracker:action` next actions using `config/next-actions.md`

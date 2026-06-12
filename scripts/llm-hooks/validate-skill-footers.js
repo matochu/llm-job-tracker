@@ -7,20 +7,20 @@ const rawSkillCommands = [
   'status-next', 'tailor-cv', 'review-cv-fit', 'export-cv-pdf',
 ];
 const expectedSkillNames = new Map(Object.entries({
-  'job-find': 'job:find',
-  'job-verify': 'job:verify',
-  'job-company': 'job:company',
-  'job-draft': 'job:draft',
-  'job-status': 'job:status',
-  'job-profile': 'job:profile',
-  'job-setup': 'job:setup',
-  'job-run': 'job:run',
-  'job-health': 'job:health',
-  'job-stories': 'job:stories',
-  'job-apply': 'job:apply',
-  'job-cv': 'job:cv',
-  'job-fit': 'job:fit',
-  'job-pdf': 'job:pdf',
+  'find': 'job-tracker:find',
+  'verify': 'job-tracker:verify',
+  'company': 'job-tracker:company',
+  'draft': 'job-tracker:draft',
+  'status': 'job-tracker:status',
+  'profile': 'job-tracker:profile',
+  'setup': 'job-tracker:setup',
+  'run': 'job-tracker:run',
+  'health': 'job-tracker:health',
+  'stories': 'job-tracker:stories',
+  'apply': 'job-tracker:apply',
+  'cv': 'job-tracker:cv',
+  'fit': 'job-tracker:fit',
+  'pdf': 'job-tracker:pdf',
 }));
 
 function main() {
@@ -37,23 +37,23 @@ function main() {
     const text = readFileSync(skillFile, 'utf8');
     const rel = relative(root, skillFile);
     const expectedName = expectedSkillNames.get(skillDir);
-    if (!expectedName) errors.push(`${rel}: unexpected skill directory \`${skillDir}\`; expected a configured \`job-*\` directory`);
+    if (!expectedName) errors.push(`${rel}: unexpected skill directory \`${skillDir}\`; expected a configured skill directory`);
     else if (!text.includes(`name: ${expectedName}`)) errors.push(`${rel}: expected skill name \`name: ${expectedName}\``);
     const outputSection = text.includes('## Output') ? text.split('## Output', 2)[1] : '';
     if (!outputSection.includes('Active profile')) errors.push(`${rel}: missing \`Active profile\` requirement in \`## Output\` section`);
-    if (!(text.includes('config/next-actions.md') && text.includes('job:action'))) {
-      errors.push(`${rel}: missing \`job:action\` next-actions footer requirement`);
+    if (!(text.includes('config/next-actions.md') && text.includes('job-tracker:action'))) {
+      errors.push(`${rel}: missing \`job-tracker:action\` next-actions footer requirement`);
     }
     text.split(/\r?\n/).forEach((line, index) => {
       const stripped = line.trim();
       if (!stripped) return;
       if (/^(name:|description:|### |## )/.test(stripped)) return;
-      if (stripped.includes('`job:action`')) return;
+      if (stripped.includes('`job-tracker:action`')) return;
       const lower = stripped.toLowerCase();
       if (!rawSkillCommands.some((command) => lower.includes(command))) return;
       const isUserFacing = ['suggest', 'use `', 'run `', 'next actions', 'output', 'include', 'footer', 'reply', 'provide'].some((marker) => lower.includes(marker));
-      if (isUserFacing && !stripped.includes('`job:')) {
-        errors.push(`${rel}:${index + 1}: use \`job:action\` instead of raw skill command in user-facing instruction`);
+      if (isUserFacing && !stripped.includes('`job-tracker:')) {
+        errors.push(`${rel}:${index + 1}: use \`job-tracker:action\` instead of raw skill command in user-facing instruction`);
       }
     });
   }

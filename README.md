@@ -108,13 +108,13 @@ The workspace separates reusable workflows from candidate-specific data:
 4. Run the interactive workspace readiness check in your LLM tool:
 
    ```text
-   job:setup
+   job-tracker:setup
    ```
 
 5. Start from current pipeline status:
 
    ```text
-   job:status
+   job-tracker:status
    ```
 
 ## Local LLM Integrations
@@ -159,6 +159,19 @@ Generated local integration targets are ignored by git:
 - `CLAUDE.md`
 - `AGENTS.md`
 
+## Install As A Claude Code / Cowork Plugin
+
+The same skills ship as a Claude Code plugin. Use this if you prefer Claude Cowork (desktop) or the Claude Code marketplace over the `npx` workspace scaffolder.
+
+1. Download the plugin zip from the latest [GitHub release](https://github.com/matochu/llm-job-tracker/releases).
+2. In Claude Cowork, open **Plugins** in the sidebar, click **+**, choose **Upload plugin**, and drop the zip.
+3. Open the folder you want to keep your job search in (this becomes the workspace).
+4. Run `/job-tracker:setup` to scaffold and configure the workspace.
+
+Commands are namespaced the same way in both the plugin and the `npx` workspace: `/job-tracker:run`, `/job-tracker:find`, `/job-tracker:status`, and so on.
+
+Your data (`candidate/`, `config/`, `data/`) lives in the working directory you open, not inside the plugin. Update the plugin by uploading a newer release zip; `/job-tracker:health` reports when a newer version is available.
+
 ## LLM Hooks
 
 The project uses minimal command hooks that are compatible with both Codex and Claude Code. They are conservative and do not use Claude-only prompt, agent, HTTP, or MCP hook types.
@@ -166,10 +179,10 @@ The project uses minimal command hooks that are compatible with both Codex and C
 Installed hooks:
 
 - block agent-side outreach sending, applying, connecting, or pushing;
-- allow final ATS application submit only when `job:apply` uses the explicit confirmation marker after user approval;
+- allow final ATS application submit only when `job-tracker:apply` uses the explicit confirmation marker after user approval;
 - block shell redirection overwrites of `data/tracker.md`, CV, and prep-note files;
 - block direct prep-note claims that outreach, applications, LinkedIn messages, connection requests, or email were sent/submitted/contacted by the agent;
-- remind the agent that `### Manual Message Drafts` should be produced through `job:draft`;
+- remind the agent that `### Manual Message Drafts` should be produced through `job-tracker:draft`;
 - remind the agent about CV/tracker/prep-note rules after edits;
 - remind the agent at turn end to report changed files, verification status, and relevant next actions.
 
@@ -210,49 +223,49 @@ PDF export uses `scripts/generate_pdf.py`. The generator looks for `weasyprint` 
 
 ## Typical Workflow
 
-1. `job:run [profile?] [target]` can orchestrate the full path and update `data/tracker.md` after each stage.
-2. `job:find` searches configured sources, verifies new leads, and adds accepted roles to `Raw Pipeline`.
-3. `job:company [Company]` researches a promising company and creates or updates `data/companies/[company]/prep-notes.md`.
-4. `job:draft [Company]` prepares manual recruiter, engineering, founder, or referral message drafts in prep notes. It never sends them.
-5. `job:cv [Company]` creates or updates `data/companies/[company]/resume.md`.
-6. `job:fit data/companies/[company]/resume.md [job-url]` checks fit, risks, and edits before user-side application decisions.
-7. `job:stories [Company]` maps factual interview stories to the role when interview preparation or fit gaps need coverage.
-8. `job:pdf data/companies/[company]/resume.md` generates the recruiter-ready PDF.
-9. `job:apply [Company|application-url]` scouts/fills an ATS form and submits only after explicit user confirmation.
+1. `job-tracker:run [profile?] [target]` can orchestrate the full path and update `data/tracker.md` after each stage.
+2. `job-tracker:find` searches configured sources, verifies new leads, and adds accepted roles to `Raw Pipeline`.
+3. `job-tracker:company [Company]` researches a promising company and creates or updates `data/companies/[company]/prep-notes.md`.
+4. `job-tracker:draft [Company]` prepares manual recruiter, engineering, founder, or referral message drafts in prep notes. It never sends them.
+5. `job-tracker:cv [Company]` creates or updates `data/companies/[company]/resume.md`.
+6. `job-tracker:fit data/companies/[company]/resume.md [job-url]` checks fit, risks, and edits before user-side application decisions.
+7. `job-tracker:stories [Company]` maps factual interview stories to the role when interview preparation or fit gaps need coverage.
+8. `job-tracker:pdf data/companies/[company]/resume.md` generates the recruiter-ready PDF.
+9. `job-tracker:apply [Company|application-url]` scouts/fills an ATS form and submits only after explicit user confirmation.
 10. Update `data/tracker.md` after outreach, application, replies, interviews, closures, or deferrals.
 
-During `job:run`, child-skill results are internal progress, not user-facing stop points. `job:run` should continue through its plan until the final summary or a hard blocker.
+During `job-tracker:run`, child-skill results are internal progress, not user-facing stop points. `job-tracker:run` should continue through its plan until the final summary or a hard blocker.
 
 ## Hard Rules
 
 - Do not bypass `job:*` skills by writing their expected artifacts directly.
-- Company research sections in `data/companies/*/prep-notes.md` must be produced through `job:company`.
-- `### Manual Message Drafts` must be produced through `job:draft`.
+- Company research sections in `data/companies/*/prep-notes.md` must be produced through `job-tracker:company`.
+- `### Manual Message Drafts` must be produced through `job-tracker:draft`.
 - Having research, contact, or draft data already in context is not a valid reason to skip the relevant skill.
-- `job:run` must call the relevant `job:*` skill instead of reconstructing that skill's output manually.
+- `job-tracker:run` must call the relevant `job:*` skill instead of reconstructing that skill's output manually.
 - Never mark outreach, applications, LinkedIn messages, connection requests, or email as sent/submitted unless the user explicitly says they did it outside the tool and asks to update status.
-- `job:apply` is the only workflow that may submit an ATS/job application from the browser, and only after explicit user confirmation in the same run. It must never send LinkedIn messages, connection requests, emails, or referral outreach.
+- `job-tracker:apply` is the only workflow that may submit an ATS/job application from the browser, and only after explicit user confirmation in the same run. It must never send LinkedIn messages, connection requests, emails, or referral outreach.
 
 ## Skills / Commands
 
-Use `job:action` commands to run skills:
+Use `job-tracker:action` commands to run skills:
 
 | Command | Runs |
 |---|---|
-| `job:setup` | run the first-step interactive readiness check before `job:run` |
-| `job:health` | check tracker/profile/company/CV/PDF consistency and recommend narrow fixes |
-| `job:status` | inspect tracker and recommend next actions |
-| `job:run [profile?] [target]` | orchestrate search, company prep, manual message drafts, CV, fit, PDF, tracker updates, and final summary |
-| `job:find` | find new leads, verify them at source, add them to `Raw Pipeline`, and report checked/skipped/blocked sources |
-| `job:verify` | verify tracked jobs or run intake/prep/final reviewer passes |
-| `job:profile [action]` | inspect, switch, validate, add, or remove job-search profiles |
-| `job:company Company` | research one company, ATS, active roles, contacts, tech stack, and prep notes |
-| `job:draft Company` | prepare and save manual recruiter, engineering-manager, founder, or referral message drafts |
-| `job:cv Company` | create or update a company-specific Markdown CV |
-| `job:fit resume.md job-url` | score a CV against a vacancy via subagent and suggest concrete edits |
-| `job:stories [Company]` | map or maintain factual STAR stories for interview preparation |
-| `job:pdf resume.md` | export a Markdown CV or cover letter to PDF using the configured generator |
-| `job:apply Company\|url` | scout, prepare, fill, and optionally submit an ATS application after explicit confirmation |
+| `job-tracker:setup` | run the first-step interactive readiness check before `job-tracker:run` |
+| `job-tracker:health` | check tracker/profile/company/CV/PDF consistency and recommend narrow fixes |
+| `job-tracker:status` | inspect tracker and recommend next actions |
+| `job-tracker:run [profile?] [target]` | orchestrate search, company prep, manual message drafts, CV, fit, PDF, tracker updates, and final summary |
+| `job-tracker:find` | find new leads, verify them at source, add them to `Raw Pipeline`, and report checked/skipped/blocked sources |
+| `job-tracker:verify` | verify tracked jobs or run intake/prep/final reviewer passes |
+| `job-tracker:profile [action]` | inspect, switch, validate, add, or remove job-search profiles |
+| `job-tracker:company Company` | research one company, ATS, active roles, contacts, tech stack, and prep notes |
+| `job-tracker:draft Company` | prepare and save manual recruiter, engineering-manager, founder, or referral message drafts |
+| `job-tracker:cv Company` | create or update a company-specific Markdown CV |
+| `job-tracker:fit resume.md job-url` | score a CV against a vacancy via subagent and suggest concrete edits |
+| `job-tracker:stories [Company]` | map or maintain factual STAR stories for interview preparation |
+| `job-tracker:pdf resume.md` | export a Markdown CV or cover letter to PDF using the configured generator |
+| `job-tracker:apply Company\|url` | scout, prepare, fill, and optionally submit an ATS application after explicit confirmation |
 
 Each skill reads `config/language.md` and replies in Ukrainian by default. CVs, cover letters, and manual message drafts are in English unless requested otherwise.
 
@@ -266,15 +279,15 @@ Profile selection is simple:
 - Existing tracked jobs use the row-level `Profile` value in `data/tracker.md`.
 - Other job skills resolve the right profile themselves from those two rules.
 
-`job:profile` manages profile configuration:
+`job-tracker:profile` manages profile configuration:
 
-- `job:profile status` shows the active profile and profile health.
-- `job:profile use <slug>` switches the active profile for future discovery.
-- `job:profile add <slug>` creates a new profile.
-- `job:profile remove <slug>` deletes an unused profile.
-- `job:profile validate` checks settings, profile files, and tracker profile values.
+- `job-tracker:profile status` shows the active profile and profile health.
+- `job-tracker:profile use <slug>` switches the active profile for future discovery.
+- `job-tracker:profile add <slug>` creates a new profile.
+- `job-tracker:profile remove <slug>` deletes an unused profile.
+- `job-tracker:profile validate` checks settings, profile files, and tracker profile values.
 
-Do not pass profile slugs to other job commands. The one exception is `job:run`, which may take a profile slug and switches the active profile via `job:profile use` before running.
+Do not pass profile slugs to other job commands. The one exception is `job-tracker:run`, which may take a profile slug and switches the active profile via `job-tracker:profile use` before running.
 
 ## Configuration
 
@@ -355,7 +368,7 @@ All configured paths are relative to the repository root.
 - Verify job leads on the company careers page or ATS before adding them as active.
 - Treat LinkedIn-only leads as unverified until confirmed at the source of truth.
 - Outreach workflows prepare manual message drafts only and save them in prep notes. The user writes/sends manually outside the skills.
-- Broad `job:find` runs must end with a source report showing checked, skipped, blocked, and found sources.
+- Broad `job-tracker:find` runs must end with a source report showing checked, skipped, blocked, and found sources.
 - LinkedIn, Djinni, browser-filtered boards, and JavaScript-rendered ATS pages must be checked through browser MCP, preferably Playwright MCP or Chrome DevTools MCP. If login is required, log in manually in the opened browser and let the agent continue. Do not replace these checks with plain web-search snippets.
 
 ## Porting To Another Candidate
@@ -364,12 +377,12 @@ To reuse this workspace for another person:
 
 1. Replace `candidate/candidate.md`.
 2. Adjust `config/language.md`.
-3. Use `job:profile` to create, validate, or switch the active search profile.
+3. Use `job-tracker:profile` to create, validate, or switch the active search profile.
 4. Adjust `strategy/sources.md`.
 5. Update `config/paths.md` only if the repository layout differs.
 6. Replace `candidate/cv/cv-base.md` and company-specific CVs.
 7. Run `node scripts/install.js all`.
-8. Run `job:setup`.
+8. Run `job-tracker:setup`.
 
 The skill files should stay generic.
 

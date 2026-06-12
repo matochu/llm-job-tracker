@@ -40,7 +40,7 @@ test('scaffolds a workspace without install', () => {
   assert.equal(existsSync(join(target, 'candidate', 'cv', 'cv-base.md')), true);
   assert.equal(existsSync(join(target, 'strategy', 'search-profiles', 'default.md')), true);
   assert.equal(existsSync(join(target, 'data', 'tracker.md')), true);
-  assert.equal(existsSync(join(target, 'skills', 'job-setup', 'SKILL.md')), true);
+  assert.equal(existsSync(join(target, 'skills', 'setup', 'SKILL.md')), true);
   assert.equal(existsSync(join(target, 'scripts', 'install.js')), true);
   assert.equal(existsSync(join(target, 'scripts', 'check-public.js')), false);
 
@@ -96,9 +96,9 @@ test('installs local agent integrations with JS installer', () => {
   assert.equal(result.status, 0, result.stderr);
   assert.equal(existsSync(join(target, 'CLAUDE.md')), true);
   assert.equal(existsSync(join(target, 'AGENTS.md')), true);
-  assert.equal(existsSync(join(target, '.claude', 'skills', 'job-setup', 'SKILL.md')), true);
+  assert.equal(existsSync(join(target, '.claude', 'skills', 'setup', 'SKILL.md')), true);
   assert.equal(existsSync(join(target, '.claude', 'settings.json')), true);
-  assert.equal(existsSync(join(target, '.codex', 'skills', 'job-setup', 'SKILL.md')), true);
+  assert.equal(existsSync(join(target, '.codex', 'skills', 'setup', 'SKILL.md')), true);
   assert.equal(existsSync(join(target, '.codex', 'hooks.json')), true);
   assert.equal(existsSync(join(target, '.codex', 'rules', 'default.rules')), true);
 });
@@ -123,7 +123,7 @@ test('updates an existing workspace by default and preserves protected files', (
 
   writeFileSync(join(target, 'config', 'settings.md'), 'PRIVATE SETTINGS\n');
   writeFileSync(join(target, 'candidate', 'candidate.md'), 'PRIVATE CANDIDATE\n');
-  writeFileSync(join(target, 'skills', 'job-setup', 'SKILL.md'), 'OLD MANAGED SKILL\n');
+  writeFileSync(join(target, 'skills', 'setup', 'SKILL.md'), 'OLD MANAGED SKILL\n');
 
   const result = runCli([target, '--no-install']);
 
@@ -131,7 +131,7 @@ test('updates an existing workspace by default and preserves protected files', (
   assert.match(result.stdout, /workspace updated/);
   assert.equal(readFileSync(join(target, 'config', 'settings.md'), 'utf8'), 'PRIVATE SETTINGS\n');
   assert.equal(readFileSync(join(target, 'candidate', 'candidate.md'), 'utf8'), 'PRIVATE CANDIDATE\n');
-  assert.notEqual(readFileSync(join(target, 'skills', 'job-setup', 'SKILL.md'), 'utf8'), 'OLD MANAGED SKILL\n');
+  assert.notEqual(readFileSync(join(target, 'skills', 'setup', 'SKILL.md'), 'utf8'), 'OLD MANAGED SKILL\n');
 });
 
 test('update dry-run does not write files', () => {
@@ -139,14 +139,14 @@ test('update dry-run does not write files', () => {
   const target = join(parent, 'workspace');
   const scaffold = runCli([target, '--no-install']);
   assert.equal(scaffold.status, 0, scaffold.stderr);
-  writeFileSync(join(target, 'skills', 'job-setup', 'SKILL.md'), 'OLD MANAGED SKILL\n');
+  writeFileSync(join(target, 'skills', 'setup', 'SKILL.md'), 'OLD MANAGED SKILL\n');
 
   const result = runCli(['update', target, '--dry-run']);
 
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /update skills/);
   assert.match(result.stdout, /preserve candidate/);
-  assert.equal(readFileSync(join(target, 'skills', 'job-setup', 'SKILL.md'), 'utf8'), 'OLD MANAGED SKILL\n');
+  assert.equal(readFileSync(join(target, 'skills', 'setup', 'SKILL.md'), 'utf8'), 'OLD MANAGED SKILL\n');
 });
 
 test('explicit update refuses a non-workspace target', () => {

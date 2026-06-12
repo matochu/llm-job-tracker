@@ -1,7 +1,7 @@
 ---
-name: job:stories
-description: Maintains a factual interview story bank, maps existing stories to job requirements, and proposes user-confirmed STAR stories for interviews without inventing experience.
-argument-hint: [company-or-role-or-story-topic]
+name: job-tracker:stories
+description: "Maintains a factual interview story bank, maps existing stories to job requirements, and proposes user-confirmed STAR stories for interviews without inventing experience."
+argument-hint: "[company-or-role-or-story-topic]"
 ---
 
 Maintain and use the interview story bank.
@@ -45,8 +45,8 @@ Every story must have a stable ID: `S001`, `S002`, `S003`, and so on.
 
 Use IDs in other outputs:
 
-- `job:fit`: `S003 covers ambiguity; S007 is a stretch for observability.`
-- `job:run`: `story gap: no Ready story for incident/debugging questions.`
+- `job-tracker:fit`: `S003 covers ambiguity; S007 is a stretch for observability.`
+- `job-tracker:run`: `story gap: no Ready story for incident/debugging questions.`
 - prep notes: `Interview prep: use S002 and S005.`
 
 Do not duplicate full stories into company prep notes unless the user asks for a company-specific interview plan.
@@ -70,7 +70,7 @@ Do not duplicate full stories into company prep notes unless the user asks for a
    - mark unsupported details as `Needs user confirmation`
 6. When improving a story, update both the index row and detail section.
 7. When a story is used in a real interview, update `Use Count` and `Last Used` only after the user explicitly says it was used.
-8. If called by `job:fit` or `job:run`, return story matches and gaps as internal preparation input, not as a stop point. When called by `job:run` and runnable internal work remains, report `Run progress` and the exact `Next internal step:`.
+8. If called by `job-tracker:fit` or `job-tracker:run`, return story matches and gaps as internal preparation input, not as a stop point. When called by `job-tracker:run` and runnable internal work remains, report `Run progress` and the exact `Next internal step:`.
 
 ## Story Quality Rules
 
@@ -103,7 +103,7 @@ Reply in the configured assistant language and include:
 - story mapping table with ID, fit, and framing
 - questions for user confirmation, if needed
 - suggested story-bank edits, if any
-- when called by `job:run` and runnable internal work remains, `Run progress` plus `Next internal step`
-- footer with `Active profile: <slug>` and context-specific `job:action` next actions from `config/next-actions.md`
+- when called by `job-tracker:run` and runnable internal work remains, `Run progress` plus `Next internal step`
+- footer with `Active profile: <slug>` and context-specific `job-tracker:action` next actions from `config/next-actions.md`
 
 If no useful next action exists, use `Next actions: No immediate next action`.

@@ -15,5 +15,5 @@ node scripts/check-deps.js
 Then in the LLM tool run:
 
 ```text
-job:setup
+job-tracker:setup
 ```

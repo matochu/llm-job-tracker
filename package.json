@@ -35,6 +35,7 @@
     "check:public": "node scripts/check-public.js",
     "check:workspace": "node scripts/check-workspace.js",
     "check:deps": "node scripts/check-deps.js",
+    "build:plugin": "node scripts/build-plugin.js",
     "install:agents": "node scripts/install.js all"
   },
   "keywords": [

@@ -1,7 +1,7 @@
 ---
-name: job:status
-description: Reviews the configured tracker and prep notes, summarizes current pipeline status, and proposes letter-key next actions that can trigger follow-up skills or tracker updates.
-argument-hint: [company-or-section]
+name: job-tracker:status
+description: "Reviews the configured tracker and prep notes, summarizes current pipeline status, and proposes letter-key next actions that can trigger follow-up skills or tracker updates."
+argument-hint: "[company-or-section]"
 ---
 
 Review job-search status and propose next actions.
@@ -58,7 +58,7 @@ Do not generate ad hoc `for company in ...; do ...; done` shell loops for status
    - needs verification
    - should be deferred or archived
 5. Produce a concise status summary.
-6. Provide a footer with `Active profile: <slug>` and a context-specific `job:action` menu using `config/next-actions.md`. If multiple companies need the same `job:action`, group them into one next action instead of repeating separate single-company actions.
+6. Provide a footer with `Active profile: <slug>` and a context-specific `job-tracker:action` menu using `config/next-actions.md`. If multiple companies need the same `job-tracker:action`, group them into one next action instead of repeating separate single-company actions.
 
 ## Action Handling
 
@@ -97,5 +97,5 @@ After the board:
 ### Footer
 
 - recommended next action first
-- grouped next action when several companies need the same `job:action`
-- footer with `Active profile: <slug>` and context-specific `job:action` next actions; `Next actions` must contain only agent-runnable `job:*` actions
+- grouped next action when several companies need the same `job-tracker:action`
+- footer with `Active profile: <slug>` and context-specific `job-tracker:action` next actions; `Next actions` must contain only agent-runnable `job:*` actions

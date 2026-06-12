@@ -5,7 +5,7 @@ the resumable source of truth: plan, progress, decisions, blockers, resume
 point, and insights all live in it. Raw logs are optional and never the source
 of truth.
 
-`job:run` must write one Session Report. Other long-running skills may adopt the
+`job-tracker:run` must write one Session Report. Other long-running skills may adopt the
 same format later; this file is the format authority.
 
 ## Paths
@@ -48,7 +48,7 @@ pause is resumable. The user-facing next action for that state is always
 # Session Report
 
 - ID: 2026-06-07T103000
-- Skill: job:run
+- Skill: job-tracker:run
 - Status: running
 - Profile: <slug>
 - Mode: broad | company | filter
@@ -123,13 +123,13 @@ Section meaning:
 ## Update Rules
 
 - Create the report at run start with `Status: running` and fill Goal and Plan.
-- Update the report after each child skill and tracker update (`job:find`,
-  `job:verify`, `job:company`, `job:draft`, `job:cv`, `job:fit`, `job:stories`,
-  `job:pdf`, tracker moves/metadata edits), refreshing `Updated`, Plan,
+- Update the report after each child skill and tracker update (`job-tracker:find`,
+  `job-tracker:verify`, `job-tracker:company`, `job-tracker:draft`, `job-tracker:cv`, `job-tracker:fit`, `job-tracker:stories`,
+  `job-tracker:pdf`, tracker moves/metadata edits), refreshing `Updated`, Plan,
   Progress, Tracker Updates, Files Changed, Artifacts, and Resume Point.
 - Keep `Plan`, `Progress`, and `Resume Point` consistent. If Progress says
-  `job:cv ExampleCo` is done, Resume Point cannot still say the last completed
-  step was `job:draft ExampleCo`.
+  `job-tracker:cv ExampleCo` is done, Resume Point cannot still say the last completed
+  step was `job-tracker:draft ExampleCo`.
 - Record decisions and blockers when they happen, not only at the end.
 - On final summary, set `Status: done` (or `blocked`/`abandoned`) and fill
   Summary, Resume Point, Files Changed, Artifacts, and Agent Insights.

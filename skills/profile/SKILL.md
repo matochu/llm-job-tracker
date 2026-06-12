@@ -1,7 +1,7 @@
 ---
-name: job:profile
-description: Manages job-search profile configuration: active profile, profile files, validation, switching, adding, and removing profiles.
-argument-hint: status | list | validate | use <slug> | add <slug> | remove <slug>
+name: job-tracker:profile
+description: "Manages job-search profile configuration: active profile, profile files, validation, switching, adding, and removing profiles."
+argument-hint: "status | list | validate | use <slug> | add <slug> | remove <slug>"
 ---
 
 Manage job-search profiles.
@@ -41,7 +41,7 @@ If the action is ambiguous, ask one concise follow-up question.
 
 1. Never create or keep a generic `default.md`.
 2. Profile slugs must be lowercase kebab-case or short lowercase names, such as `frontend`, `ai`, `barcelona-product`, or `platform`.
-3. Do not pass profile slugs through other job commands, except `job:run`, which may take a profile slug and switches the active profile via `job:profile use` before running. Other skills read the active profile from `config/settings.md` for new discovery or the row-level `Profile` in `data/tracker.md` for tracked jobs.
+3. Do not pass profile slugs through other job commands, except `job-tracker:run`, which may take a profile slug and switches the active profile via `job-tracker:profile use` before running. Other skills read the active profile from `config/settings.md` for new discovery or the row-level `Profile` in `data/tracker.md` for tracked jobs.
 4. When switching active profile:
    - require the profile file to exist
    - update both `Profile slug` and `Profile file` in `config/settings.md`
@@ -140,4 +140,4 @@ Reply in the configured assistant language and include:
 - profiles changed or created
 - validation errors, if any
 - exact files changed
-- footer with `Active profile: <slug>` and context-specific `job:action` next actions using `config/next-actions.md`
+- footer with `Active profile: <slug>` and context-specific `job-tracker:action` next actions using `config/next-actions.md`

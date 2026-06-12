@@ -1,7 +1,7 @@
 ---
-name: job:apply
-description: Prepares and optionally submits a job application through browser MCP: opens the ATS form, scouts fields, prepares answers, fills only after review, and clicks submit only after explicit user confirmation in the same run.
-argument-hint: <company-or-application-url>
+name: job-tracker:apply
+description: "Prepares and optionally submits a job application through browser MCP: opens the ATS form, scouts fields, prepares answers, fills only after review, and clicks submit only after explicit user confirmation in the same run."
+argument-hint: "<company-or-application-url>"
 ---
 
 Prepare an application form and optionally submit it after explicit confirmation.
@@ -35,7 +35,7 @@ If the request names a tracked company, also read the matching tracker row, `dat
 
 This skill handles application form preparation, controlled filling, and optional submission.
 
-It is separate from `job:draft`: `job:draft` prepares manual LinkedIn/email/referral message drafts. `job:apply` works with ATS/job application forms.
+It is separate from `job-tracker:draft`: `job-tracker:draft` prepares manual LinkedIn/email/referral message drafts. `job-tracker:apply` works with ATS/job application forms.
 
 ## Browser Rules
 
@@ -68,9 +68,9 @@ Do not submit LinkedIn connection requests, LinkedIn messages, emails, or referr
    - direct application URL
    - current browser tab if the user explicitly asks to use it
 2. Verify prerequisites:
-   - tailored CV exists or queue `job:cv`
-   - PDF exists or queue `job:pdf`
-   - fit review exists or recommend `job:fit` when needed
+   - tailored CV exists or queue `job-tracker:cv`
+   - PDF exists or queue `job-tracker:pdf`
+   - fit review exists or recommend `job-tracker:fit` when needed
 3. Open the application form with browser MCP.
 4. Identify ATS or form type:
    - Ashby
@@ -132,6 +132,6 @@ Reply in the configured assistant language and include:
 - submit status: not submitted / submitted after explicit confirmation / blocked
 - tracker/prep-note updates, if any
 - manual user actions, when relevant, without shortcut letters
-- footer with `Active profile: <slug>` and context-specific `job:action` next actions from `config/next-actions.md`
+- footer with `Active profile: <slug>` and context-specific `job-tracker:action` next actions from `config/next-actions.md`
 
 `Next actions` must contain only agent-runnable `job:*` actions.

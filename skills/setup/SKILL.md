@@ -1,10 +1,10 @@
 ---
-name: job:setup
-description: Runs the first-step interactive readiness check for job-search configuration, dependencies, profiles, base CV, tracker, sources, browser MCP, PDF setup, and run prerequisites.
+name: job-tracker:setup
+description: "Runs the first-step interactive readiness check for job-search configuration, dependencies, profiles, base CV, tracker, sources, browser MCP, PDF setup, and run prerequisites."
 argument-hint:
 ---
 
-Check whether the workspace is ready for `job:run`.
+Check whether the workspace is ready for `job-tracker:run`.
 
 This is an interactive setup assistant. It performs a full preflight and asks the user concrete questions for missing or weak configuration. It does not install the skill system and does not run `node scripts/install.js`.
 
@@ -28,7 +28,7 @@ Before starting, read existing files when present:
 
 ## Scope
 
-Run `job:setup` as the first user-facing step after installing this workspace.
+Run `job-tracker:setup` as the first user-facing step after installing this workspace.
 
 This skill runs as an interactive setup dialog. It does not just report — it asks questions and immediately writes the answers into the appropriate config files.
 
@@ -49,7 +49,7 @@ Forbidden actions:
 - do not create a full base CV from scratch without user-provided resume content
 - do not change the active profile without explicit user confirmation
 - do not add job sources without user confirmation
-- do not start `job:run`
+- do not start `job-tracker:run`
 
 ## Review Checklist
 
@@ -99,7 +99,9 @@ Dialog order (highest to lowest priority):
 6. **Sources** — if `strategy/sources.md` has no usable entries for the active profile, ask which job boards/platforms the user wants to search.
 7. **Tracker** — if `data/tracker.md` is missing, offer to create a scaffold with one confirmation question.
 8. **Dependencies** — run `node scripts/check-deps.js` and report results.
-9. **Version check** — read `config/.installed-version`. Run `npm view llm-job-tracker version --json` to get the latest. If installed < latest, show what changed (read relevant sections from `CHANGELOG.md`) and suggest: `npx llm-job-tracker update .` If `.installed-version` is missing, note it as a warning but do not block setup.
+9. **Version check** — detect install mode via `echo "$CLAUDE_PLUGIN_ROOT"`.
+   - Plugin mode (`CLAUDE_PLUGIN_ROOT` set): read version from `$CLAUDE_PLUGIN_ROOT/.claude-plugin/plugin.json`, compare with the latest GitHub release (`gh release list --repo matochu/llm-job-tracker --limit 1`). If outdated, show what changed from `CHANGELOG.md` and tell the user to re-upload the latest plugin zip in Cowork (the agent cannot self-update a plugin).
+   - Workspace mode (not set): read `config/.installed-version`, compare with `npm view llm-job-tracker version --json`. If outdated, show changes and suggest `npx llm-job-tracker update .` If `.installed-version` is missing, note as warning but do not block setup.
 
 Do not ask more than three questions in one response. After writing, always confirm: "Saved to `<path>`. Moving to next item."
 
@@ -107,9 +109,9 @@ Do not ask more than three questions in one response. After writing, always conf
 
 After completing all dialog rounds, return a final verdict:
 
-- `pass`: ready for `job:run`
-- `warning`: ready for `job:run`, but warnings should be addressed soon
-- `blocked`: not ready for `job:run`; user input is required (shown mid-dialog when a blocker cannot be resolved automatically)
+- `pass`: ready for `job-tracker:run`
+- `warning`: ready for `job-tracker:run`, but warnings should be addressed soon
+- `blocked`: not ready for `job-tracker:run`; user input is required (shown mid-dialog when a blocker cannot be resolved automatically)
 
 ## Output
 
@@ -125,7 +127,7 @@ During the dialog, each response includes:
 Final response (after all items resolved) includes:
 
 - `Verdict: pass|warning|blocked`
-- `Ready for job:run: yes|no`
+- `Ready for job-tracker:run: yes|no`
 - summary of what was configured this session
 - warnings for items skipped or partially filled
-- footer with `Active profile: <slug-or-missing>` and context-specific `job:action` next actions using `config/next-actions.md`
+- footer with `Active profile: <slug-or-missing>` and context-specific `job-tracker:action` next actions using `config/next-actions.md`

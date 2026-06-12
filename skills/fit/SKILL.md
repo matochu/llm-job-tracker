@@ -1,7 +1,7 @@
 ---
-name: job:fit
-description: Scores a CV against a specific vacancy, checks configured CV style, keyword coverage, risks, interview readiness, and suggests concrete edits.
-argument-hint: <path/to/resume.md> <vacancy-url-or-path-or-paste>
+name: job-tracker:fit
+description: "Scores a CV against a specific vacancy, checks configured CV style, keyword coverage, risks, interview readiness, and suggests concrete edits."
+argument-hint: "<path/to/resume.md> <vacancy-url-or-path-or-paste>"
 ---
 
 Review a CV against a specific vacancy.
@@ -48,7 +48,7 @@ Subagent responsibilities:
 
 If subagents are unavailable, perform the review in the main agent and state that subagent execution was unavailable.
 
-If this skill is called by `job:run`, its output is an internal fit-review result for the orchestrator. Suggested CV edits, PDF export, or tracker updates must be added to the `job:run` internal action queue when appropriate, not treated as user-facing stop points. Report `Run progress` and the exact `Next internal step:` when runnable internal work remains.
+If this skill is called by `job-tracker:run`, its output is an internal fit-review result for the orchestrator. Suggested CV edits, PDF export, or tracker updates must be added to the `job-tracker:run` internal action queue when appropriate, not treated as user-facing stop points. Report `Run progress` and the exact `Next internal step:` when runnable internal work remains.
 
 ## Workflow
 
@@ -69,8 +69,8 @@ If this skill is called by `job:run`, its output is an internal fit-review resul
    - over-targeting or invented evidence
    - readability and ATS compatibility
 6. Suggest concrete edits. Do not apply edits unless the user asks.
-7. Match existing interview stories from `candidate/stories.md` to the vacancy themes using story IDs. Report `Strong`, `Workable`, `Stretch`, or `Gap` for each important interview theme. If coverage is missing, suggest `job:stories [company-or-topic]` questions instead of inventing stories.
-8. If the user asks, apply edits and suggest `job:pdf [resume.md]`.
+7. Match existing interview stories from `candidate/stories.md` to the vacancy themes using story IDs. Report `Strong`, `Workable`, `Stretch`, or `Gap` for each important interview theme. If coverage is missing, suggest `job-tracker:stories [company-or-topic]` questions instead of inventing stories.
+8. If the user asks, apply edits and suggest `job-tracker:pdf [resume.md]`.
 
 ## Output
 
@@ -112,11 +112,11 @@ Reply in the configured assistant language using this structure:
 
 - Use story IDs from `candidate/stories.md`.
 - Include fit level and framing notes for each story.
-- List gaps as questions for `job:stories`, not fabricated examples.
+- List gaps as questions for `job-tracker:stories`, not fabricated examples.
 
 Active profile: <slug>
 
 ## Next actions
 
-- context-specific `job:action` next actions from `config/next-actions.md`
+- context-specific `job-tracker:action` next actions from `config/next-actions.md`
 ```

@@ -4,7 +4,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { readEvent, repoRoot, warn } from './hooklib.js';
 
-const vagueNextStepRe = /^\s*(?:next step|next action|continue with|наступний крок|далі)\s*:?\s*`?job:[a-z-]+/im;
+const vagueNextStepRe = /^\s*(?:next step|next action|continue with|наступний крок|далі)\s*:?\s*`?job-tracker:[a-z-]+/im;
 
 function assistantText(event) {
   const candidates = [event.assistant_response, event.assistantResponse, event.response, event.message, event.text, event.content, event.raw_stdin];
@@ -29,9 +29,9 @@ function main() {
   const hasVagueNextStep = vagueNextStepRe.test(text);
   const hasFrameworkContinuation = text.includes('Next internal step:') || text.includes('Next actions:');
   if (hasVagueNextStep && !hasFrameworkContinuation) {
-    warn('Job-search stop warning: vague `job:*` continuation detected. Use `Next internal step: run ...` for running `job:run`, or a proper `Next actions:` footer. For paused resumable `job:run`, show only `[n] Continue Run` with the compact run plan and resume point.');
+    warn('Job-search stop warning: vague `job-tracker:*` continuation detected. Use `Next internal step: run ...` for running `job-tracker:run`, or a proper `Next actions:` footer. For paused resumable `job-tracker:run`, show only `[n] Continue Run` with the compact run plan and resume point.');
   }
-  warn('Job-search stop reminder: final reply should be Ukrainian unless producing recruiter-facing English; mention changed files, verification status, `Active profile: <slug>`, and concise `job:action` Next actions when useful.');
+  warn('Job-search stop reminder: final reply should be Ukrainian unless producing recruiter-facing English; mention changed files, verification status, `Active profile: <slug>`, and concise `job-tracker:action` Next actions when useful.');
   return 0;
 }
 

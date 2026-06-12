@@ -1,7 +1,7 @@
 ---
-name: job:company
-description: Researches one target company for the configured job-search profile: active jobs, ATS, tech stack, referral contacts, outreach strategy, and prep notes.
-argument-hint: <company-name-or-slug>
+name: job-tracker:company
+description: "Researches one target company for the configured job-search profile: active jobs, ATS, tech stack, referral contacts, outreach strategy, and prep notes."
+argument-hint: "<company-name-or-slug>"
 ---
 
 Research one target company for the configured candidate.
@@ -45,20 +45,20 @@ Before starting, read:
 6. Extract tech stack from job descriptions, company docs, engineer profiles, or public sources.
 7. Create or update `data/companies/[slug]/prep-notes.md`.
 8. Update tracker if the company should move from Raw Pipeline to active pipeline, monitoring, or archive.
-9. If useful recruiter, engineering, founder, or referral contacts were found, run `job:draft [company]` after prep notes are saved so manual message drafts are prepared in the same prep-notes file.
-   - `job:draft` must only prepare drafts and update `### Manual Message Drafts`.
+9. If useful recruiter, engineering, founder, or referral contacts were found, run `job-tracker:draft [company]` after prep notes are saved so manual message drafts are prepared in the same prep-notes file.
+   - `job-tracker:draft` must only prepare drafts and update `### Manual Message Drafts`.
    - Do not send messages, connection requests, emails, LinkedIn messages, or applications.
-   - If the current tool cannot run another skill in the same turn, make `job:draft [company]` the first recommended next action.
+   - If the current tool cannot run another skill in the same turn, make `job-tracker:draft [company]` the first recommended next action.
 
-If this skill is called by `job:run`, its output is an internal company-prep result for the orchestrator. Do not use a user-facing `Next actions` footer for runnable `job:run` work. Report `Run progress` and the exact `Next internal step:` instead, such as `run job:draft [company]`, `run job:cv [company]`, or a tracker update.
+If this skill is called by `job-tracker:run`, its output is an internal company-prep result for the orchestrator. Do not use a user-facing `Next actions` footer for runnable `job-tracker:run` work. Report `Run progress` and the exact `Next internal step:` instead, such as `run job-tracker:draft [company]`, `run job-tracker:cv [company]`, or a tracker update.
 
 ## Enforcement
 
 This skill is the required path for producing company research and prep-note research sections. Do not bypass it by writing `data/companies/*/prep-notes.md` research sections directly from context.
 
-Having company, role, ATS, or contact data already in context is not a valid reason to skip `job:company`.
+Having company, role, ATS, or contact data already in context is not a valid reason to skip `job-tracker:company`.
 
-When useful contacts exist, the `job:draft [company]` step is mandatory after prep notes are saved. If another skill cannot run in the same turn, do not write manual message drafts yourself; make `job:draft [company]` the first next action.
+When useful contacts exist, the `job-tracker:draft [company]` step is mandatory after prep notes are saved. If another skill cannot run in the same turn, do not write manual message drafts yourself; make `job-tracker:draft [company]` the first next action.
 
 ## Prep Notes Template
 
@@ -123,5 +123,5 @@ Reply in the configured assistant language and include:
 - relevant active roles
 - best contacts
 - tracker/prep-notes changes
-- whether manual message drafts were prepared via `job:draft`
-- footer with `Active profile: <slug>` and context-specific `job:action` next actions using `config/next-actions.md`
+- whether manual message drafts were prepared via `job-tracker:draft`
+- footer with `Active profile: <slug>` and context-specific `job-tracker:action` next actions using `config/next-actions.md`
