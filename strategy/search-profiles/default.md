@@ -46,6 +46,14 @@ Describe the target role family and candidate positioning.
 
 - 
 
+## Fit Score Bands
+
+Adjust thresholds to match your search strategy. These are conservative defaults.
+
+- **Strong apply (≥45/60):** apply immediately, no tailoring needed.
+- **Apply with tailoring (35–44/60):** worth applying; address top gaps in CV before sending.
+- **Low ROI (<35/60):** skip unless strong referral or very low competition.
+
 ## Tracker Tag
 
 Use this tag in tracker notes when useful:

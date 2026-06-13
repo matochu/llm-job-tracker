@@ -22,6 +22,7 @@ const includeEntries = [
   'hooks',
   'scripts',
   'templates',
+  'migrations',
   'config',
   'candidate',
   'strategy',

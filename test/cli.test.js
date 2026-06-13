@@ -342,6 +342,71 @@ test('install.js removes stale skill dirs from .claude/skills and .codex/skills'
   assert.equal(existsSync(join(target, '.claude', 'skills', 'run', 'SKILL.md')), true);
 });
 
+test('update seeds missing candidate/application-answers.md', () => {
+  const parent = makeTempDir();
+  const target = join(parent, 'workspace');
+  const scaffold = runCli([target, '--no-install']);
+  assert.equal(scaffold.status, 0, scaffold.stderr);
+  // remove the seeded file to simulate missing state
+  rmSync(join(target, 'candidate', 'application-answers.md'));
+
+  const result = runCli(['update', target, '--no-install']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(existsSync(join(target, 'candidate', 'application-answers.md')), true);
+});
+
+test('update does not overwrite existing candidate/application-answers.md', () => {
+  const parent = makeTempDir();
+  const target = join(parent, 'workspace');
+  const scaffold = runCli([target, '--no-install']);
+  assert.equal(scaffold.status, 0, scaffold.stderr);
+  writeFileSync(join(target, 'candidate', 'application-answers.md'), '# My answers\n');
+
+  const result = runCli(['update', target, '--no-install']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(readFileSync(join(target, 'candidate', 'application-answers.md'), 'utf8'), '# My answers\n');
+});
+
+test('init writes config/.migrated-version equal to package version', () => {
+  const parent = makeTempDir();
+  const target = join(parent, 'workspace');
+
+  const result = runCli([target, '--no-install']);
+
+  assert.equal(result.status, 0, result.stderr);
+  const migratedFile = join(target, 'config', '.migrated-version');
+  assert.equal(existsSync(migratedFile), true);
+  const migratedVersion = readFileSync(migratedFile, 'utf8');
+  const installedVersion = readFileSync(join(target, 'config', '.installed-version'), 'utf8');
+  assert.equal(migratedVersion, installedVersion);
+  assert.match(migratedVersion, /^\d+\.\d+\.\d+$/);
+});
+
+test('update does not change config/.migrated-version', () => {
+  const parent = makeTempDir();
+  const target = join(parent, 'workspace');
+  const scaffold = runCli([target, '--no-install']);
+  assert.equal(scaffold.status, 0, scaffold.stderr);
+  writeFileSync(join(target, 'config', '.migrated-version'), '0.1.0');
+
+  const result = runCli(['update', target, '--no-install']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(readFileSync(join(target, 'config', '.migrated-version'), 'utf8'), '0.1.0');
+});
+
+test('init scaffolds migrations/0.3.0.md', () => {
+  const parent = makeTempDir();
+  const target = join(parent, 'workspace');
+
+  const result = runCli([target, '--no-install']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(existsSync(join(target, 'migrations', '0.3.0.md')), true);
+});
+
 test('install.js defaults to all in non-TTY mode', () => {
   const parent = makeTempDir();
   const target = join(parent, 'workspace');

@@ -61,7 +61,7 @@ If this skill is called by `job-tracker:run`, its output is an internal fit-revi
    - domain
    - top responsibilities
    - location/work mode
-4. Score fit using the configured rubric and resolved profile.
+4. Score fit using the configured rubric and resolved profile. After summing the score, apply the fit score bands from the resolved profile's `## Fit Score Bands` section to determine the verdict. If the profile has no `## Fit Score Bands` section, use the defaults from `strategy/criteria.md` (strong apply ≥45, apply with tailoring 35–44, low ROI <35).
 5. Check CV style and hygiene:
    - forbidden sections or phrases
    - career expectations quality
@@ -90,7 +90,11 @@ Reply in the configured assistant language using this structure:
 | Criterion | Score | Comment |
 |---|---:|---|
 
-**Total: NN/60 — verdict**
+**Total: NN/60**
+
+**Verdict: [Strong apply | Apply with tailoring | Low ROI / skip]** — [one-line reason tied to the resolved profile band]
+
+**Recommendation:** [concrete next step — e.g. "apply now", "fix top 2 gaps then apply", or "skip unless referral available"]
 
 ## Style / Hygiene
 

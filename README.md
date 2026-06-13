@@ -45,7 +45,11 @@ Update an existing workspace in place:
 ```bash
 cd my-job-search
 npx llm-job-tracker
+# then in your LLM tool:
+# job-tracker:health
 ```
+
+The CLI updates managed files (`skills/`, `scripts/`, `templates/`, `migrations/`, shared `config/` files). It never overwrites your data: `candidate/`, `data/`, `strategy/search-profiles/`, and personal `config/` files are protected. After the CLI update, run `job-tracker:health` — it seeds any missing protected-zone files and applies pending in-file migrations (adding new sections to existing files) with your confirmation.
 
 The CLI defaults to the current directory. Without an explicit command, it initializes empty/non-workspace targets and updates existing job-tracker workspaces.
 

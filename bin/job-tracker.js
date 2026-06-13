@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, statSync, writeFileSync, readFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
@@ -46,6 +46,7 @@ const initEntries = [
   'data',
   'skills',
   'scripts',
+  'migrations',
 ];
 
 const managedEntries = [
@@ -54,10 +55,16 @@ const managedEntries = [
   'skills',
   'scripts',
   'templates',
+  'migrations',
   'config/agent-instructions.md',
   'config/next-actions.md',
   'config/tracker-schema.md',
   'config/session-reports.md',
+];
+
+// Files seeded on init and on update only when missing; never overwritten.
+const seedIfMissingEntries = [
+  'candidate/application-answers.md',
 ];
 
 
@@ -240,6 +247,17 @@ function updateWorkspace(target, dryRun = false) {
     if (dryRun) console.log(`update ${entry}`);
     else copyEntry(src, dest, true);
   }
+  for (const entry of seedIfMissingEntries) {
+    const dest = resolve(target, entry);
+    if (existsSync(dest)) continue;
+    const src = resolve(repoRoot, entry);
+    if (!existsSync(src)) continue;
+    if (dryRun) console.log(`seed ${entry}`);
+    else {
+      mkdirSync(dirname(dest), { recursive: true });
+      copyEntry(src, dest, false);
+    }
+  }
   if (dryRun) {
     for (const entry of protectedEntries) console.log(`preserve ${entry}`);
   }
@@ -269,6 +287,7 @@ try {
     ensureInitTarget(target, opts.force);
     copyWorkspace(target, opts.force || isWorkspace(target));
     writeFileSync(resolve(target, 'config', '.installed-version'), pkgVersion);
+    writeFileSync(resolve(target, 'config', '.migrated-version'), pkgVersion);
     if (opts.install) runInstall(target);
     console.log(`\nLLM job tracker workspace initialized:\n${target}`);
   } else {
@@ -276,6 +295,7 @@ try {
     if (!opts.dryRun) writeFileSync(resolve(target, 'config', '.installed-version'), pkgVersion);
     if (opts.install && !opts.dryRun) runInstall(target);
     console.log(`\nLLM job tracker workspace ${opts.dryRun ? 'update plan checked' : 'updated'}:\n${target}`);
+    if (!opts.dryRun) console.log(`\nRun job-tracker:health to apply pending data migrations.`);
   }
 
   console.log(`\nNext steps:\n  1. Review candidate/candidate.md and candidate/cv/cv-base.md.\n  2. Review config/settings.md and strategy/search-profiles/default.md.\n  3. In your LLM tool, run: job-tracker:setup\n`);

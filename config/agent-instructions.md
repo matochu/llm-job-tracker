@@ -51,7 +51,7 @@ Search-specific targets, fit signals, reject rules, priority rules, application 
 
 - `job-tracker:find` — find new leads, verify them at source, add to Raw Pipeline.
 - `job-tracker:setup` — run the first-step interactive readiness check before `job-tracker:run`.
-- `job-tracker:health` — check tracker/profile/company/CV/PDF consistency and recommend narrow fixes.
+- `job-tracker:health` — check tracker/profile/company/CV/PDF consistency, seed missing protected-zone files, and apply pending in-file migrations from `migrations/<version>.md` with confirmation.
 - `job-tracker:run` — orchestrate the full search/prep/draft/CV/fit/stories/PDF path with frequent tracker updates and final summary.
 - `job-tracker:verify` — verify tracked roles and run coarse intake/prep/final reviewer passes for `job-tracker:run`.
 - `job-tracker:company` — research one company, roles, ATS, contacts, tech stack, prep notes.

@@ -9,6 +9,7 @@
   },
   "files": [
     "bin/",
+    "migrations/",
     "config/",
     "candidate/",
     "strategy/",
