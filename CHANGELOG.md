@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## 0.3.1 - 2026-06-13
+
+### Added
+
+- Fit score bands and apply/skip verdict thresholds in search profiles (`## Fit Score Bands` in each profile); `job-tracker:fit` now outputs a structured Verdict + Recommendation based on profile thresholds (defaults: strong apply ≥45/60, apply with tailoring 35–44, low ROI <35).
+- Migration mechanism for protected-zone evolution: CLI seeds missing files on init and update; `job-tracker:health` applies idempotent in-file migrations from `migrations/<version>.md` with confirmation; version markers `config/.installed-version` (CLI) and `config/.migrated-version` (health); works in plugin and workspace mode.
+- `migrations/0.3.1.md` — first migration: adds `## Fit Score Bands` to existing profiles, seeds `candidate/application-answers.md` in plugin mode, updates `config/paths.md` references.
+
+### Fixed
+
+- Partial migration failure no longer bumps `config/.migrated-version`; health stops on first failed step and reports the exact failure so re-runs are safe.
+- Seed steps skipped because source is missing are treated as failures (not satisfied); version marker is not bumped.
+- `bin/job-tracker.js`: unused `readFileSync` import removed; `seedIfMissingEntries` now creates parent directories before copying.
+
 ## 0.3.0 - 2026-06-13
 
 ### Added

@@ -404,7 +404,7 @@ test('init scaffolds migrations/0.3.0.md', () => {
   const result = runCli([target, '--no-install']);
 
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(existsSync(join(target, 'migrations', '0.3.0.md')), true);
+  assert.equal(existsSync(join(target, 'migrations', '0.3.1.md')), true);
 });
 
 test('install.js defaults to all in non-TTY mode', () => {
