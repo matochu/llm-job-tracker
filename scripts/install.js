@@ -188,9 +188,29 @@ function installOptionalFileIfMissing(src, dest) {
   console.log(`Installed ${dest}`);
 }
 
+function pruneStaleSkills(skillsDir, canonicalNames) {
+  if (!existsSync(skillsDir)) return;
+  for (const entry of readdirSync(skillsDir, { withFileTypes: true })) {
+    if (!canonicalNames.has(entry.name)) {
+      const stale = join(skillsDir, entry.name);
+      rmSync(stale, { recursive: true, force: true });
+      console.log(`Removed stale skill: ${entry.name}`);
+    }
+  }
+}
+
 function installClaudeProject(mode) {
   mkdirSync(join(repoRoot, '.claude'), { recursive: true });
-  linkOrCopyDir(join(repoRoot, 'skills'), join(repoRoot, '.claude', 'skills'), mode);
+  const claudeSkills = join(repoRoot, '.claude', 'skills');
+  const canonicalSkills = join(repoRoot, 'skills');
+  const canonicalNames = new Set(readdirSync(canonicalSkills, { withFileTypes: true })
+    .filter(e => e.isDirectory()).map(e => e.name));
+
+  // If .claude/skills exists as a non-symlink dir, prune stale entries before replacing
+  if (existsSync(claudeSkills) && !lstatSync(claudeSkills).isSymbolicLink()) {
+    pruneStaleSkills(claudeSkills, canonicalNames);
+  }
+  linkOrCopyDir(canonicalSkills, claudeSkills, mode);
   installClaudeSettings(join(repoRoot, 'scripts/llm-hooks/claude-settings.json'), join(repoRoot, '.claude/settings.json'));
   installAgentFile(join(repoRoot, 'CLAUDE.md'));
   console.log('Installed Claude project skills in .claude/');
@@ -199,6 +219,10 @@ function installClaudeProject(mode) {
 function installCodexProject(mode) {
   const codexSkills = join(repoRoot, '.codex', 'skills');
   mkdirSync(codexSkills, { recursive: true });
+
+  const canonicalNames = new Set(readdirSync(join(repoRoot, 'skills'), { withFileTypes: true })
+    .filter(e => e.isDirectory()).map(e => e.name));
+  pruneStaleSkills(codexSkills, canonicalNames);
 
   for (const entry of readdirSync(join(repoRoot, 'skills'), { withFileTypes: true })) {
     if (!entry.isDirectory()) continue;

@@ -206,6 +206,17 @@ function copyWorkspace(target, force) {
   mkdirSync(resolve(target, 'strategy', 'search-profiles'), { recursive: true });
 }
 
+function pruneStaleSkillDirs(targetSkills, srcSkills, dryRun) {
+  if (!existsSync(targetSkills)) return;
+  const canonical = new Set(readdirSync(srcSkills));
+  for (const name of readdirSync(targetSkills)) {
+    if (!canonical.has(name)) {
+      if (dryRun) console.log(`remove skills/${name}`);
+      else rmSync(resolve(targetSkills, name), { recursive: true, force: true });
+    }
+  }
+}
+
 function updateWorkspace(target, dryRun = false) {
   if (!existsSync(target) || !statSync(target).isDirectory()) throw new Error(`Workspace target is not a directory: ${target}`);
   if (!isWorkspace(target)) throw new Error(`Refusing to update non-workspace target: ${target}`);
@@ -221,6 +232,9 @@ function updateWorkspace(target, dryRun = false) {
     if (entry === 'scripts') {
       copyScripts(target, true, dryRun, updateExcludedScriptEntries);
       continue;
+    }
+    if (entry === 'skills') {
+      pruneStaleSkillDirs(resolve(target, 'skills'), src, dryRun);
     }
     const dest = resolve(target, entry);
     if (dryRun) console.log(`update ${entry}`);
