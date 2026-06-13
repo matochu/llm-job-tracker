@@ -43,6 +43,7 @@ Search-specific targets, fit signals, reject rules, priority rules, application 
 - `style/outreach-style.md` — message tone and templates strategy.
 - `style/cv-style.md` — CV house style and review rules.
 - `candidate/stories.md` — factual STAR story bank for interview preparation.
+- `candidate/application-answers.md` — profile-aware reusable answer bank for ATS forms and outreach; read by `apply` and `draft`, appended after confirmed applications.
 - `config/session-reports.md` — Session Report format, paths, and lifecycle.
 - `strategy/search-profiles/*.md` — named profiles with fit/reject/priority rules.
 

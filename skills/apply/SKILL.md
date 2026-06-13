@@ -11,14 +11,15 @@ Prepare an application form and optionally submit it after explicit confirmation
 Before starting, read:
 
 1. `candidate/candidate.md`
-2. `config/settings.md`
-3. the resolved profile from the Profile Resolution rules below
-4. `config/language.md`
-5. `config/paths.md`
-6. `strategy/criteria.md`
-7. `config/tracker-schema.md`
-8. `style/cv-style.md`
-9. `config/next-actions.md`
+2. `candidate/application-answers.md` (if present)
+3. `config/settings.md`
+4. the resolved profile from the Profile Resolution rules below
+5. `config/language.md`
+6. `config/paths.md`
+7. `strategy/criteria.md`
+8. `config/tracker-schema.md`
+9. `style/cv-style.md`
+10. `config/next-actions.md`
 
 Also get the current date and timezone from the execution environment or system context before recording application, draft-state, or tracker update dates.
 
@@ -89,9 +90,10 @@ Do not submit LinkedIn connection requests, LinkedIn messages, emails, or referr
    - EEO / voluntary disclosure fields
    - required checkboxes or acknowledgements
 6. Build a proposed application plan:
-   - fields to fill from `candidate/candidate.md`
+   - fields to fill from `candidate/candidate.md` (source of truth for all facts)
+   - standard fields and reusable question answers from `candidate/application-answers.md`, filtered by the resolved profile: use rows where `Profile` equals the resolved profile or `all`; profile-specific rows override `all` rows for the same field
    - files to upload from `data/companies/[slug]/`
-   - proposed answers to custom questions
+   - proposed answers to custom questions (company-specific questions such as "why this company" are generated fresh, not sourced from the bank)
    - fields that require user input
    - fields that should be skipped or set to `Decline to self-identify`
 7. Stop and ask the user to review when:
@@ -108,6 +110,10 @@ Do not submit LinkedIn connection requests, LinkedIn messages, emails, or referr
 10. If the user explicitly confirms submit, click the final submit/apply button via browser MCP with `USER_CONFIRMED_ATS_APPLICATION` included in the tool input.
 11. Verify the result page or confirmation state.
 12. Update tracker/prep notes narrowly only after successful submission or after the user asks to save draft state.
+13. After a successful application, offer to save reusable answers back to `candidate/application-answers.md`:
+    - For each confirmed custom answer that is not company-specific (i.e. could apply to other companies), ask the user: "Save this answer to the answer bank for future applications? (yes / profile-specific / no)"
+    - If yes, append a new row to the Reusable Question Bank section with the question pattern, resolved profile (or `all` if the user says profile-independent), and the confirmed answer.
+    - Only save answers the user explicitly approves. Never save fabricated answers; every saved answer must be consistent with `candidate/candidate.md`.
 
 ## ATS Notes
 

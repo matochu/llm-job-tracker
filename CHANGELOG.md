@@ -8,6 +8,7 @@ This project follows semantic versioning.
 
 ### Added
 
+- Reusable, profile-aware application answer bank (`candidate/application-answers.md`) read by `apply` and `draft`, appended after confirmed applications; profile-specific rows override `all` rows for the same field.
 - Plugin distribution as a Claude Code / Cowork plugin zip, built via `npm run build:plugin` and published as a GitHub release asset.
 - Interactive `scripts/install.js` prompt (TTY) with non-TTY default to `all` for CI/npx use.
 - Version tracking: CLI writes `config/.installed-version` on every init/update so agents can detect and propose upgrades.

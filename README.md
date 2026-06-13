@@ -301,6 +301,7 @@ Do not pass profile slugs to other job commands. The one exception is `job-track
 - `style/outreach-style.md` — outreach tone and message strategy.
 - `style/cv-style.md` — CV house style and review rules.
 - `candidate/stories.md` — factual STAR story bank for interview preparation.
+- `candidate/application-answers.md` — profile-aware reusable answers for ATS forms and outreach.
 - `config/next-actions.md` — dynamic next-action shortcut rules.
 - `strategy/search-profiles/*.md` — named profiles with search-specific fit/reject/priority rules.
 

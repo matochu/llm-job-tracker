@@ -54,7 +54,7 @@ export function editedPaths(event) {
   const paths = keys.filter((key) => data[key]).map((key) => String(data[key]));
 
   const raw = JSON.stringify(data);
-  for (const match of raw.matchAll(/(data\/companies\/[^"'\s]+|data\/tracker\.md|candidate\/cv\/[^"'\s]+)/g)) {
+  for (const match of raw.matchAll(/(data\/companies\/[^"'\s]+|data\/tracker\.md|candidate\/cv\/[^"'\s]+|candidate\/application-answers\.md)/g)) {
     paths.push(match[1]);
   }
 

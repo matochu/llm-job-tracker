@@ -11,12 +11,13 @@ Prepare manual message drafts. This skill never sends messages, connection reque
 Before starting, read:
 
 1. `candidate/candidate.md`
-2. `config/settings.md`
-3. the resolved profile from the Profile Resolution rules below
-4. `config/language.md`
-5. `config/paths.md`
-6. `style/outreach-style.md`
-7. `config/next-actions.md`
+2. `candidate/application-answers.md` (if present)
+3. `config/settings.md`
+4. the resolved profile from the Profile Resolution rules below
+5. `config/language.md`
+6. `config/paths.md`
+7. `style/outreach-style.md`
+8. `config/next-actions.md`
 
 ## Profile Resolution
 
@@ -29,7 +30,7 @@ Before starting, read:
 
 1. Resolve the company slug/name.
 2. Read `data/companies/[slug]/prep-notes.md`.
-3. Identify the target role, strongest contacts, mutual connections, application strategy, and resolved profile positioning angle.
+3. Identify the target role, strongest contacts, mutual connections, application strategy, and resolved profile positioning angle. Where available, reuse standing phrasing from `candidate/application-answers.md` (filtered by resolved profile: `Profile == resolved` or `all`, specific wins) for elements like short bio or positioning statement. Company-specific content ("why this company", role-specific framing) is always generated fresh.
 4. Draft message variants for relevant recipient types:
    - recruiter / talent acquisition
    - engineering manager / tech lead

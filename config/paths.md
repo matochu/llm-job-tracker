@@ -8,7 +8,7 @@ path registry; skills embed literal paths but must match the values listed here.
 ## Configuration Zones
 
 - **Config (`config/`):** `config/settings.md`, `config/paths.md`, `config/language.md`, `config/next-actions.md`, `config/agent-instructions.md`, `config/tracker-schema.md`, `config/session-reports.md`
-- **Candidate (`candidate/`):** `candidate/candidate.md`, `candidate/stories.md`, base CVs under `candidate/cv/`
+- **Candidate (`candidate/`):** `candidate/candidate.md`, `candidate/stories.md`, `candidate/application-answers.md`, base CVs under `candidate/cv/`
 - **Strategy (`strategy/`):** `strategy/search-profiles/*.md`, `strategy/sources.md`, `strategy/criteria.md`
 - **Style (`style/`):** `style/cv-style.md`, `style/outreach-style.md`
 - **Templates (`templates/`):** `templates/resume-template.md`, `templates/prep-notes-template.md`, `templates/pr-backlog-template.md`
@@ -22,6 +22,7 @@ path registry; skills embed literal paths but must match the values listed here.
 - **Company CV:** `data/companies/[slug]/resume.md`
 - **Base CV:** `candidate/cv/cv-base.md`
 - **Story bank:** `candidate/stories.md`
+- **Application answer bank:** `candidate/application-answers.md`
 - **Templates directory:** `templates/`
 - **Resume template reference:** `templates/resume-template.md`
 - **PDF generator:** `scripts/generate_pdf.py`

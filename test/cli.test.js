@@ -274,6 +274,32 @@ test('update does not overwrite user-modified cv.css', () => {
   assert.equal(readFileSync(join(target, 'scripts', 'cv.css'), 'utf8'), '/* my custom css */');
 });
 
+test('init scaffolds candidate/application-answers.md', () => {
+  const parent = makeTempDir();
+  const target = join(parent, 'workspace');
+
+  const result = runCli([target, '--no-install']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(existsSync(join(target, 'candidate', 'application-answers.md')), true);
+  const content = readFileSync(join(target, 'candidate', 'application-answers.md'), 'utf8');
+  assert.match(content, /Application Answer Bank/);
+  assert.match(content, /Profile/);
+});
+
+test('update preserves user-modified candidate/application-answers.md', () => {
+  const parent = makeTempDir();
+  const target = join(parent, 'workspace');
+  const scaffold = runCli([target, '--no-install']);
+  assert.equal(scaffold.status, 0, scaffold.stderr);
+  writeFileSync(join(target, 'candidate', 'application-answers.md'), '# My custom answers\n');
+
+  const result = runCli(['update', target, '--no-install']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(readFileSync(join(target, 'candidate', 'application-answers.md'), 'utf8'), '# My custom answers\n');
+});
+
 test('update removes stale skill directories from workspace skills/', () => {
   const parent = makeTempDir();
   const target = join(parent, 'workspace');
