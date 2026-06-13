@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## 0.3.0 - 2026-06-13
+
+### Added
+
+- Plugin distribution as a Claude Code / Cowork plugin zip, built via `npm run build:plugin` and published as a GitHub release asset.
+- Interactive `scripts/install.js` prompt (TTY) with non-TTY default to `all` for CI/npx use.
+- Version tracking: CLI writes `config/.installed-version` on every init/update so agents can detect and propose upgrades.
+- Pipeline Board section in `job-tracker:status` output.
+- PDF import step in `job-tracker:setup` interactive onboarding (step 0).
+- CSS customization guidance in `job-tracker:setup` (step 9).
+- Version check step in `job-tracker:setup` that detects plugin vs workspace mode.
+
+### Changed
+
+- Renamed all skill directories: `job-run` → `run`, `job-setup` → `setup`, etc. Commands are now `/job-tracker:run`, `/job-tracker:setup`, and so on, consistent between plugin and npx workspace modes.
+- Renamed `scripts/resume.css` to `scripts/cv.css`; neutralized accent color and default styles so the file is a candidate-customizable starting point.
+- `style/cv-style.md` neutralized — personal style rules removed.
+- Plugin and npx workspace now share identical skill commands; no build-time namespace transforms needed.
+- Stale skill directories (`job-*`) are now pruned from `skills/`, `.claude/skills`, and `.codex/skills` on update and install.
+- `update` no longer overwrites `scripts/cv.css` (user-customizable); `init` copies it once.
+
+### Removed
+
+- `scripts/resume.css` (replaced by `scripts/cv.css`).
+
 ## 0.2.0 - 2026-06-12
 
 ### Changed

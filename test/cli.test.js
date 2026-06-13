@@ -274,6 +274,48 @@ test('update does not overwrite user-modified cv.css', () => {
   assert.equal(readFileSync(join(target, 'scripts', 'cv.css'), 'utf8'), '/* my custom css */');
 });
 
+test('update removes stale skill directories from workspace skills/', () => {
+  const parent = makeTempDir();
+  const target = join(parent, 'workspace');
+  const scaffold = runCli([target, '--no-install']);
+  assert.equal(scaffold.status, 0, scaffold.stderr);
+  mkdirSync(join(target, 'skills', 'job-run'), { recursive: true });
+  writeFileSync(join(target, 'skills', 'job-run', 'SKILL.md'), 'stale skill');
+
+  const result = runCli(['update', target, '--no-install']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(existsSync(join(target, 'skills', 'job-run')), false);
+  assert.equal(existsSync(join(target, 'skills', 'run', 'SKILL.md')), true);
+});
+
+test('install.js removes stale skill dirs from .claude/skills and .codex/skills', () => {
+  const parent = makeTempDir();
+  const target = join(parent, 'workspace');
+  const scaffold = runCli([target, '--no-install']);
+  assert.equal(scaffold.status, 0, scaffold.stderr);
+
+  // Simulate stale dirs left over from a previous install (not in canonical skills/)
+  const firstInstall = spawnSync(process.execPath, ['scripts/install.js', 'all', '--copy'], {
+    cwd: target, encoding: 'utf8',
+  });
+  assert.equal(firstInstall.status, 0, firstInstall.stderr);
+  mkdirSync(join(target, '.claude', 'skills', 'job-run'), { recursive: true });
+  writeFileSync(join(target, '.claude', 'skills', 'job-run', 'SKILL.md'), 'stale');
+  mkdirSync(join(target, '.codex', 'skills', 'job-run'), { recursive: true });
+  writeFileSync(join(target, '.codex', 'skills', 'job-run', 'SKILL.md'), 'stale');
+
+  const result = spawnSync(process.execPath, ['scripts/install.js', 'all', '--copy'], {
+    cwd: target,
+    encoding: 'utf8',
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(existsSync(join(target, '.claude', 'skills', 'job-run')), false);
+  assert.equal(existsSync(join(target, '.codex', 'skills', 'job-run')), false);
+  assert.equal(existsSync(join(target, '.claude', 'skills', 'run', 'SKILL.md')), true);
+});
+
 test('install.js defaults to all in non-TTY mode', () => {
   const parent = makeTempDir();
   const target = join(parent, 'workspace');
