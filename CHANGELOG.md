@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## 0.4.0 - 2026-06-14
+
+### Added
+
+- `job-tracker:import <url>` — new command: imports one job posting URL into Raw Pipeline. Verifies the posting at source (browser MCP for JS-rendered/login pages), auto-selects the best-fit profile across all configured profiles and switches to it (asking on tie), derives `Source` from the URL host (ashby/greenhouse/lever/linkedin/workable/etc.), and writes a per-import session report at `.sessions/reports/[id].import.md`. Deduplicates against existing tracker URLs and best-effort recent import reports.
+- Fit Rubric — `strategy/criteria.md` now contains `## Fit Rubric`: a three-layer model (Hard Gates PASS/DISQUALIFIED/UNRESOLVED → six-dimension /60 fit score → Application ROI modifier), six dimensions with 1/3/5 anchors, and a per-dimension evidence matrix with `Unknown → 3, never fabricate` rule. `skills/fit/SKILL.md` updated to apply the rubric with Hard Gates before scoring and ROI as a recommendation modifier only.
+- Session report filename generalized to `[id].<skill>.md` (`[id].run.md` for run, `[id].import.md` for import). `check-workspace` now accepts any kebab-case skill suffix; blocked import reports are not flagged as unfinished runs.
+- `migrations/0.4.0.md` — three idempotent migration steps for existing workspaces: (1) add `## Fit Rubric` to `strategy/criteria.md`, (2) update session-report path in `config/paths.md` to `[id].<skill>.md`, (3) update profile-switch exception in `config/settings.md` to name both `job-tracker:run` and `job-tracker:import`.
+
+### Changed
+
+- `job-tracker:import` is now the second skill (besides `job-tracker:run`) allowed to switch the active profile via `job-tracker:profile use`. Profile switch rules updated in `skills/profile/SKILL.md`, `config/settings.md`, `README.md`, and `config/agent-instructions.md` to distinguish: `run` takes a slug argument; `import` takes no slug and auto-selects best-fit.
+- `config/session-reports.md`: filename convention generalized; resume/Continue Run logic scoped to `Skill: job-tracker:run` reports only.
+
 ## 0.3.2 - 2026-06-14
 
 ### Added

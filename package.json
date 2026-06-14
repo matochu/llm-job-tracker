@@ -1,6 +1,6 @@
 {
   "name": "llm-job-tracker",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "Scaffold a local job-search workspace for LLM agents.",
   "type": "module",
   "bin": {
