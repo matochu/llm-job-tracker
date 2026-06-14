@@ -228,7 +228,7 @@ PDF export uses `scripts/generate_pdf.py`. The generator looks for `weasyprint` 
 ## Typical Workflow
 
 1. `job-tracker:run [profile?] [target]` can orchestrate the full path and update `data/tracker.md` after each stage.
-2. `job-tracker:find` searches configured sources, verifies new leads, and adds accepted roles to `Raw Pipeline`.
+2. `job-tracker:find` searches configured sources, verifies new leads, and adds accepted roles to `Raw Pipeline`. For a single posting URL discovered manually, use `job-tracker:import <url>` as a faster single-URL bridge into `Raw Pipeline`.
 3. `job-tracker:company [Company]` researches a promising company and creates or updates `data/companies/[company]/prep-notes.md`.
 4. `job-tracker:draft [Company]` prepares manual recruiter, engineering, founder, or referral message drafts in prep notes. It never sends them.
 5. `job-tracker:cv [Company]` creates or updates `data/companies/[company]/resume.md`.
@@ -269,6 +269,7 @@ Use `job-tracker:action` commands to run skills:
 | `job-tracker:health` | workspace integrity lint and pending migrations |
 | `job-tracker:verify` | liveness re-check of tracked roles at source |
 | `job-tracker:find` | find new leads, verify them at source, add them to `Raw Pipeline` |
+| `job-tracker:import <url>` | import one posting URL: verify, auto-select best-fit profile, add to `Raw Pipeline` |
 | `job-tracker:profile [action]` | inspect, switch, validate, add, or remove job-search profiles |
 
 **Per-company**
@@ -303,7 +304,7 @@ Profile selection is simple:
 - `job-tracker:profile remove <slug>` deletes an unused profile.
 - `job-tracker:profile validate` checks settings, profile files, and tracker profile values.
 
-Do not pass profile slugs to other job commands. The one exception is `job-tracker:run`, which may take a profile slug and switches the active profile via `job-tracker:profile use` before running.
+Do not pass profile slugs to other job commands. Two exceptions may switch the active profile via `job-tracker:profile use`: `job-tracker:run` (takes a profile slug argument) and `job-tracker:import` (takes no slug — auto-selects the best-fit profile and switches to it, asking on ties).
 
 ## Configuration
 
@@ -370,7 +371,7 @@ All configured paths are relative to the repository root.
 ## Tracker Rules
 
 - Job tables must include a `Profile` column.
-- New leads must store the active profile in `Profile`.
+- New leads must store the active profile in `Profile`. `job-tracker:import` uses the auto-selected best-fit profile (made active before the row is written).
 - Existing tracked vacancies must be processed using their row-level `Profile`, not the active profile.
 - Add unresearched new leads to `Raw Pipeline` first.
 - Move researched, active, prioritized roles to the active pipeline.

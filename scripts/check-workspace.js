@@ -169,12 +169,13 @@ function checkSessionReports(root) {
     const rel = relative(root, report);
     const name = basename(report);
 
-    if (!name.endsWith('.run.md')) {
-      issues.push(issue('warning', `${rel}: Session Report filename should be [id].run.md`));
+    const sessionFilenameMatch = name.match(/^(\d{4}-\d{2}-\d{2}T\d{6})\.[a-z][a-z0-9-]*\.md$/);
+    if (!sessionFilenameMatch) {
+      issues.push(issue('warning', `${rel}: Session Report filename should be [id].<skill>.md`));
       continue;
     }
 
-    const reportId = name.slice(0, -'.run.md'.length);
+    const reportId = sessionFilenameMatch[1];
     if (!sessionIdPattern.test(reportId)) {
       issues.push(issue('warning', `${rel}: Session Report ID should use YYYY-MM-DDTHHMMSS`));
     }
@@ -188,7 +189,12 @@ function checkSessionReports(root) {
     if (!statusMatch) {
       issues.push(issue('warning', `${rel}: missing or invalid Status`));
     } else if (['running', 'blocked'].includes(statusMatch[1])) {
-      issues.push(issue('warning', `${rel}: unfinished Session Report status \`${statusMatch[1]}\``));
+      // Only run reports are resumable; a blocked import report is a login-required snapshot,
+      // not an unfinished run. Warn only for job-tracker:run reports.
+      const isRunReport = name.endsWith('.run.md') || text.includes('Skill: job-tracker:run');
+      if (isRunReport) {
+        issues.push(issue('warning', `${rel}: unfinished Session Report status \`${statusMatch[1]}\``));
+      }
     }
 
     for (const section of sessionRequiredSections) {

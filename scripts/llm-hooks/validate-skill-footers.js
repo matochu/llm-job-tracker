@@ -21,6 +21,7 @@ const expectedSkillNames = new Map(Object.entries({
   'cv': 'job-tracker:cv',
   'fit': 'job-tracker:fit',
   'pdf': 'job-tracker:pdf',
+  'import': 'job-tracker:import',
 }));
 
 function main() {

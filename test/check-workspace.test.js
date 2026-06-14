@@ -77,7 +77,70 @@ test('warns on malformed session reports', () => {
   const result = runCheck(fixture);
 
   assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /Session Report filename should be \[id\]\.run\.md/);
+  assert.match(result.stdout, /Session Report filename should be \[id\]\.<skill>\.md/);
+});
+
+test('accepts well-formed import session reports', () => {
+  const fixture = makeFixture();
+  mkdirSync(join(fixture, '.sessions', 'reports'), { recursive: true });
+  const id = '2026-06-14T120000';
+  const content = [
+    '# Session Report',
+    '',
+    `- ID: ${id}`,
+    '- Skill: job-tracker:import',
+    '- Status: done',
+    '',
+    '## Goal',
+    '## Plan',
+    '## Progress',
+    '## Decisions',
+    '## Blockers',
+    '## Resume Point',
+    '## Tracker Updates',
+    '## Files Changed',
+    '## Artifacts',
+    '## Agent Insights',
+    '## Summary',
+  ].join('\n');
+  writeFileSync(join(fixture, '.sessions', 'reports', `${id}.import.md`), content);
+
+  const result = runCheck(fixture);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.doesNotMatch(result.stdout, /Session Report filename should be/);
+  assert.doesNotMatch(result.stdout, /unfinished Session Report/);
+});
+
+test('does not warn on blocked import session reports', () => {
+  const fixture = makeFixture();
+  mkdirSync(join(fixture, '.sessions', 'reports'), { recursive: true });
+  const id = '2026-06-14T130000';
+  const content = [
+    '# Session Report',
+    '',
+    `- ID: ${id}`,
+    '- Skill: job-tracker:import',
+    '- Status: blocked',
+    '',
+    '## Goal',
+    '## Plan',
+    '## Progress',
+    '## Decisions',
+    '## Blockers',
+    '## Resume Point',
+    '## Tracker Updates',
+    '## Files Changed',
+    '## Artifacts',
+    '## Agent Insights',
+    '## Summary',
+  ].join('\n');
+  writeFileSync(join(fixture, '.sessions', 'reports', `${id}.import.md`), content);
+
+  const result = runCheck(fixture);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.doesNotMatch(result.stdout, /unfinished Session Report/);
 });
 
 test('warns on orphan company directories', () => {

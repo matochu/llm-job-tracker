@@ -64,6 +64,7 @@ These are preferred hints, not a fixed menu. The agent may create other shortcut
 |---|---|---|
 | `n` | run / continue run | Run `job-tracker:run [profile?] [target]`, or resume the latest unfinished `job-tracker:run` when the run is paused-resumable |
 | `s` | search | Run `job-tracker:find` |
+| `i` | import | Run `job-tracker:import <url>` |
 | `h` | health | Run `job-tracker:health` |
 | `v` | verify | Run `job-tracker:verify` |
 | `u` | profile | Run `job-tracker:profile status` or `job-tracker:profile use [slug]` |
@@ -118,6 +119,24 @@ Next actions:
 ```
 
 ## Per-Skill Menus
+
+### job-tracker:import
+
+Use when a lead was added (decision: added):
+
+- Research the company immediately with `job-tracker:company [company]` (Recommended).
+- Review fit against the vacancy with `job-tracker:fit`.
+- Import another URL with `job-tracker:import <url>`.
+
+Use when the lead was rejected, dead, or duplicate:
+
+- Import a different URL.
+- Search broadly with `job-tracker:find`.
+- Return to pipeline overview with `job-tracker:status`.
+
+Use when blocked (login required):
+
+- Log in to the required site, then re-run `job-tracker:import <url>`.
 
 ### job-tracker:find
 

@@ -50,6 +50,7 @@ Search-specific targets, fit signals, reject rules, priority rules, application 
 ## Skill Map
 
 - `job-tracker:find` — find new leads, verify them at source, add to Raw Pipeline. Use `job-tracker:find network` to discover leads from local contact sources in `data/network/`.
+- `job-tracker:import` — import one job posting URL: verify at source, auto-select the best-fit profile (switches active profile to it, asking on ties), derive Source from the URL host, and add a verified row to Raw Pipeline. Writes a per-import session report at `.sessions/reports/[id].import.md`.
 - `job-tracker:setup` — run the first-step interactive readiness check before `job-tracker:run`.
 - `job-tracker:health` — check tracker/profile/company/CV/PDF consistency, seed missing protected-zone files, and apply pending in-file migrations from `migrations/<version>.md` with confirmation.
 - `job-tracker:run` — orchestrate the full search/prep/draft/CV/fit/stories/PDF path with frequent tracker updates and final summary; owns its own intake/prep/final reviewer gates.
@@ -82,7 +83,7 @@ The skill files should not need candidate-specific edits.
 
 - The tracker path is configured in `paths.md`.
 - Job tables must include a `Profile` column.
-- New leads must store the active profile in the `Profile` column.
+- New leads must store the active profile in the `Profile` column. `job-tracker:import` writes the row under the auto-selected best-fit profile (which it switches active before writing, so the row always matches the active profile at write time).
 - For tracked vacancies, skills must use the row's `Profile` value instead of the active profile.
 - Add unresearched new leads to Raw Pipeline first.
 - Move researched, active, prioritized roles to the active pipeline.
@@ -91,7 +92,7 @@ The skill files should not need candidate-specific edits.
 
 ## Session Reports
 
-- Long-running skills may write one Session Report per pass; the report is the resumable source of truth. `job-tracker:run` must write one.
+- Long-running skills may write one Session Report per pass; the report is the resumable source of truth. `job-tracker:run` must write one. `job-tracker:import` writes a single-pass report per import (`[id].import.md`). Resume / Continue Run logic applies only to `job-tracker:run` reports; a blocked import report is an import snapshot, not a resumable run.
 - Format, paths, and lifecycle live in `config/session-reports.md`.
 - `.sessions/` is runtime output and is gitignored; do not commit it.
 - The latest report is the newest file by timestamp; there is no index or `current` pointer.

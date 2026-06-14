@@ -64,3 +64,46 @@ When required evidence is absent, mark it `Unknown` and score **3** — never in
 **Failure condition:** the file is not found or the string is absent after the write. Stop and report.
 
 Reason: `strategy/criteria.md` is init-only (not in CLI `managedEntries`), so `update` does not refresh it — same pattern as the Fit Score Bands migration.
+
+---
+
+## Step 2 — Update session-report path in `config/paths.md`
+
+**Target file:** `config/paths.md`.
+
+**Check:** search the file for the exact string `[id].<skill>.md`.
+- If found → step is satisfied; skip.
+
+**Apply:** replace the line:
+```
+- **Session reports:** `.sessions/reports/[id].run.md`
+```
+with:
+```
+- **Session reports:** `.sessions/reports/[id].<skill>.md`
+```
+
+**Success condition:** `[id].<skill>.md` is present in the file after the write.
+
+**Failure condition:** the anchor string `[id].run.md` is not found in the file, or `[id].<skill>.md` is absent after the write. Stop and report. Do not bump `.migrated-version`.
+
+---
+
+## Step 3 — Update profile-switch exception in `config/settings.md`
+
+**Target file:** `config/settings.md`.
+
+**Check:** search the Profile Rules section for the string `job-tracker:import`.
+- If found → step is satisfied; skip.
+
+**Apply:** **replace the entire bullet** that begins "User-facing commands do not pass profiles as arguments, except `job-tracker:run`" with the following (preserve surrounding bullets unchanged):
+
+```
+- User-facing commands do not pass profiles as arguments, except `job-tracker:run` (may take a profile slug) and `job-tracker:import` (takes no slug — auto-selects the best-fit profile and switches to it, asking on ties); both switch the active profile via `job-tracker:profile use`. Other skills read the active profile from `config/settings.md` for new discovery or the row-level `Profile` in `data/tracker.md` for tracked jobs.
+```
+
+Do **not** merely insert `and job-tracker:import` into the existing text — replace the full bullet to avoid implying that import takes a slug argument.
+
+**Success condition:** the bullet contains both `job-tracker:run` and `job-tracker:import` with import described as no-slug/auto-select.
+
+**Failure condition:** the anchor bullet starting with "User-facing commands do not pass profiles" is not found, or `job-tracker:import` is absent after the write. Stop and report. Do not blind-append. Do not bump `.migrated-version`.

@@ -27,7 +27,7 @@ path registry; skills embed literal paths but must match the values listed here.
 - **Resume template reference:** `templates/resume-template.md`
 - **PDF generator:** `scripts/generate_pdf.py`
 - **PDF CSS:** `scripts/cv.css`
-- **Session reports:** `.sessions/reports/[id].run.md`
+- **Session reports:** `.sessions/reports/[id].<skill>.md`
 - **Session logs:** `.sessions/logs/[id].log`
 
 ## Network / Referrals

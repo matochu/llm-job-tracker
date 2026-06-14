@@ -16,7 +16,7 @@ The tracker is `data/tracker.md`.
 - Keep edits narrow and preserve existing user notes.
 - Every job table must include a `Profile` column immediately after `Company`.
 - `Profile` values must match a slug listed in `config/settings.md`.
-- New leads added by `job-tracker:find` must use the active profile from `config/settings.md`.
+- New leads added by `job-tracker:find` must use the active profile from `config/settings.md`. `job-tracker:import` writes the row under its auto-selected best-fit profile (it switches the active profile first, so the row always matches the active profile at write time).
 - Existing tracked vacancies must be processed using their row-level `Profile`, not the active profile.
 - Do not duplicate companies across active pipeline and Raw Pipeline unless there are separate roles.
 - Move closed roles to Archive with the verification date and reason.
@@ -34,6 +34,6 @@ Required job table shape for `Raw Pipeline`:
 | Example | frontend | Senior Frontend Engineer | https://example.com/job | YYYY-MM-DD | ⬜ | linkedin |
 ```
 
-The `Source` column records where the lead came from. Common values: `linkedin`, `ashby`, `greenhouse`, `lever`, `djinni`, `vc-board`, `network`, `hidden-market`, `watchlist`. Use `network` when the lead was discovered via `job-tracker:find network`. Leave blank or omit when the source is obvious from URL or ATS.
+The `Source` column records where the lead came from. Common values: `linkedin`, `ashby`, `greenhouse`, `lever`, `djinni`, `vc-board`, `network`, `hidden-market`, `watchlist`. Use `network` when the lead was discovered via `job-tracker:find network`. `job-tracker:import` derives the source automatically from the URL host (see `skills/import/SKILL.md` Source Derivation table). Leave blank or omit when the source is obvious from URL or ATS.
 
 All active, staging, submitted, and archive job rows must preserve `Profile` when moved between sections.

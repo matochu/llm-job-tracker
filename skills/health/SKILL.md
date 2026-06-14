@@ -118,7 +118,7 @@ Check for:
 - empty base CV or company CV files
 - active/listed profiles without profile files
 - `.sessions/` is gitignored
-- Session Report filenames use `[id].run.md`
+- Session Report filenames use `[id].<skill>.md` (e.g. `[id].run.md`, `[id].import.md`)
 - Session Reports contain required sections and valid status values
 - old `running` or `blocked` Session Reports that may need resume or abandonment
 - installed skill/footer validation drift

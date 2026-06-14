@@ -41,7 +41,7 @@ If the action is ambiguous, ask one concise follow-up question.
 
 1. Never create or keep a generic `default.md`.
 2. Profile slugs must be lowercase kebab-case or short lowercase names, such as `frontend`, `ai`, `barcelona-product`, or `platform`.
-3. Do not pass profile slugs through other job commands, except `job-tracker:run`, which may take a profile slug and switches the active profile via `job-tracker:profile use` before running. Other skills read the active profile from `config/settings.md` for new discovery or the row-level `Profile` in `data/tracker.md` for tracked jobs.
+3. Do not pass profile slugs through other job commands. Two exceptions may switch the active profile via `job-tracker:profile use`: `job-tracker:run` (takes a profile slug argument and switches before running) and `job-tracker:import` (takes no slug — auto-selects the best-fit profile and switches to it, asking on ties). Other skills read the active profile from `config/settings.md` for new discovery or the row-level `Profile` in `data/tracker.md` for tracked jobs.
 4. When switching active profile:
    - require the profile file to exist
    - update both `Profile slug` and `Profile file` in `config/settings.md`

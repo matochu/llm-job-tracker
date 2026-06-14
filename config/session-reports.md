@@ -5,14 +5,14 @@ the resumable source of truth: plan, progress, decisions, blockers, resume
 point, and insights all live in it. Raw logs are optional and never the source
 of truth.
 
-`job-tracker:run` must write one Session Report. Other long-running skills may adopt the
-same format later; this file is the format authority.
+`job-tracker:run` must write one Session Report. `job-tracker:import` writes a single-pass
+report per import. Other skills may adopt the same format later; this file is the format authority.
 
 ## Paths
 
 Configured in `config/paths.md`:
 
-- **Session reports:** `.sessions/reports/[id].run.md`
+- **Session reports:** `.sessions/reports/[id].<skill>.md`
 - **Session logs (optional):** `.sessions/logs/[id].log`
 
 `.sessions/` is runtime output and is gitignored.
@@ -21,8 +21,9 @@ Configured in `config/paths.md`:
 
 - `ID` is a timestamp with the local timezone, compacted for filesystem use:
   `YYYY-MM-DDTHHMMSS` (no colons), e.g. `2026-06-07T103000`.
-- Filename is `[id].run.md`, e.g. `2026-06-07T103000.run.md`.
-  Skill identity is metadata inside the report, not part of the filename.
+- Filename is `[id].<skill>.md`, where `<skill>` is the skill's short name:
+  `run` → `[id].run.md`, `import` → `[id].import.md`, e.g. `2026-06-07T103000.run.md`.
+  The `Skill:` metadata field inside the report is the authoritative skill identity; the filename suffix is a routing hint only.
 - The latest report is the newest file by timestamp. There is no index file
   and no `current` pointer.
 
@@ -35,8 +36,14 @@ Configured in `config/paths.md`:
 - `done` — the run finished and produced a final summary.
 - `abandoned` — the run was dropped without a final summary.
 
-To resume the most recent unfinished run, take the newest report with
-`Status: running` or `Status: blocked`.
+To resume the most recent unfinished **run**, take the newest `.run.md` report
+(`Skill: job-tracker:run`) with `Status: running` or `Status: blocked`.
+
+**Scope:** the Continue Run / `[n] Continue Run` resume logic applies **only** to
+`job-tracker:run` reports (`.run.md` / `Skill: job-tracker:run`). A `blocked`
+`job-tracker:import` report is not a resumable run — it is an import snapshot
+whose next action is to re-run `job-tracker:import <url>` after logging in.
+Skills that scan for resumable reports must filter on `Skill: job-tracker:run`.
 
 `Status: running` with `Can continue automatically: yes` means a user-facing
 pause is resumable. The user-facing next action for that state is always
