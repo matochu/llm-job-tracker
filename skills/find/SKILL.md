@@ -1,7 +1,7 @@
 ---
 name: job-tracker:find
 description: "Finds new jobs for the configured candidate profile, verifies each new lead at the source, updates the configured tracker Raw Pipeline, and suggests company research."
-argument-hint: "[keywords-or-filters]"
+argument-hint: "[keywords-or-filters | network]"
 ---
 
 Find new job leads for the configured candidate profile.
@@ -22,7 +22,7 @@ Before starting, read:
 
 Also get the current date and timezone from the execution environment or system context before adding leads or dates to the tracker.
 
-Use `$ARGUMENTS` as additional search keywords or filters.
+Use `$ARGUMENTS` as additional search keywords or filters. If the argument is `network`, run the network source discovery flow (see `## Network Mode` below) instead of the standard source checklist.
 
 ## Profile Resolution
 
@@ -57,6 +57,25 @@ If this skill is called by `job-tracker:run`, its next-action footer is advisory
 6. Reject low-fit roles and noisy sources explicitly.
 7. Add each accepted lead to the configured `Raw Pipeline` table with the active profile in the `Profile` column.
 8. For new companies without a `data/companies/[slug]/prep-notes.md`, suggest `job-tracker:company [company]`.
+
+## Network Mode
+
+When called as `job-tracker:find network`, skip the standard source checklist and run the network discovery flow defined in `strategy/sources.md` under `## Network Sources → job-tracker:find network`.
+
+Discovery flow:
+1. Read and normalize all available network sources from `data/network/` and legacy `docs/*referrals*.md` / `docs/*network*.md`.
+2. If no network sources are found, report `no local network sources found` and stop.
+3. Group normalized contacts by company (case-insensitive, suffix-tolerant matching).
+4. Apply the active profile's fit/reject rules to each company group. Discard companies that clearly violate reject rules (wrong industry, company type, etc.).
+5. For each qualifying company **not yet in the tracker**: verify whether an active relevant role exists — check the company careers page or ATS (web search or browser MCP). This step is required; do not add companies to the tracker without role verification.
+   - **Active role found:** add to Raw Pipeline with role, URL, `Source: network`, and active profile. Suggest `job-tracker:company [company]` as next action.
+   - **No active role but useful contact exists:** add to Monitoring (not Raw Pipeline) with `Notes: source: network; contacts: [names]`. Do not invent a role or URL.
+   - **Company inaccessible / careers page down:** note in output summary as `unverified`; do not add to tracker.
+6. For qualifying companies **already in the tracker**: surface as warm intro opportunities in the summary — no tracker change.
+
+Network mode does not run the standard LinkedIn Jobs / ATS / VC board / Djinni pass. If the user wants both, they run `job-tracker:find` (standard) and `job-tracker:find network` separately.
+
+Output includes: network sources read, total contacts found, companies verified, new Raw Pipeline entries, new Monitoring entries, warm intro opportunities at existing tracked companies, and the standard footer.
 
 ## Output
 

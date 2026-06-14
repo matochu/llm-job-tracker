@@ -413,6 +413,64 @@ Every `job-tracker:find` run must end with a source report:
 
 Use `partial` when at least one source in the group could not be checked. Use `skipped` only when the user narrowed the request or a blocker prevented access.
 
+## Network Sources
+
+Network sources are local files that map people to companies. They are used by `job-tracker:find network` for lead discovery and by `job-tracker:company` for contact pre-population before LinkedIn live scan.
+
+### Supported Sources
+
+All available sources are always read — no fallback gating. Sources that exist are merged; sources that don't exist are silently skipped.
+
+- **`data/network/connections.csv`** — LinkedIn first-degree export. Fields: `First Name,Last Name,URL,Email Address,Company,Position,Connected On`. Export from: LinkedIn → Settings → Data Privacy → Get a copy of your data → Connections.
+- **`data/network/*.md`** — Curated referral/contact notes. Recommended format (freeform text also accepted, parsed best-effort):
+  ```md
+  | Name | Company | Role | LinkedIn | Email | Notes |
+  |---|---|---|---|---|---|
+  ```
+- **`docs/*referrals*.md`** and **`docs/*network*.md`** — Legacy sources (e.g. hand-maintained pre-`data/network/` files). Always read if present; reported as `(legacy source)` in output. Migrate to `data/network/` when convenient.
+
+### Source Normalization
+
+Before any matching, all records from all sources are normalized into a flat internal list:
+
+```
+Name | Company | Role | LinkedIn | Email | Source file | Notes
+```
+
+- Company matching is **case-insensitive** and tolerates common suffixes: Inc, Ltd, GmbH, SL, LLC, S.A., B.V., etc.
+- Duplicate records (same name + company) are merged; the source file is noted.
+- CSV and markdown table rows are parsed structurally. Freeform text is parsed best-effort; table format gives more reliable results.
+
+### `job-tracker:find network`
+
+When `network` is passed as an argument to `job-tracker:find`:
+
+1. Read and normalize all available network sources.
+2. Group contacts by company.
+3. Apply the active profile's fit/reject rules to each company group. Discard companies that clearly violate reject rules.
+4. For qualifying companies **not yet in the tracker**: verify whether an active relevant role exists — check the company careers page or ATS. This step is required before any tracker mutation.
+   - **Active role found:** add to Raw Pipeline with role, URL, `Source: network`, and active profile.
+   - **No active role but useful contact exists:** add to Monitoring with `Notes: source: network; contacts: [names]`. Do not invent a role or URL.
+   - **Inaccessible / careers page down:** note as `unverified` in the output; do not add to tracker.
+5. For qualifying companies **already in the tracker**: surface as warm intro opportunities in the output summary — no tracker change.
+
+Source report entry: add a `Network` row showing how many sources were read, how many contacts were found, how many companies were verified, and how many new Raw Pipeline / Monitoring entries were added.
+
+### `job-tracker:company` — Local Network Check
+
+During the People/Referrals research step, before opening LinkedIn browser MCP:
+
+1. Read and normalize all network sources.
+2. Match contacts against the target company (case-insensitive, suffix-tolerant).
+3. Include local matches as **candidates** for the People/Referrals section alongside LinkedIn results.
+4. Write/update `## People / Referrals` during the normal prep-notes update step — not before research is complete.
+
+Local network contacts are marked with their source file in the `Mutual connections` or `Notes` column so the user can see where they came from.
+
+### Privacy
+
+`data/network/` is gitignored except for `.gitkeep` and `README.md`. Do not copy personal contact data into `docs/` unless the user explicitly wants that file committed or shared.
+
 ## Verification Rule
 
 Web search snippets often surface stale job links. Always verify each lead on the current company careers page or ATS listing before adding it to the tracker.

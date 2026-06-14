@@ -29,9 +29,11 @@ The tracker is `data/tracker.md`.
 Required job table shape for `Raw Pipeline`:
 
 ```md
-| Company | Profile | Role | URL | Added | Status |
-|---|---|---|---|---|---|
-| Example | frontend | Senior Frontend Engineer | https://example.com/job | YYYY-MM-DD | ⬜ |
+| Company | Profile | Role | URL | Added | Status | Source |
+|---|---|---|---|---|---|---|
+| Example | frontend | Senior Frontend Engineer | https://example.com/job | YYYY-MM-DD | ⬜ | linkedin |
 ```
+
+The `Source` column records where the lead came from. Common values: `linkedin`, `ashby`, `greenhouse`, `lever`, `djinni`, `vc-board`, `network`, `hidden-market`, `watchlist`. Use `network` when the lead was discovered via `job-tracker:find network`. Leave blank or omit when the source is obvious from URL or ATS.
 
 All active, staging, submitted, and archive job rows must preserve `Profile` when moved between sections.

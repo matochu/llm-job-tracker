@@ -49,7 +49,7 @@ Search-specific targets, fit signals, reject rules, priority rules, application 
 
 ## Skill Map
 
-- `job-tracker:find` — find new leads, verify them at source, add to Raw Pipeline.
+- `job-tracker:find` — find new leads, verify them at source, add to Raw Pipeline. Use `job-tracker:find network` to discover leads from local contact sources in `data/network/`.
 - `job-tracker:setup` — run the first-step interactive readiness check before `job-tracker:run`.
 - `job-tracker:health` — check tracker/profile/company/CV/PDF consistency, seed missing protected-zone files, and apply pending in-file migrations from `migrations/<version>.md` with confirmation.
 - `job-tracker:run` — orchestrate the full search/prep/draft/CV/fit/stories/PDF path with frequent tracker updates and final summary; owns its own intake/prep/final reviewer gates.

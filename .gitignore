@@ -27,3 +27,8 @@ release-notes.md
 
 # Local dev files
 *.local.md
+
+# Network / referral data (personal contacts, gitignored)
+data/network/*
+!data/network/.gitkeep
+!data/network/README.md

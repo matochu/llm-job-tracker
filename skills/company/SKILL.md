@@ -32,13 +32,12 @@ Before starting, read:
 1. Resolve the company name and slug.
 2. Find the company careers page and ATS.
 3. Verify active roles against the resolved profile's fit, reject, work-mode, and priority rules.
-4. Search for referral contacts:
-   - use LinkedIn only through browser MCP, preferably Playwright MCP or Chrome DevTools MCP
-   - if LinkedIn is not authenticated, open it in the browser and wait for the user to log in manually
-   - do not use plain web search as a fallback for LinkedIn contacts
-   - prioritize employees with mutual connections
-   - prioritize people matching configured referral strategy
-   - do not send connection requests during research
+4. Search for referral contacts using a local-first approach:
+   a. **Local network check first:** read and normalize all network sources from `data/network/` and any legacy `docs/*referrals*.md` / `docs/*network*.md` (see `strategy/sources.md` — Network Sources). Match contacts against the target company (case-insensitive, suffix-tolerant). Collect any matches as **candidates** for the People/Referrals section, noting their source file. Skip silently if no network sources exist.
+   b. **LinkedIn live scan:** use browser MCP (preferably Playwright MCP or Chrome DevTools MCP) to supplement with additional contacts, verify current roles, and find mutual connections. If LinkedIn is not authenticated, open it in the browser and wait for the user to log in manually. Do not use plain web search as a fallback for LinkedIn contacts.
+   c. Prioritize employees with mutual connections and people matching the configured referral strategy.
+   d. Do not send connection requests during research.
+   e. Write/update `## People / Referrals` during step 7 (prep notes update) — not before research is complete. Mark locally-sourced contacts in the `Mutual connections` or `Notes` column with their source file (e.g. `local: connections.csv`).
 5. Build company summary:
    - product, industry, scale, stage/funding, business model, HQ/remote policy
    - Glassdoor or reputation signal if available

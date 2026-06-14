@@ -1,7 +1,7 @@
 ---
 name: job-tracker:run
 description: "Orchestrates a full job-search pass: discovery or selected company, company prep, manual message drafts, CV, fit review, PDF when appropriate, tracker updates, and final summary."
-argument-hint: "[profile-slug] [company-or-search-filter]"
+argument-hint: "[profile-slug] [company-or-search-filter | network]"
 ---
 
 Run a complete job-search pass by coordinating existing `job-tracker:*` skills.
@@ -281,9 +281,10 @@ Do not pause for fit risks, stack gaps, missing nice-to-have keywords, weak cont
 
 1. Determine mode:
    - no remaining arguments: broad run using the active profile
+   - `network`: network discovery run — use `job-tracker:find network` instead of the standard source checklist; local network sources seed company candidates, and careers/ATS pages may be opened only to verify active roles before tracker mutation
    - company-like argument: run for that company
-   - source/filter-like argument: broad run with that filter
-2. If no company is specified, run `job-tracker:find [filter]`.
+   - other filter/keyword argument: broad run with that filter passed to `job-tracker:find`
+2. If no company is specified, run `job-tracker:find [filter]` (or `job-tracker:find network` in network mode). In network mode, the standard broad source checklist (LinkedIn Jobs, ATS discovery, VC boards, Djinni, etc.) is skipped — local network sources seed company candidates, and careers/ATS pages are opened only to verify active roles before any tracker mutation. If local network sources are empty, report and skip to the final summary.
 3. Update `data/tracker.md` immediately after discovery:
    - add accepted leads to `Raw Pipeline`
    - store the active profile in `Profile`

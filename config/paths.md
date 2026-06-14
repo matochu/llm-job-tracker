@@ -30,6 +30,12 @@ path registry; skills embed literal paths but must match the values listed here.
 - **Session reports:** `.sessions/reports/[id].run.md`
 - **Session logs:** `.sessions/logs/[id].log`
 
+## Network / Referrals
+
+- **Network sources directory:** `data/network/`
+- **LinkedIn connections CSV:** `data/network/connections.csv`
+- **Legacy referral notes:** `docs/*referrals*.md`, `docs/*network*.md` (read if present; migrate to `data/network/` over time)
+
 ## PDF Output Directory
 
 - PDF output directory: same directory as the source `resume.md`, i.e. `data/companies/[slug]/`.
