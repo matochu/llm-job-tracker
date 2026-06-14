@@ -1,20 +1,20 @@
-# Job Search Scoring
+# Migration: next (staging)
 
-Search-specific fit, reject, and priority rules live in `strategy/search-profiles/*.md`.
+Applied by `job-tracker:health` when `.migrated-version` < installed version.
 
-Use this file only for shared scoring mechanics that should not vary by profile.
+---
 
-Tracker table shapes and column rules live in `config/tracker-schema.md`. Do not
-redefine tracker row formats here.
+## Step 1 — Add `## Fit Rubric` section to `strategy/criteria.md`
 
-## Priority Labels
+**Target file:** `strategy/criteria.md`.
 
-- **P1:** primary target for the active profile.
-- **P2:** good fit with one or more manageable risks.
-- **P3:** backup, weak fit, or needs clarification before investing time.
+**Check:** search the file for the exact string `## Fit Rubric`.
+- If found → step is satisfied; skip.
+- If not found → apply.
 
-Always explain the concrete reason for the priority using the active profile.
+**Apply:** insert the following block immediately before the `## Fit Score Bands` heading (or at end of file if that heading is missing):
 
+```md
 ## Fit Rubric
 
 `job-tracker:fit` applies this rubric when scoring a CV against a vacancy. The rubric is the shared definition; the resolved profile's `## Fit Score Bands` determines the thresholds.
@@ -24,7 +24,7 @@ Always explain the concrete reason for the priority using the active profile.
 1. **Hard Gates** — checked before scoring. Three outcomes:
    - **PASS** — no profile reject rule or candidate hard constraint is violated.
    - **DISQUALIFIED** — a reject rule or constraint is clearly violated. Overrides the band to **Disqualified by rule** regardless of the numeric score.
-   - **UNRESOLVED** — a hard constraint applies (work authorization, location, timezone) but the JD/sources do not state enough to verify it. Does **not** change the numeric score, but forbids an "apply now" recommendation — the recommendation becomes "clarify \<constraint\> first."
+   - **UNRESOLVED** — a hard constraint applies (work authorization, location, timezone) but the JD/sources do not state enough to verify it. Does **not** change the numeric score, but forbids an "apply now" recommendation — the recommendation becomes "clarify <constraint> first."
 
 2. **Fit score (`/60`)** — six pure-fit dimensions, 1–5 each. `Total = (Σ of 6) × 2`.
 
@@ -57,15 +57,10 @@ Not every dimension has a CV line or JD requirement. Score only from evidence th
 | Growth & trajectory | CV + JD/Profile | n/a |
 
 When required evidence is absent, mark it `Unknown` and score **3** — never invent external signals (Glassdoor, comp, referral) that were not loaded.
+```
 
-## Fit Score Bands
+**Success condition:** `## Fit Rubric` is present in the file after the write.
 
-Fit score verdict thresholds are **profile-specific** and live in each `strategy/search-profiles/*.md` under `## Fit Score Bands`.
+**Failure condition:** the file is not found or the string is absent after the write. Stop and report.
 
-`job-tracker:fit` reads the resolved profile and applies its thresholds. If a profile has no `## Fit Score Bands` section, use these defaults:
-
-- **Strong apply (≥45/60):** apply immediately, no tailoring needed.
-- **Apply with tailoring (35–44/60):** worth applying; address top gaps in CV before sending.
-- **Low ROI (<35/60):** skip unless there is a strong referral or very low competition.
-
-Adjust thresholds in the profile to match search strategy: a broader/aggressive search may lower the strong-apply bar; a selective/senior-only search may raise it.
+Reason: `strategy/criteria.md` is init-only (not in CLI `managedEntries`), so `update` does not refresh it — same pattern as the Fit Score Bands migration.

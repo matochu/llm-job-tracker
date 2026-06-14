@@ -15,10 +15,16 @@ Before starting, read:
 3. the resolved profile from the Profile Resolution rules below
 4. `config/language.md`
 5. `config/paths.md`
-6. `strategy/criteria.md`
+6. `strategy/criteria.md` (includes `## Fit Rubric` and `## Fit Score Bands`)
 7. `style/cv-style.md`
 8. `candidate/stories.md`
 9. `config/next-actions.md`
+
+Optionally, if the vacancy is already tracked, also read:
+- the matching row in `data/tracker.md` (for resolved profile, status, and company context)
+- `data/companies/[slug]/prep-notes.md` if it exists (Company-evidence for Culture & red flags dimension)
+
+Absence of these optional files is fine — affected dimensions use `Unknown` / neutral 3 per the evidence matrix.
 
 ## Profile Resolution
 
@@ -41,7 +47,11 @@ Main agent responsibilities:
 
 Subagent responsibilities:
 
-- read the CV, vacancy, resolved profile, `style/cv-style.md`, and `strategy/criteria.md`
+- read the CV, vacancy, resolved profile, `style/cv-style.md`, and `strategy/criteria.md` (including `## Fit Rubric`)
+- check Hard Gates (profile reject rules + candidate hard constraints) → PASS / DISQUALIFIED / UNRESOLVED
+- score the 6-dimension rubric from `strategy/criteria.md`, citing only the evidence types that apply per the evidence matrix; mark Unknown + score 3 when evidence is absent; raise UNRESOLVED (not neutral 3) when logistics evidence is absent while a hard constraint applies
+- never fabricate external signals (Glassdoor, comp, referral, reputation) not present in loaded files
+- report any Hard Gate hit with the triggering rule or constraint
 - score fit, style, keyword coverage, risks, and interview readiness
 - suggest concrete edits without applying them
 - return a concise structured review for the main agent to integrate
@@ -61,16 +71,25 @@ If this skill is called by `job-tracker:run`, its output is an internal fit-revi
    - domain
    - top responsibilities
    - location/work mode
-4. Score fit using the configured rubric and resolved profile. After summing the score, apply the fit score bands from the resolved profile's `## Fit Score Bands` section to determine the verdict. If the profile has no `## Fit Score Bands` section, use the defaults from `strategy/criteria.md` (strong apply ≥45, apply with tailoring 35–44, low ROI <35).
-5. Check CV style and hygiene:
+4. Hard Gates — before scoring, check:
+   a. Profile reject rules from the resolved profile.
+   b. Candidate hard constraints from `candidate/candidate.md` (work authorization, location/timezone, legal).
+   Emit PASS / DISQUALIFIED / UNRESOLVED with the triggering rule or constraint.
+   - DISQUALIFIED → record "Disqualified by rule: \<rule\>"; proceed to score for reference but override the verdict.
+   - UNRESOLVED → record "UNRESOLVED: clarify \<constraint\>"; proceed to score normally but forbid "apply now" in the recommendation.
+5. Score fit using the `## Fit Rubric` in `strategy/criteria.md`. Score each of the 6 dimensions 1–5 per the anchors and evidence matrix. `Total = (Σ of 6) × 2`. Apply the fit score bands from the resolved profile's `## Fit Score Bands` section to determine the verdict. If the profile has no `## Fit Score Bands` section, use the defaults from `strategy/criteria.md`.
+   - If Hard Gate is DISQUALIFIED, override verdict to "Disqualified by rule" regardless of numeric score.
+   - If Hard Gate is UNRESOLVED, keep the band verdict but change the recommendation to "clarify \<constraint\> first."
+   - Application ROI / effort (referral, competition, deadline, tailoring cost) shapes the Recommendation only — do not add it to the total.
+6. Check CV style and hygiene:
    - forbidden sections or phrases
    - career expectations quality
    - keyword coverage
    - over-targeting or invented evidence
    - readability and ATS compatibility
-6. Suggest concrete edits. Do not apply edits unless the user asks.
-7. Match existing interview stories from `candidate/stories.md` to the vacancy themes using story IDs. Report `Strong`, `Workable`, `Stretch`, or `Gap` for each important interview theme. If coverage is missing, suggest `job-tracker:stories [company-or-topic]` questions instead of inventing stories.
-8. If the user asks, apply edits and suggest `job-tracker:pdf [resume.md]`.
+7. Suggest concrete edits. Do not apply edits unless the user asks.
+8. Match existing interview stories from `candidate/stories.md` to the vacancy themes using story IDs. Report `Strong`, `Workable`, `Stretch`, or `Gap` for each important interview theme. If coverage is missing, suggest `job-tracker:stories [company-or-topic]` questions instead of inventing stories.
+9. If the user asks, apply edits and suggest `job-tracker:pdf [resume.md]`.
 
 ## Output
 
@@ -85,16 +104,30 @@ Reply in the configured assistant language using this structure:
 - Must-have:
 - Domain / mode:
 
+## Hard Gates
+
+- [PASS | DISQUALIFIED: \<rule or constraint\> | UNRESOLVED: \<constraint to clarify\>]
+
 ## Score
 
-| Criterion | Score | Comment |
-|---|---:|---|
+| Dimension | Score (1–5) | Evidence | Cited | Rationale |
+|---|---:|---|---|---|
+| Requirements match | | CV + JD | | |
+| Profile alignment | | JD + Profile | | |
+| Seniority & scope | | CV + JD | | |
+| Compensation & logistics | | JD + Candidate | | |
+| Culture & red flags | | Company + JD | | |
+| Growth & trajectory | | CV + JD/Profile | | |
 
-**Total: NN/60**
+**Total: NN/60** — **Verdict: [Strong apply | Apply with tailoring | Low ROI / skip | Disqualified by rule]**
 
-**Verdict: [Strong apply | Apply with tailoring | Low ROI / skip]** — [one-line reason tied to the resolved profile band]
+*(UNRESOLVED Hard Gate does not change the band but blocks an "apply now" recommendation.)*
 
-**Recommendation:** [concrete next step — e.g. "apply now", "fix top 2 gaps then apply", or "skip unless referral available"]
+## Application ROI / Effort
+
+- referral path, competition, deadline, tailoring cost, pipeline capacity
+
+**Recommendation:** [apply now | tailor top gaps first | get referral first | clarify \<constraint\> first | defer | skip]
 
 ## Style / Hygiene
 
