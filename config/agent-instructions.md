@@ -23,11 +23,11 @@ Search-specific targets, fit signals, reject rules, priority rules, application 
 
 ## Hard Rules
 
-- Do not bypass `job:*` skills by writing their expected artifacts directly.
+- Do not bypass `job-tracker:*` skills by writing their expected artifacts directly.
 - Company research sections in `data/companies/*/prep-notes.md` must be produced through `job-tracker:company`.
 - `### Manual Message Drafts` must be produced through `job-tracker:draft`.
 - Having research, contact, or draft data already in context is not a valid reason to skip the relevant skill.
-- `job-tracker:run` must call the relevant `job:*` skill instead of reconstructing that skill's output manually.
+- `job-tracker:run` must call the relevant `job-tracker:*` skill instead of reconstructing that skill's output manually.
 - Never mark outreach, applications, LinkedIn messages, connection requests, or email as sent/submitted unless the user explicitly says they did it outside the tool and asks to update status.
 - `job-tracker:apply` is the only workflow that may submit an ATS/job application from the browser, and only after explicit user confirmation in the same run. It must never send LinkedIn messages, connection requests, emails, or referral outreach.
 
@@ -52,11 +52,11 @@ Search-specific targets, fit signals, reject rules, priority rules, application 
 - `job-tracker:find` — find new leads, verify them at source, add to Raw Pipeline.
 - `job-tracker:setup` — run the first-step interactive readiness check before `job-tracker:run`.
 - `job-tracker:health` — check tracker/profile/company/CV/PDF consistency, seed missing protected-zone files, and apply pending in-file migrations from `migrations/<version>.md` with confirmation.
-- `job-tracker:run` — orchestrate the full search/prep/draft/CV/fit/stories/PDF path with frequent tracker updates and final summary.
-- `job-tracker:verify` — verify tracked roles and run coarse intake/prep/final reviewer passes for `job-tracker:run`.
+- `job-tracker:run` — orchestrate the full search/prep/draft/CV/fit/stories/PDF path with frequent tracker updates and final summary; owns its own intake/prep/final reviewer gates.
+- `job-tracker:verify` — liveness re-check of tracked roles at source; classifies active, closed, or unclear and narrows tracker updates.
 - `job-tracker:company` — research one company, roles, ATS, contacts, tech stack, prep notes.
 - `job-tracker:draft` — prepare recruiter/engineering/referral manual message drafts and save them in prep notes.
-- `job-tracker:status` — inspect tracker/prep-notes status and propose letter-key next actions.
+- `job-tracker:status` — home base: pipeline state, top priorities, and what to do next.
 - `job-tracker:profile` — show, switch, validate, add, or remove profile configuration.
 - `job-tracker:cv` — create or update company-specific Markdown CV.
 - `job-tracker:fit` — score a CV against a vacancy via subagent when supported and suggest edits.

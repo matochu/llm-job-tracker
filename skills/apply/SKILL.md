@@ -140,4 +140,4 @@ Reply in the configured assistant language and include:
 - manual user actions, when relevant, without shortcut letters
 - footer with `Active profile: <slug>` and context-specific `job-tracker:action` next actions from `config/next-actions.md`
 
-`Next actions` must contain only agent-runnable `job:*` actions.
+`Next actions` must contain only agent-runnable `job-tracker:*` actions.

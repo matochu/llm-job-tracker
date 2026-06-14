@@ -30,7 +30,7 @@ Next internal step: run `job-tracker:company ExampleCo`
 Active profile: ai
 ```
 
-`Next actions` are agent actions only: preparation, analysis, verification, drafting, generation, PDF export, tracker updates, or another `job:*` workflow the user can ask the agent to run.
+`Next actions` are agent actions only: preparation, analysis, verification, drafting, generation, PDF export, tracker updates, or another `job-tracker:*` workflow the user can ask the agent to run.
 
 Manual work the user must do outside the agent belongs in a separate `Manual user actions` section. Manual user actions include writing/sending LinkedIn messages or emails, clicking send/connect buttons, replying to recruiters, or manually checking private UI state.
 
@@ -47,7 +47,7 @@ Do not assign shortcut letters to `Manual user actions`. They are reminders/chec
 - Avoid duplicate shortcuts within the same footer. If two actions want the same letter, choose the next recognizable letter.
 - Do not include actions that are already done or irrelevant.
 - If an action would run another job-search workflow, use the `job-tracker:action` command form.
-- Every workflow action in `Next actions` must include an explicit `job:*` command.
+- Every workflow action in `Next actions` must include an explicit `job-tracker:*` command.
 - Do not include manual LinkedIn/email/application/user-side work in `Next actions`.
 - Do not show legacy raw skill commands such as `find-jobs`, `company-research`, `tailor-cv`, or `write-outreach` in user-facing next actions.
 - If an action mutates tracker/prep-notes, say what will change.

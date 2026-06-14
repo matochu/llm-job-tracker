@@ -1,6 +1,6 @@
 ---
 name: job-tracker:health
-description: "Checks job-search workspace integrity, tracker/profile schema, orphan company artifacts, CV/PDF consistency, duplicate URLs, Session Reports, hook/install sync signals, and reports concrete fixes without doing search or preparation work."
+description: "Workspace integrity lint and pending migrations: run when status flags issues, after large batches, or before release."
 argument-hint:
 ---
 
@@ -134,4 +134,4 @@ Reply in the configured assistant language and include:
 - recommended narrow fixes in priority order
 - footer with `Active profile: <slug>` and context-specific `job-tracker:action` next actions from `config/next-actions.md`
 
-`Next actions` must contain only agent-runnable `job:*` actions. Manual user work, if any, belongs under `Manual user actions`.
+`Next actions` must contain only agent-runnable `job-tracker:*` actions. Manual user work, if any, belongs under `Manual user actions`.

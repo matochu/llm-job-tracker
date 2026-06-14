@@ -4,7 +4,7 @@ description: "Orchestrates a full job-search pass: discovery or selected company
 argument-hint: "[profile-slug] [company-or-search-filter]"
 ---
 
-Run a complete job-search pass by coordinating existing `job:*` skills.
+Run a complete job-search pass by coordinating existing `job-tracker:*` skills.
 
 ## Load Config
 
@@ -45,9 +45,89 @@ Do not stop for soft uncertainty. Record soft issues in `data/tracker.md` and th
 
 It never sends applications, emails, LinkedIn messages, connection requests, or outreach. `job-tracker:draft` prepares manual message drafts only.
 
-Use `job-tracker:verify` as a coarse reviewer pass, not as per-step micro-gates. When subagent execution or a fresh context is available, run `job-tracker:verify` reviewer passes in that subagent.
+QA reviewer gates (intake / prep / final) are defined in `## Reviewer Gates` below. Run each gate at the designated step. When subagent execution or a fresh context is available, run each gate in a fresh subagent so review context stays independent from the producing step.
 
 Do not bypass child skills by reconstructing their expected artifacts manually. `job-tracker:run` must call `job-tracker:company` for prep-note research, `job-tracker:draft` for `### Manual Message Drafts`, `job-tracker:cv` for CV tailoring, `job-tracker:fit` for fit review, `job-tracker:stories` for interview story mapping, and `job-tracker:pdf` for PDF export.
+
+## Reviewer Gates
+
+Three QA passes run inside `job-tracker:run` to keep the orchestrator honest. Each gate runs as a **fresh subagent** when subagent execution is available: give it a reviewer stance (inspect artifacts, produce a verdict, do not rewrite producing-step work), the criteria block from this section, and only the target artifacts/tracker scope. If subagent execution is unavailable, run in the current context but keep the reviewer stance.
+
+Gates return a verdict and, when `Continue: yes`, a `Next internal step`. When `job-tracker:run` receives `Continue: yes`, immediately execute the reported `Next internal step` or derive the next step from the internal action queue — do not treat a `Continue: yes` result as a user-facing stop point.
+
+Verdict vocabulary: `pass` / `warning` / `needs_fix` / `blocked`. Include `Continue: yes` or `Continue: no`. Example:
+
+```md
+Verdict: pass
+Continue: yes
+Next internal step: run `job-tracker:company ExampleCo`
+```
+
+### Intake Gate
+
+Run after `job-tracker:find` or before processing a batch.
+
+Review each candidate lead for:
+
+- `Profile` column exists and is filled with the active profile used for discovery
+- source URL or board URL exists
+- role can be verified at company/ATS/source of truth
+- role is active or unclear but worth retaining
+- role does not obviously violate resolved profile reject rules
+- duplicate company/role rows are not being introduced
+
+Allowed updates:
+
+- fix narrow tracker metadata such as checked date, source status, duplicate note, or profile value when the active profile is unambiguous
+- move closed/disappeared roles to Archive
+- mark inaccessible roles as blocked with reason
+
+Do not create prep notes, draft messages, tailor CVs, or export PDFs in this gate.
+
+### Prep Gate
+
+Run after `job-tracker:run` has processed a company or batch.
+
+Review prepared state for each company:
+
+- tracker row still points to an active or intentionally monitored role
+- row-level `Profile` matches the profile used for prep and CV decisions
+- `data/companies/[slug]/prep-notes.md` exists when company research was claimed
+- prep notes separate verified facts from assumptions
+- useful contacts are recorded without inventing relationship, availability, or willingness
+- if contacts were found, `### Manual Message Drafts` exists or the missing draft is listed as a next action
+- message drafts are clearly manual drafts only
+- no artifact says or implies that the agent sent, applied, connected, submitted, or contacted anyone
+- prep-note research and manual message draft sections appear to come from the required `job-tracker:company` and `job-tracker:draft` workflow, not from manual reconstruction by `job-tracker:run`
+- CV exists only when the role is active and worth CV work
+- fit review result is recorded when CV work was done
+- PDF exists only when Markdown CV exists and PDF export was appropriate
+
+Allowed updates:
+
+- correct tracker statuses that overstate readiness
+- add reviewer notes for missing prep/CV/PDF/manual-draft artifacts
+- mark blockers or warnings for the final gate
+
+Do not write new outreach text, rewrite CV content, or perform application/contact actions.
+
+### Final Gate
+
+Run before the final summary.
+
+Audit the full run result:
+
+- every changed tracker row has a `Profile`
+- statuses, prep notes, CV, fit, PDF, and next actions agree with each other
+- companies are not described as ready to apply, submit, send, or contact merely because artifacts exist
+- manual message drafts are represented as `manual message draft prepared`; the user still writes/sends manually outside the skill
+- prep notes and manual message drafts are not reported as produced by `job-tracker:run` directly; they must be attributed to `job-tracker:company` and `job-tracker:draft`
+- manual user work is listed under `Manual user actions`, not as shortcut-based `Next actions`
+- closed roles are archived or marked with a clear reason
+- monitoring candidates have a reason and next check path
+- remaining agent work is expressed as `job-tracker:action` next actions, not vague prose; manual user work is kept in `Manual user actions`
+
+Return one reviewer verdict for the run and only the highest-signal issues.
 
 ## Orchestrator Mode
 
@@ -68,17 +148,17 @@ Use a run plan and progress updates instead of intermediate `Next actions`:
 
 When a child skill returns a result inside `job-tracker:run`, rewrite that result as `Run progress` and continue with `Next internal step` whenever runnable internal work remains. Do not let child-skill result text become the final user-facing response unless the run is complete or blocked.
 
-Do not print a `Next actions:` footer after profile switching, `job-tracker:find`, `job-tracker:verify intake`, or a per-company child step unless the response state is `paused-resumable`, `blocked`, or `done`.
+Do not print a `Next actions:` footer after profile switching, `job-tracker:find`, the intake reviewer gate, or a per-company child step unless the response state is `paused-resumable`, `blocked`, or `done`.
 
 Only show user-facing `Next actions:` in the final summary, in a hard-blocker response, or in a `paused-resumable` response.
 
 If there is any runnable internal step remaining, do not output final `Next actions`; continue the run.
 
-When `job-tracker:verify` returns `Continue: yes`, immediately execute its reported `Next internal step` or derive the next step from the internal action queue. A verifier summary that says `Continue: yes` is not a stopping point and must not become the final response.
+When a reviewer gate returns `Continue: yes`, immediately execute its reported `Next internal step` or derive the next step from the internal action queue. A gate result that says `Continue: yes` is not a stopping point and must not become the final response.
 
 Runnable internal steps include:
 
-- `job-tracker:verify intake`
+- intake reviewer gate (see `## Reviewer Gates`)
 - `job-tracker:company`
 - `job-tracker:draft`
 - `job-tracker:cv`
@@ -86,8 +166,8 @@ Runnable internal steps include:
 - `job-tracker:stories`
 - `job-tracker:pdf`
 - tracker/prep-note updates
-- `job-tracker:verify prep`
-- `job-tracker:verify final`
+- prep reviewer gate (see `## Reviewer Gates`)
+- final reviewer gate (see `## Reviewer Gates`)
 
 Never list `job-tracker:fit` or `job-tracker:pdf` as final `Next actions` when `job-tracker:run` has enough inputs to run them internally.
 
@@ -139,7 +219,7 @@ Maintain an internal action queue during the run.
 
 For each queued item, track:
 
-- action: the exact `job:*` child skill or tracker update
+- action: the exact `job-tracker:*` child skill or tracker update
 - target: company, file path, vacancy URL, or tracker section
 - status: pending / running / done / skipped / blocked
 - reason: why it is queued, skipped, or blocked
@@ -157,7 +237,7 @@ During the run, repeat and update the plan periodically:
 
 - after profile switching
 - after `job-tracker:find`
-- after `job-tracker:verify intake`
+- after the intake reviewer gate
 - after selecting the work set
 - after every 2-3 company steps, or after each company when the run is small
 - after any hard blocker or major soft-blocker cluster
@@ -208,7 +288,7 @@ Do not pause for fit risks, stack gaps, missing nice-to-have keywords, weak cont
    - add accepted leads to `Raw Pipeline`
    - store the active profile in `Profile`
    - record skipped/blocked sources when relevant
-4. If discovery added or changed leads, run `job-tracker:verify intake` as a reviewer pass before selecting the work set. Prefer subagent execution when available.
+4. If discovery added or changed leads, run the **intake reviewer gate** (see `## Reviewer Gates`) before selecting the work set. Prefer fresh-subagent execution when available.
 5. Select the work set:
    - prefer P1/P2, active roles, reachable contacts, and strong fit
    - mark closed, rejected, unclear, or low-ROI roles as skipped in `data/tracker.md` and continue with the next candidate
@@ -224,8 +304,8 @@ Do not pause for fit risks, stack gaps, missing nice-to-have keywords, weak cont
    - run `job-tracker:stories [company]` when the fit review exposes important interview themes, gaps, or role-specific behavioral risks
    - run `job-tracker:pdf [resume.md]` only when the fit is strong enough and the Markdown CV is ready
    - update `data/tracker.md` after PDF export: PDF ready or skipped with reason
-7. After a selected company or batch is processed, run `job-tracker:verify prep [company-or-batch]` as a reviewer pass. Prefer subagent execution when available. Apply narrow tracker/note fixes when the verdict is `needs_fix`, then continue unless the verdict is `blocked`.
-8. Before the final summary, run `job-tracker:verify final` as a reviewer pass. Prefer subagent execution when available. The final summary must reflect its warnings, blockers, and continuation verdict.
+7. After a selected company or batch is processed, run the **prep reviewer gate** (see `## Reviewer Gates`). Prefer fresh-subagent execution when available. Apply narrow tracker/note fixes when the verdict is `needs_fix`, then continue unless the verdict is `blocked`.
+8. Before the final summary, run the **final reviewer gate** (see `## Reviewer Gates`). Prefer fresh-subagent execution when available. The final summary must reflect its warnings, blockers, and continuation verdict.
 
 ## Autonomy And Blockers
 
@@ -285,6 +365,6 @@ Reply in the configured assistant language and include:
   - choose whether to move a company to Monitoring or Archive
 - final recommended next action
 - for `paused-resumable`, the exact single `[n] Continue Run` footer from the Resumable Pause UX section
-- for `blocked` or `done`, a footer with `Active profile: <slug>` and context-specific `job-tracker:action` next actions using `config/next-actions.md`; `Next actions` must contain only agent-runnable `job:*` actions, while user-side LinkedIn/email/application work must be listed separately under `Manual user actions`
+- for `blocked` or `done`, a footer with `Active profile: <slug>` and context-specific `job-tracker:action` next actions using `config/next-actions.md`; `Next actions` must contain only agent-runnable `job-tracker:*` actions, while user-side LinkedIn/email/application work must be listed separately under `Manual user actions`
 
 Never treat message drafts as permission to apply, submit, send, or contact anyone. Use wording like `manual message draft prepared`; the user still writes/sends manually outside the skill.

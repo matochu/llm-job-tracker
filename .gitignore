@@ -24,3 +24,6 @@ release-notes.md
 
 # Local private/publication scan patterns
 .public-scan-patterns.local
+
+# Local dev files
+*.local.md

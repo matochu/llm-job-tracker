@@ -1,6 +1,6 @@
 ---
 name: job-tracker:status
-description: "Reviews the configured tracker and prep notes, summarizes current pipeline status, and proposes letter-key next actions that can trigger follow-up skills or tracker updates."
+description: "Your home base: current pipeline state, top priorities, and what to do next. Start here when unsure."
 argument-hint: "[company-or-section]"
 ---
 
@@ -46,7 +46,7 @@ Do not generate ad hoc `for company in ...; do ...; done` shell loops for status
 
 ## Workflow
 
-1. Read the configured tracker.
+1. Read the configured tracker. Then check for pending migrations: if `config/.installed-version` and `config/.migrated-version` both exist locally and `migrated-version` < `installed-version` by semver, emit one line — "pending local migrations — run `job-tracker:health`". If either file is missing, or versions are equal, or `migrated-version` > `installed-version`, skip silently. Do not read `$CLAUDE_PLUGIN_ROOT` or any remote source; only compare the two local workspace files.
 2. If `$ARGUMENTS` names a company or section, focus there. Otherwise review the whole pipeline.
 3. Inspect relevant `data/companies/[slug]/prep-notes.md`, `resume.md`, and PDFs when needed to determine readiness.
 4. Classify items against tracker state and resolved profile priorities:
@@ -98,4 +98,4 @@ After the board:
 
 - recommended next action first
 - grouped next action when several companies need the same `job-tracker:action`
-- footer with `Active profile: <slug>` and context-specific `job-tracker:action` next actions; `Next actions` must contain only agent-runnable `job:*` actions
+- footer with `Active profile: <slug>` and context-specific `job-tracker:action` next actions; `Next actions` must contain only agent-runnable `job-tracker:*` actions

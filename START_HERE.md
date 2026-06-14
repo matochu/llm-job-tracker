@@ -17,3 +17,5 @@ Then in the LLM tool run:
 ```text
 job-tracker:setup
 ```
+
+Once configured, `job-tracker:status` is your home base — run it when unsure what to do next, or use `job-tracker:run` to start an autonomous pass.

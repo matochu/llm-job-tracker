@@ -242,11 +242,11 @@ During `job-tracker:run`, child-skill results are internal progress, not user-fa
 
 ## Hard Rules
 
-- Do not bypass `job:*` skills by writing their expected artifacts directly.
+- Do not bypass `job-tracker:*` skills by writing their expected artifacts directly.
 - Company research sections in `data/companies/*/prep-notes.md` must be produced through `job-tracker:company`.
 - `### Manual Message Drafts` must be produced through `job-tracker:draft`.
 - Having research, contact, or draft data already in context is not a valid reason to skip the relevant skill.
-- `job-tracker:run` must call the relevant `job:*` skill instead of reconstructing that skill's output manually.
+- `job-tracker:run` must call the relevant `job-tracker:*` skill instead of reconstructing that skill's output manually.
 - Never mark outreach, applications, LinkedIn messages, connection requests, or email as sent/submitted unless the user explicitly says they did it outside the tool and asks to update status.
 - `job-tracker:apply` is the only workflow that may submit an ATS/job application from the browser, and only after explicit user confirmation in the same run. It must never send LinkedIn messages, connection requests, emails, or referral outreach.
 
@@ -254,15 +254,27 @@ During `job-tracker:run`, child-skill results are internal progress, not user-fa
 
 Use `job-tracker:action` commands to run skills:
 
+**Entry — start here**
+
 | Command | Runs |
 |---|---|
-| `job-tracker:setup` | run the first-step interactive readiness check before `job-tracker:run` |
-| `job-tracker:health` | check tracker/profile/company/CV/PDF consistency and recommend narrow fixes |
-| `job-tracker:status` | inspect tracker and recommend next actions |
-| `job-tracker:run [profile?] [target]` | orchestrate search, company prep, manual message drafts, CV, fit, PDF, tracker updates, and final summary |
-| `job-tracker:find` | find new leads, verify them at source, add them to `Raw Pipeline`, and report checked/skipped/blocked sources |
-| `job-tracker:verify` | verify tracked jobs or run intake/prep/final reviewer passes |
+| `job-tracker:status` | home base: pipeline state, top priorities, and what to do next |
+| `job-tracker:run [profile?] [target]` | autonomous pass: search, company prep, manual message drafts, CV, fit, PDF, tracker updates, and final summary |
+
+**Helpers**
+
+| Command | Runs |
+|---|---|
+| `job-tracker:setup` | first-step interactive readiness check before `job-tracker:run` |
+| `job-tracker:health` | workspace integrity lint and pending migrations |
+| `job-tracker:verify` | liveness re-check of tracked roles at source |
+| `job-tracker:find` | find new leads, verify them at source, add them to `Raw Pipeline` |
 | `job-tracker:profile [action]` | inspect, switch, validate, add, or remove job-search profiles |
+
+**Per-company**
+
+| Command | Runs |
+|---|---|
 | `job-tracker:company Company` | research one company, ATS, active roles, contacts, tech stack, and prep notes |
 | `job-tracker:draft Company` | prepare and save manual recruiter, engineering-manager, founder, or referral message drafts |
 | `job-tracker:cv Company` | create or update a company-specific Markdown CV |
