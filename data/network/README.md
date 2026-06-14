@@ -22,7 +22,7 @@ Any `.md` file works. Recommended table format for best results:
 ```md
 | Name | Company | Role | LinkedIn | Email | Notes |
 |---|---|---|---|---|---|
-| Jane Doe | Acme Inc | Staff Engineer | linkedin.com/in/jane | jane@acme.com | met at JSConf 2024 |
+| [name] | [company] | [role] | [linkedin url] | [email] | [how you know them] |
 ```
 
 Freeform text (lists, paragraphs) is also accepted — parsed best-effort.

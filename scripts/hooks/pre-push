@@ -1,0 +1,23 @@
+#!/bin/sh
+# Pre-push guard: block pushing private/local data into the public repo.
+# Runs the public-safety scan over git-visible files only (tracked +
+# untracked-not-ignored), so local artifacts like .claude/ or
+# data/network/*.csv never block a push and never leak into the remote.
+
+repo_root=$(git rev-parse --show-toplevel) || exit 0
+cd "$repo_root" || exit 0
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "pre-push: node not found, skipping check-public" >&2
+  exit 0
+fi
+
+node scripts/check-public.js
+status=$?
+
+if [ "$status" -ne 0 ]; then
+  echo "pre-push: check-public failed — push aborted. Fix the issues above or push with --no-verify to override." >&2
+  exit 1
+fi
+
+exit 0

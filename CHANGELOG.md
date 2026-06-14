@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## 0.3.2 - 2026-06-14
+
+### Added
+
+- Network source layer: `job-tracker:find network` discovers opportunities from local referral/contact sources, and `job-tracker:company` checks local network sources before LinkedIn contact research.
+- `data/network/` as the canonical gitignored location for private contact/referral data, with committed `README.md` and `.gitkeep`.
+- `Source` column for Raw Pipeline entries, including `network` for leads discovered through local contact sources.
+- `migrations/0.3.2.md` — creates `data/network/`, adds the Raw Pipeline `Source` column, and adds network/referral paths to `config/paths.md`.
+
 ## 0.3.1 - 2026-06-13
 
 ### Added

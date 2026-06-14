@@ -1,7 +1,7 @@
 {
   "name": "job-tracker",
   "description": "Local-first job-search workspace for LLM agents: find jobs, research companies, tailor CVs, draft outreach, review fit, prepare interview stories, and export PDFs.",
-  "version": "0.3.0",
+  "version": "0.3.2",
   "author": {
     "name": "Serhii Frolov",
     "url": "https://github.com/matochu"

@@ -2,6 +2,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const defaultRoot = resolve(scriptDir, '..');
@@ -68,7 +69,37 @@ function fail(message, matches = []) {
   process.exit(1);
 }
 
-function walkFiles(root, dir = root, files = []) {
+// Build the set of paths git would publish: tracked files plus untracked files
+// that are not gitignored. Returns null when not in a git repo (e.g. an
+// extracted package), in which case callers fall back to scanning the whole tree.
+// This makes check-public ignore local-only, gitignored artifacts such as
+// `.claude/`, `.sessions/`, and `data/network/*` that never reach a commit.
+function gitVisibleSet(root) {
+  try {
+    const out = execFileSync(
+      'git',
+      ['ls-files', '--cached', '--others', '--exclude-standard'],
+      { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }
+    );
+    const set = new Set();
+    for (const line of out.split(/\r?\n/)) {
+      if (line) set.add(resolve(root, line));
+    }
+    return set;
+  } catch {
+    return null;
+  }
+}
+
+function hasVisibleUnder(absPath, visibleSet) {
+  const prefix = absPath.endsWith('/') ? absPath : `${absPath}/`;
+  for (const visible of visibleSet) {
+    if (visible === absPath || visible.startsWith(prefix)) return true;
+  }
+  return false;
+}
+
+function walkFiles(root, dir = root, files = [], visibleSet = null) {
   if (!existsSync(dir)) return files;
 
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -77,22 +108,22 @@ function walkFiles(root, dir = root, files = []) {
     const path = join(dir, entry.name);
     if (entry.isDirectory()) {
       if (forbiddenDirNames.has(entry.name)) {
-        files.push(path);
+        if (!visibleSet || hasVisibleUnder(path, visibleSet)) files.push(path);
         continue;
       }
-      walkFiles(root, path, files);
+      walkFiles(root, path, files, visibleSet);
     } else if (entry.isFile() && !excludedFiles.has(entry.name)) {
-      files.push(path);
+      if (!visibleSet || visibleSet.has(path)) files.push(path);
     }
   }
 
   return files;
 }
 
-function scanFiles(root, pattern) {
+function scanFiles(root, pattern, visibleSet = null) {
   const matches = [];
 
-  for (const path of walkFiles(root)) {
+  for (const path of walkFiles(root, root, [], visibleSet)) {
     let text;
     try {
       text = readFileSync(path, 'utf8');
@@ -111,10 +142,10 @@ function scanFiles(root, pattern) {
   return matches;
 }
 
-function hasLiveCompanyArtifacts(root) {
+function hasLiveCompanyArtifacts(root, visibleSet) {
   const companiesDir = join(root, 'data', 'companies');
   if (!existsSync(companiesDir)) return false;
-  return walkFiles(root, companiesDir).some((path) => basename(path) !== '.gitkeep');
+  return walkFiles(root, companiesDir, [], visibleSet).some((path) => basename(path) !== '.gitkeep');
 }
 
 function hasExtraCandidateCv(root) {
@@ -136,18 +167,22 @@ function readLocalPatterns(root) {
 
 function main() {
   const root = parseArgs(process.argv.slice(2));
+  const visibleSet = gitVisibleSet(root);
 
   for (const path of forbiddenPaths) {
-    if (existsSync(join(root, path))) {
+    const abs = join(root, path);
+    const present = visibleSet ? hasVisibleUnder(abs, visibleSet) : existsSync(abs);
+    if (present) {
       fail(`forbidden public path exists: ${path}`);
     }
   }
 
-  if (existsSync(join(root, 'EXPORT_REVIEW.md'))) {
+  const exportReview = join(root, 'EXPORT_REVIEW.md');
+  if (visibleSet ? visibleSet.has(exportReview) : existsSync(exportReview)) {
     fail('EXPORT_REVIEW.md must not be published');
   }
 
-  const forbiddenGeneratedDirs = walkFiles(root).filter((path) => path.endsWith('/__pycache__'));
+  const forbiddenGeneratedDirs = walkFiles(root, root, [], visibleSet).filter((path) => path.endsWith('/__pycache__'));
   if (forbiddenGeneratedDirs.length) {
     fail('generated Python cache directory found', forbiddenGeneratedDirs.map((path) => relative(root, path)));
   }
@@ -158,7 +193,7 @@ function main() {
     }
   }
 
-  if (hasLiveCompanyArtifacts(root)) {
+  if (hasLiveCompanyArtifacts(root, visibleSet)) {
     fail('data/companies must not contain live company artifacts');
   }
 
@@ -166,19 +201,19 @@ function main() {
     fail('candidate/cv must contain only cv-base.md');
   }
 
-  let matches = scanFiles(root, genericPrivatePattern);
+  let matches = scanFiles(root, genericPrivatePattern, visibleSet);
   if (matches.length) {
     fail('private marker found', matches);
   }
 
   for (const pattern of readLocalPatterns(root)) {
-    matches = scanFiles(root, pattern);
+    matches = scanFiles(root, pattern, visibleSet);
     if (matches.length) {
       fail('local private marker found', matches);
     }
   }
 
-  matches = scanFiles(root, stalePathPattern);
+  matches = scanFiles(root, stalePathPattern, visibleSet);
   if (matches.length) {
     fail('stale architecture path found', matches);
   }

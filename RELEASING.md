@@ -66,6 +66,16 @@ Do not name a migration file after a version until the release version is decide
 | `config/.installed-version` | CLI on init/update | written into the user's workspace |
 | `config/.migrated-version` | `job-tracker:health` after migrations | written into the user's workspace |
 
+## Local Git Hooks
+
+A pre-push hook in `scripts/hooks/pre-push` runs `node scripts/check-public.js` before every push, blocking any private/local data from reaching the public remote. The hook script is committed, but the hook path must be enabled once per clone (git does not persist `core.hooksPath` across clones):
+
+```bash
+git config core.hooksPath scripts/hooks
+```
+
+The check is git-aware: it only inspects files git would publish (tracked + untracked-not-ignored), so gitignored local artifacts (`.claude/`, `.sessions/`, `data/network/*.csv`, etc.) never trip it. Override a single push with `git push --no-verify` if ever needed.
+
 ## Protected-Zone Changes
 
 When a feature adds or modifies files in protected zones (`candidate/`, `strategy/search-profiles/`, `config/paths.md`, etc.):
