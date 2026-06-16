@@ -36,6 +36,7 @@ const includeEntries = [
 
 // Never ship these — install artifacts, dev-only, or per-user state.
 const excludePaths = new Set([
+  'migrations/next.md',
   'scripts/check-public.js',
   'scripts/build-plugin.js',
   'CLAUDE.md',

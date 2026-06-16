@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## 0.4.1 - 2026-06-16
+
+### Fixed
+
+- Preserve legacy `scripts/resume.css` during workspace update so the next migration can move user-customized PDF CSS to `scripts/cv.css` instead of losing it before `job-tracker:health` runs.
+- `migrations/0.4.1.md` migrates existing workspaces from `scripts/resume.css` to `scripts/cv.css` and updates the protected `config/paths.md` reference.
+
 ## 0.4.0 - 2026-06-14
 
 ### Added

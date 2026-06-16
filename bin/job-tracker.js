@@ -69,7 +69,6 @@ const seedIfMissingEntries = [
 
 
 const removedManagedEntries = [
-  'scripts/resume.css',
   'scripts/check-deps.sh',
   'scripts/check-public.sh',
   'scripts/check-workspace.py',

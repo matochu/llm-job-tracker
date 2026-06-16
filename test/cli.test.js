@@ -248,17 +248,19 @@ test('init copies cv.css and does not copy resume.css', () => {
   assert.equal(existsSync(join(target, 'scripts', 'resume.css')), false);
 });
 
-test('update removes stale resume.css', () => {
+test('update preserves legacy resume.css for health migration when cv.css is missing', () => {
   const parent = makeTempDir();
   const target = join(parent, 'workspace');
   const scaffold = runCli([target, '--no-install']);
   assert.equal(scaffold.status, 0, scaffold.stderr);
+  rmSync(join(target, 'scripts', 'cv.css'));
   writeFileSync(join(target, 'scripts', 'resume.css'), 'old css');
 
   const result = runCli(['update', target, '--no-install']);
 
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(existsSync(join(target, 'scripts', 'resume.css')), false);
+  assert.equal(readFileSync(join(target, 'scripts', 'resume.css'), 'utf8'), 'old css');
+  assert.equal(existsSync(join(target, 'scripts', 'cv.css')), false);
 });
 
 test('update does not overwrite user-modified cv.css', () => {
