@@ -173,6 +173,108 @@ function loadTrackerSchema(root) {
   return schema;
 }
 
+function tableRowsAfterHeading(markdown, heading) {
+  const lines = markdown.split(/\r?\n/);
+  const headingIndex = lines.findIndex((line) => line.trim() === heading);
+  if (headingIndex === -1) return [];
+  const rows = [];
+  for (let index = headingIndex + 1; index < lines.length; index += 1) {
+    const line = lines[index].trim();
+    if (line.startsWith('## ') && index > headingIndex + 1) break;
+    const cells = splitMarkdownRow(line);
+    if (!cells || cells.length < 2 || isSeparatorRow(cells) || cells[0].toLowerCase().includes('provider')) continue;
+    rows.push(cells);
+  }
+  return rows;
+}
+
+function bulletItemsAfterHeading(markdown, heading) {
+  const lines = markdown.split(/\r?\n/);
+  const headingIndex = lines.findIndex((line) => line.trim() === heading);
+  if (headingIndex === -1) return [];
+  const items = [];
+  for (let index = headingIndex + 1; index < lines.length; index += 1) {
+    const line = lines[index].trim();
+    if (/^#{2,3}\s+/.test(line) && index > headingIndex + 1) break;
+    const match = line.match(/^-\s+(.+)$/);
+    if (match) items.push(match[1].trim());
+  }
+  return items;
+}
+
+function parseImplementedAtsProviders(scriptText) {
+  const explicit = scriptText.match(/implementedProviderIds\s*=\s*\[([\s\S]*?)\]/);
+  if (explicit) return [...explicit[1].matchAll(/['"`]([a-z0-9-]+)['"`]/g)].map((item) => item[1]);
+  const match = scriptText.match(/const roleMappers = \{([\s\S]*?)\};/)
+    ?? scriptText.match(/const mapper = \{([\s\S]*?)\}\[provider\]/);
+  if (!match) return [];
+  return [...match[1].matchAll(/^\s*([a-z0-9-]+):\s*roleFrom/mg)].map((item) => item[1]);
+}
+
+function checkSourceRegistry(root) {
+  const issues = [];
+  const registryPath = join(root, 'config', 'source-registry.md');
+  if (!existsSync(registryPath)) {
+    issues.push(issue('error', 'config/source-registry.md is missing; run job-tracker:setup to fill source registry settings before running discovery'));
+    return issues;
+  }
+
+  const registry = readText(registryPath);
+  for (const heading of ['## ATS Probe Providers', '## ATS Probe Search Defaults', '## Browser-Required Sources', '## Source Derivation']) {
+    if (!registry.includes(heading)) {
+      issues.push(issue('error', `config/source-registry.md is missing \`${heading}\`; run job-tracker:setup to fill source registry settings`));
+    }
+  }
+
+  const providerRows = tableRowsAfterHeading(registry, '## ATS Probe Providers');
+  const registryProviders = providerRows
+    .map((cells) => labelsFromCell(cells[0])[0])
+    .filter(Boolean)
+    .sort();
+  for (const cells of providerRows) {
+    const provider = labelsFromCell(cells[0])[0];
+    const feed = labelsFromCell(cells[3])[0] ?? cells[3] ?? '';
+    if (provider && !feed.includes('[slug]')) {
+      issues.push(issue('error', `config/source-registry.md ATS provider \`${provider}\` must define a Discovery feed containing [slug]; run job-tracker:setup to fill source registry settings`));
+    }
+  }
+  for (const heading of ['### Keywords', '### Locations']) {
+    if (!bulletItemsAfterHeading(registry, heading).length) {
+      issues.push(issue('error', `config/source-registry.md is missing list items under \`${heading}\`; run job-tracker:setup to fill source registry settings`));
+    }
+  }
+  const atsScript = readText(join(root, 'scripts', 'ats-probe.js'));
+  const scriptProviders = parseImplementedAtsProviders(atsScript).sort();
+
+  if (!scriptProviders.length) {
+    issues.push(issue('warning', 'scripts/ats-probe.js provider normalizers could not be detected; cannot compare ATS provider registry'));
+  } else if (registryProviders.join(',') !== scriptProviders.join(',')) {
+    issues.push(issue('error', `config/source-registry.md ATS providers (${registryProviders.join(', ') || 'none'}) do not match scripts/ats-probe.js implemented providers (${scriptProviders.join(', ')}); run job-tracker:setup to review source registry settings`));
+  }
+
+  const hasDjinniBrowser = tableRowsAfterHeading(registry, '## Browser-Required Sources')
+    .some((cells) => labelsFromCell(cells[0]).includes('djinni') || cells.join(' ').toLowerCase().includes('djinni.co'));
+  const hasDjinniDerivation = tableRowsAfterHeading(registry, '## Source Derivation')
+    .some((cells) => cells.join(' ').toLowerCase().includes('djinni'));
+  if (!hasDjinniBrowser || !hasDjinniDerivation) {
+    issues.push(issue('error', 'config/source-registry.md must define Djinni as browser-required and include `djinni.co` source derivation; run job-tracker:setup to review source registry settings'));
+  }
+
+  const browserRows = tableRowsAfterHeading(registry, '## Browser-Required Sources');
+  for (const source of ['linkedin', 'djinni']) {
+    const row = browserRows.find((cells) => labelsFromCell(cells[0]).includes(source));
+    const policy = row?.join(' ').toLowerCase() ?? '';
+    if (!row || !policy.includes('playwright') || !policy.includes('user') || !policy.includes('account') || !policy.includes('session')) {
+      issues.push(issue('error', `config/source-registry.md must require Playwright MCP with the user's logged-in account/session for \`${source}\`; run job-tracker:setup to review source registry settings`));
+    }
+    if (policy.includes('web search as a substitute') && !policy.includes('never use')) {
+      issues.push(issue('warning', `config/source-registry.md should explicitly forbid web-search/API substitutes for \`${source}\``));
+    }
+  }
+
+  return issues;
+}
+
 function canonicalField(name, schema) {
   const normalized = String(name ?? '').trim().toLowerCase();
   for (const [canonical, aliases] of Object.entries(schema.fields)) {
@@ -360,6 +462,7 @@ function main() {
   const profiles = listedProfiles(root);
   const schema = loadTrackerSchema(root);
   issues.push(...schema.issues);
+  issues.push(...checkSourceRegistry(root));
   const { rows, issues: trackerIssues } = trackerRows(root, schema);
   issues.push(...trackerIssues);
 

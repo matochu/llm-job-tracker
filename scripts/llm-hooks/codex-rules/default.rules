@@ -18,7 +18,16 @@ prefix_rule(
     decision = "allow",
     justification = "Allow local Python helper scripts and dependency checks used by this workspace.",
     match = [
-        "node scripts/llm-hooks/validate-skill-footers.js",
         "python3 scripts/generate_pdf.py data/companies/example/resume.md",
+    ],
+)
+
+prefix_rule(
+    pattern = ["node"],
+    decision = "allow",
+    justification = "Allow local Node.js validators and workspace helper scripts.",
+    match = [
+        "node scripts/llm-hooks/validate-skill-footers.js",
+        "node scripts/check-workspace.js",
     ],
 )

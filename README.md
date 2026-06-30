@@ -81,7 +81,7 @@ Flags:
 The workspace separates reusable workflows from candidate-specific data:
 
 - `skills/` contains generic agent workflows.
-- `config/` contains settings, paths, language, next-actions, tracker schema, session report schema, and durable agent instructions.
+- `config/` contains settings, paths, language, source registry, next-actions, tracker schema, session report schema, and durable agent instructions.
 - `candidate/` contains candidate facts, stories, and base CVs under `candidate/cv/`.
 - `strategy/` contains search profiles, sources, and scoring criteria.
 - `style/` contains CV and outreach house style.
@@ -257,14 +257,7 @@ node scripts/ats-probe.js discover langfuse.com
 node scripts/ats-probe.js lever company-slug --json
 ```
 
-Supported providers:
-
-- `ashby`
-- `lever`
-- `greenhouse`
-- `workable`
-- `recruitee`
-- `smartrecruiters`
+Supported provider IDs, discovery feed templates, default search keywords, and default locations live in `config/source-registry.md`. `node scripts/check-workspace.js` checks that the registry matches the providers implemented by `scripts/ats-probe.js`.
 
 Default output is:
 
@@ -369,6 +362,7 @@ Do not pass profile slugs to other job commands. Two exceptions may switch the a
 - `config/settings.md` — active profile and profile selection rules.
 - `config/language.md` — assistant reply language and document language.
 - `config/paths.md` — tracker, company notes, CV, PDF generator paths.
+- `config/source-registry.md` — source values, host patterns, ATS probe providers, and browser-required source policy.
 - `config/browser-patterns.md` — Browser MCP interaction rules for JavaScript-rendered and login-required sources.
 - `strategy/criteria.md` — shared scoring labels and tracker row format.
 - `strategy/sources.md` — job-search sources and verification rules.
@@ -395,6 +389,7 @@ All configured paths are relative to the repository root.
 │   ├── language.md
 │   ├── next-actions.md
 │   ├── agent-instructions.md
+│   ├── source-registry.md
 │   ├── browser-patterns.md
 │   ├── tracker-schema.md
 │   └── session-reports.md
@@ -449,7 +444,7 @@ All configured paths are relative to the repository root.
 - Treat LinkedIn-only leads as unverified until confirmed at the source of truth.
 - Outreach workflows prepare manual message drafts only and save them in prep notes. The user writes/sends manually outside the skills.
 - Broad `job-tracker:find` runs must end with a source report showing checked, skipped, blocked, and found sources.
-- LinkedIn, Djinni, browser-filtered boards, and JavaScript-rendered ATS pages must be checked through browser MCP, preferably Playwright MCP or Chrome DevTools MCP. If login is required, log in manually in the opened browser and let the agent continue. Do not replace these checks with plain web-search snippets.
+- Sources marked browser-required in `config/source-registry.md`, browser-filtered boards, and JavaScript-rendered ATS pages must be checked through browser MCP. Follow each source's `Required access` policy; LinkedIn and Djinni require Playwright MCP with the user's logged-in account/session. If login is required, log in manually in the opened browser and let the agent continue. Do not replace these checks with plain web-search snippets.
 
 ## Porting To Another Candidate
 

@@ -19,6 +19,7 @@ Before starting, read:
 7. `config/tracker-schema.md`
 8. `style/outreach-style.md`
 9. `config/next-actions.md`
+10. `config/source-registry.md`
 
 ## Profile Resolution
 
@@ -34,7 +35,7 @@ Before starting, read:
 3. Verify active roles against the resolved profile's fit, reject, work-mode, and priority rules.
 4. Search for referral contacts using a local-first approach:
    a. **Local network check first:** read and normalize all network sources from `data/network/` and any legacy `docs/*referrals*.md` / `docs/*network*.md` (see `strategy/sources.md` — Network Sources). Match contacts against the target company (case-insensitive, suffix-tolerant). Collect any matches as **candidates** for the People/Referrals section, noting their source file. Skip silently if no network sources exist.
-   b. **LinkedIn live scan:** use browser MCP (preferably Playwright MCP or Chrome DevTools MCP) to supplement with additional contacts, verify current roles, and find mutual connections. If LinkedIn is not authenticated, open it in the browser and wait for the user to log in manually. Do not use plain web search as a fallback for LinkedIn contacts.
+   b. **Browser-required contact scan:** use `config/source-registry.md` `## Browser-Required Sources` and each source's `Required access` policy. For LinkedIn contact research, open LinkedIn through the configured browser MCP access path to supplement local contacts, verify current roles, and find mutual connections. If authentication is required, open the source in browser MCP and wait for the user to log in manually. Do not use API calls, WebFetch, curl, Chrome DevTools-only checks, or plain web search as a fallback for browser-required contacts.
    c. Prioritize employees with mutual connections and people matching the configured referral strategy.
    d. Do not send connection requests during research.
    e. Write/update `## People / Referrals` during step 7 (prep notes update) — not before research is complete. Mark locally-sourced contacts in the `Mutual connections` or `Notes` column with their source file (e.g. `local: connections.csv`).

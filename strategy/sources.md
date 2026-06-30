@@ -2,13 +2,13 @@
 
 Use this file as the source checklist for `job-tracker:find`. Do not silently skip sources. If a source cannot be checked because of login, MCP/browser failure, rate limits, or network issues, record it in the final source report.
 
-For browser-specific interaction rules, read `config/browser-patterns.md` before using Browser MCP.
+For source values, host patterns, ATS probe providers, and browser-required source policy, read `config/source-registry.md`. For browser-specific interaction rules, read `config/browser-patterns.md` before using Browser MCP.
 
 ## Search Modes
 
 - **Web search:** good for discovering companies, job-board URLs, funding/news triggers, HN threads, and public ATS pages.
-- **Browser MCP:** required for LinkedIn, Djinni, JavaScript-rendered ATS pages, portfolio boards with filters, and sites that need login/session state. Use Playwright MCP or Chrome DevTools MCP only for these sources; do not use plain web search as a fallback for logged-in or browser-rendered checks.
-- **ATS APIs:** best for exact verification when available.
+- **Browser MCP:** required for sources marked browser-required in `config/source-registry.md`, JavaScript-rendered ATS pages, portfolio boards with filters, and sites that need login/session state. Follow each source's `Required access` policy from `config/source-registry.md`; LinkedIn and Djinni require Playwright MCP with the user's logged-in account/session. Do not use plain web search as a fallback for logged-in or browser-rendered checks.
+- **ATS APIs:** best for discovery when available.
 - **Company careers page:** final source of truth when API/search results disagree.
 
 ## Required Source Pass
@@ -29,7 +29,7 @@ For the `ai` profile, also run the AI / DevEx discovery pass when doing a broad 
 
 ## 1. LinkedIn Jobs
 
-Use Browser MCP only, preferably Playwright MCP or Chrome DevTools MCP, because LinkedIn search and filters are session-dependent. If the browser is not authenticated, open LinkedIn in the browser and wait for the user to log in manually. Do not replace this with web-search snippets.
+Use Playwright MCP only with the user's logged-in LinkedIn account/session because LinkedIn search and filters are session-dependent. If the browser is not authenticated, open LinkedIn in Playwright and wait for the user to log in manually. Do not replace this with API calls, WebFetch, curl, Chrome DevTools-only checks, or web-search snippets.
 
 ### Fast Queries
 
@@ -58,6 +58,8 @@ Do not add a LinkedIn-only lead directly. Open the company careers page or ATS p
 Use web search and direct ATS URLs. Prefer current board/listing pages over old job IDs during discovery.
 
 Treat ATS APIs as the highest-signal discovery layer. When a company has a known ATS slug, prefer the provider API/feed before browser search. Browser or web search is still required when the company uses a custom careers page, the ATS slug is unknown, or the provider API does not expose enough detail.
+
+Provider IDs, host patterns, and source values are configured in `config/source-registry.md` under `## ATS Probe Providers`. Keep that registry aligned with `scripts/ats-probe.js`; do not duplicate provider ownership in skill files.
 
 Canonical probe command:
 
@@ -209,7 +211,9 @@ Use Browser MCP for filters where available. If the board requires login/session
 
 ## 5. Djinni
 
-Use Browser MCP only, preferably Playwright MCP or Chrome DevTools MCP. If redirected to login, open Djinni in the browser and wait for the user to log in manually. Do not replace this with plain web search.
+Use Playwright MCP only with the user's logged-in Djinni account/session. If redirected to login, open Djinni in Playwright and wait for the user to log in manually. Do not replace this with API calls, WebFetch, curl, Chrome DevTools-only checks, or plain web search.
+
+Djinni's source value and browser-required policy live in `config/source-registry.md`.
 
 ### Required Passes
 

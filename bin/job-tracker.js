@@ -65,6 +65,7 @@ const managedEntries = [
 // Files seeded on init and on update only when missing; never overwritten.
 const seedIfMissingEntries = [
   'candidate/application-answers.md',
+  'config/source-registry.md',
 ];
 
 

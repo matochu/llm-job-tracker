@@ -40,6 +40,7 @@ Search-specific targets, fit signals, reject rules, priority rules, application 
 - `strategy/criteria.md` — shared scoring labels and tracker row format.
 - `strategy/sources.md` — job-search sources and verification rules.
 - `config/tracker-schema.md` — tracker sections and update rules.
+- `config/source-registry.md` — source values, host patterns, ATS probe providers, and browser-required source policy.
 - `style/outreach-style.md` — message tone and templates strategy.
 - `style/cv-style.md` — CV house style and review rules.
 - `candidate/stories.md` — factual STAR story bank for interview preparation.
@@ -97,11 +98,12 @@ The skill files should not need candidate-specific edits.
 - `.sessions/` is runtime output and is gitignored; do not commit it.
 - The latest report is the newest file by timestamp; there is no index or `current` pointer.
 
-## Browser / LinkedIn
+## Browser / Sources
 
-- Use browser MCP only, preferably Playwright MCP or Chrome DevTools MCP, for LinkedIn, Djinni, JavaScript-rendered ATS pages, browser filters, and sources that need login/session state.
+- Source values, host patterns, ATS probe providers, and browser-required source policy live in `config/source-registry.md`.
+- Use browser MCP only for sources marked browser-required in `config/source-registry.md`, JavaScript-rendered ATS pages, browser filters, and sources that need login/session state. Follow each source's `Required access` policy; LinkedIn and Djinni require Playwright MCP with the user's logged-in account/session.
 - If login is required, open the page in the browser and wait for the user to log in manually.
-- Do not replace LinkedIn, Djinni, or browser-required checks with plain web search snippets.
+- Do not replace sources marked browser-required in `config/source-registry.md` with plain web search snippets.
 - Outreach workflows prepare manual message drafts only and save them in prep notes. The user writes/sends manually. Do not send connection requests, emails, or LinkedIn messages from these skills.
 - ATS/job application submission is allowed only through `job-tracker:apply` after explicit user confirmation in the same run.
 - When `job-tracker:company` finds useful contacts, run `job-tracker:draft [company]` after saving prep notes so manual message drafts are prepared immediately. If another skill cannot run in the same turn, make `job-tracker:draft [company]` the first next action.

@@ -183,7 +183,7 @@ function checkBrowserMcp() {
   }
 
   if (!foundCodexPlaywright && !foundCodexChrome) {
-    fail('No Codex browser MCP detected; LinkedIn, Djinni, portfolio boards, and JS ATS checks may be blocked in Codex');
+    fail('No Codex browser MCP detected; sources marked browser-required in config/source-registry.md may be blocked in Codex');
     note('Codex example: codex mcp add playwright -- npx -y @playwright/mcp@latest');
     note('Codex example: codex mcp add chrome-devtools -- npx chrome-devtools-mcp@latest');
   } else if (!foundCodexPlaywright) {

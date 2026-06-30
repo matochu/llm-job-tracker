@@ -21,6 +21,7 @@ Before starting, read:
 9. `config/session-reports.md`
 10. `config/next-actions.md`
 11. `config/browser-patterns.md`
+12. `config/source-registry.md`
 
 Also get the current date and timezone from the execution environment before writing tracker rows or session reports.
 
@@ -36,22 +37,11 @@ If this skill is called by `job-tracker:run`, its next-action footer is advisory
 
 ## Source Derivation
 
-Before anything else, canonicalize the URL: lowercase the host, strip tracking parameters (`utm_*`, `ref`, `gh_src`, `source`, `rl`), and remove trailing slashes. Derive the `Source` value from the canonical host:
+Before anything else, canonicalize the URL: lowercase the host, strip tracking parameters (`utm_*`, `ref`, `gh_src`, `source`, `rl`), and remove trailing slashes. Derive the tracker `Source` value from `config/source-registry.md` under `## Source Derivation`.
 
-| Host pattern | Source value |
-|---|---|
-| `jobs.ashbyhq.com` | `ashby` |
-| `*.greenhouse.io`, `job-boards*.greenhouse.io`, `boards.greenhouse.io` | `greenhouse` |
-| `jobs.lever.co` | `lever` |
-| `*.linkedin.com` | `linkedin` |
-| `apply.workable.com` | `workable` |
-| `*.recruitee.com` | `recruitee` |
-| `*.smartrecruiters.com` | `smartrecruiters` |
-| `*.teamtailor.com` | `teamtailor` |
-| `jobs.wellfound.com`, `wellfound.com` | `wellfound` |
-| `otta.com`, `app.otta.com` | `otta` |
-| `djinni.co` | `djinni` |
-| other company careers host | bare root domain (e.g. `careers.acme.com` → `acme`) |
+If no configured host pattern matches, use the bare root domain, for example `careers.acme.com` -> `acme`.
+
+For deterministic derivation, run `node scripts/ats-probe.js derive-source <url>`. It is read-only and must not be used as a tracker mutation path.
 
 ## Profile Auto-Selection
 
@@ -73,8 +63,8 @@ No slug is passed. Import picks the best-fit profile among all configured profil
 1. Get current date and timezone.
 2. Resolve URL from `$ARGUMENTS`. If missing, ask once. Canonicalize and derive `Source`.
 3. **Dedup check**: compare the canonical URL against all URLs in `data/tracker.md`. Also check recent `.sessions/reports/*.import.md` for a matching URL (best-effort). If a duplicate is found: write session report with `Status: done`, `Decision: duplicate` pointing to the existing tracker row; do not mutate the tracker; report the duplicate to the user and stop.
-4. **Verify at source of truth**: fetch the posting. Use browser MCP (Playwright MCP or Chrome DevTools MCP preferred) for JavaScript-rendered pages or pages requiring login. If login is required and unavailable: write session report with `Status: blocked` and the URL; report to user; stop. If the posting is dead or closed: write session report with `Status: done`, `Decision: dead`; do not add to tracker; stop.
-   - For supported ATS hosts (`ashby`, `lever`, `greenhouse`, `workable`, `recruitee`, `smartrecruiters`), use `node scripts/ats-probe.js <provider> <slug> --json` only as a discovery/enrichment layer when the board slug is known. Verify the imported posting's direct URL at the source of truth; do not treat absence from the board API as a dead posting.
+4. **Verify at source of truth**: fetch the posting. Use browser MCP for JavaScript-rendered pages or pages requiring login, following `config/source-registry.md` `## Browser-Required Sources` and each source's `Required access` policy. If login is required and unavailable: write session report with `Status: blocked` and the URL; report to user; stop. If the posting is dead or closed: write session report with `Status: done`, `Decision: dead`; do not add to tracker; stop.
+   - For providers listed in `config/source-registry.md` under `## ATS Probe Providers`, use `node scripts/ats-probe.js <provider> <slug> --json` only as a discovery/enrichment layer when the board slug is known. Verify the imported posting's direct URL at the source of truth; do not treat absence from the board API as a dead posting.
 5. **Normalize**: extract company name, role title, level, location/work mode, ATS/application URL.
 6. **Profile auto-selection** (see above): pick best-fit, switch active profile if needed or ask on tie.
 7. **Fit/reject filter**: apply the selected profile's reject rules. Clear reject → write session report with `Status: done`, `Decision: rejected` + reason; do not add to tracker; stop (same behavior as `job-tracker:find`).

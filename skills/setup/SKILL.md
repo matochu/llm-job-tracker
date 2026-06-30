@@ -25,6 +25,7 @@ Before starting, read existing files when present:
 11. `config/next-actions.md`
 12. `data/tracker.md`
 13. configured base CV path, usually `candidate/cv/cv-base.md`
+14. `config/source-registry.md`
 
 ## Scope
 
@@ -37,6 +38,7 @@ Allowed actions:
 - run `node scripts/check-deps.js`
 - inspect configuration files and configured paths
 - inspect installed hook/skill sync status reported by dependency checks
+- run `node scripts/check-workspace.js` and treat missing/incomplete important config as setup work, not as a final-only warning
 - ask the user for missing information (max 3 questions per response)
 - write user answers directly into `candidate/candidate.md`, the active profile, `config/settings.md`, or other config files as appropriate
 - create narrow scaffolds (tracker, profile, CV skeleton) after one confirmation question
@@ -65,7 +67,12 @@ Check:
 - `config/paths.md` points to usable tracker, company notes, CV, PDF generator, and base CV paths
 - `data/tracker.md` exists and job tables include a `Profile` column
 - `strategy/sources.md` exists and defines usable sources for the active profile
-- LinkedIn, Djinni, browser-filtered boards, and JavaScript-rendered ATS sources are marked as browser-MCP-only where relevant
+- `config/source-registry.md` exists and defines:
+  - ATS probe providers with discovery feeds containing `[slug]`
+  - ATS probe search defaults (`### Keywords` and `### Locations`)
+  - browser-required sources and required access policy
+  - LinkedIn and Djinni as Playwright MCP with the user's logged-in account/session only
+  - URL host `Source` derivation rules
 - PDF generator and CSS exist
 - browser MCP readiness is reported for Codex and, when available, Claude
 - hard rules are present in `config/agent-instructions.md`, `CLAUDE.md`, and `AGENTS.md`
@@ -96,10 +103,17 @@ Dialog order (highest to lowest priority):
 3. **Active profile** — if missing or default profile is empty, ask: target role family (e.g. "Senior Frontend Engineer"), preferred work mode (remote/hybrid/on-site), one-sentence positioning. Write to the active profile file.
 4. **Profile fit rules** — ask: strong-fit signals (3-5 bullet points), reject signals. Write to profile.
 5. **Base CV** — if still missing after step 0: ask for a path to an existing resume (PDF/DOCX/MD) or offer to paste content. If user pastes content, create `candidate/cv/cv-base.md` from it. Do not invent content.
-6. **Sources** — if `strategy/sources.md` has no usable entries for the active profile, ask which job boards/platforms the user wants to search.
-7. **Tracker** — if `data/tracker.md` is missing, offer to create a scaffold with one confirmation question.
-8. **Dependencies** — run `node scripts/check-deps.js` and report results.
-9. **Version check** — detect install mode via `echo "$CLAUDE_PLUGIN_ROOT"`.
+6. **Source registry** — if `config/source-registry.md` is missing or `node scripts/check-workspace.js` reports source-registry errors, ask focused questions and write answers into `config/source-registry.md`.
+   - If the file is missing, ask one confirmation to create it from the packaged starter registry.
+   - If ATS probe providers or discovery feeds are missing, ask which configured providers should be enabled and confirm their feed templates before writing. Do not invent custom providers; if unsure, use the starter supported provider list from the packaged `config/source-registry.md`.
+   - If ATS probe keywords/locations are missing, ask: target role keywords and allowed regions/work modes. Write them under `## ATS Probe Search Defaults`.
+   - If browser-required source policy is missing, ask whether LinkedIn and Djinni should be checked through the user's logged-in Playwright session. Default recommendation: yes. Write `Playwright MCP with the user's logged-in account/session` for both when confirmed.
+   - If source derivation is missing, ask which source values the tracker should use for known hosts, or copy the starter `## Source Derivation` table after confirmation.
+   - After writing, run `node scripts/check-workspace.js` again. If it still reports source-registry errors, keep the setup dialog in `blocked` or continue asking; do not mark setup complete.
+7. **Sources** — if `strategy/sources.md` has no usable entries for the active profile, ask which job boards/platforms the user wants to search.
+8. **Tracker** — if `data/tracker.md` is missing, offer to create a scaffold with one confirmation question.
+9. **Dependencies** — run `node scripts/check-deps.js` and report results.
+10. **Version check** — detect install mode via `echo "$CLAUDE_PLUGIN_ROOT"`.
    - Plugin mode (`CLAUDE_PLUGIN_ROOT` set): read version from `$CLAUDE_PLUGIN_ROOT/.claude-plugin/plugin.json`, compare with the latest GitHub release (`gh release list --repo matochu/llm-job-tracker --limit 1`). If outdated, show what changed from `CHANGELOG.md` and tell the user to re-upload the latest plugin zip in Cowork (the agent cannot self-update a plugin).
    - Workspace mode (not set): read `config/.installed-version`, compare with `npm view llm-job-tracker version --json`. If outdated, show changes and suggest `npx llm-job-tracker update .` If `.installed-version` is missing, note as warning but do not block setup.
 
@@ -122,7 +136,7 @@ During the dialog, each response includes:
 - what was just written (confirmation + file path)
 - the next missing item being addressed
 - up to three concrete questions
-- progress indicator: `Setup: N/10 areas complete`
+- progress indicator: `Setup: N/11 areas complete`
 
 Final response (after all items resolved) includes:
 

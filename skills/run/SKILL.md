@@ -304,7 +304,7 @@ Do not pause for fit risks, stack gaps, missing nice-to-have keywords, weak cont
    - `network`: network discovery run — use `job-tracker:find network` instead of the standard source checklist; local network sources seed company candidates, and careers/ATS pages may be opened only to verify active roles before tracker mutation
    - company-like argument: run for that company
    - other filter/keyword argument: broad run with that filter passed to `job-tracker:find`
-2. If no company is specified, run `job-tracker:find [filter]` (or `job-tracker:find network` in network mode). In network mode, the standard broad source checklist (LinkedIn Jobs, ATS discovery, VC boards, Djinni, etc.) is skipped — local network sources seed company candidates, and careers/ATS pages are opened only to verify active roles before any tracker mutation. If local network sources are empty, report and skip to the final summary.
+2. If no company is specified, run `job-tracker:find [filter]` (or `job-tracker:find network` in network mode). In network mode, the standard broad source checklist from `strategy/sources.md` and `config/source-registry.md` is skipped — local network sources seed company candidates, and careers/ATS pages are opened only to verify active roles before any tracker mutation. If local network sources are empty, report and skip to the final summary.
 3. Update `data/tracker.md` immediately after discovery:
    - add accepted leads to `Raw Pipeline`
    - store the active profile in `Profile`

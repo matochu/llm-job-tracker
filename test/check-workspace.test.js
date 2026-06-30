@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
@@ -20,6 +20,7 @@ function makeFixture() {
   mkdirSync(join(dir, 'strategy', 'search-profiles'), { recursive: true });
   mkdirSync(join(dir, 'candidate', 'cv'), { recursive: true });
   mkdirSync(join(dir, 'data', 'companies'), { recursive: true });
+  mkdirSync(join(dir, 'scripts'), { recursive: true });
 
   writeFileSync(join(dir, '.gitignore'), '.sessions/\n');
   writeFileSync(join(dir, 'config', 'settings.md'), 'Active profile: `default`\n');
@@ -36,6 +37,55 @@ function makeFixture() {
 | \`role\` | \`Role\`, \`Position\` |
 | \`url\` | \`URL\`, \`Url\`, \`Link\`, \`Links\` |
 | \`status\` | \`Status\` |
+`);
+  writeFileSync(join(dir, 'config', 'source-registry.md'), `# Source Registry
+
+## ATS Probe Providers
+
+| Provider | Source value | Host patterns | Discovery feed | Liveness policy |
+|---|---|---|---|---|
+| \`ashby\` | \`ashby\` | \`jobs.ashbyhq.com\` | \`https://api.ashbyhq.com/posting-api/job-board/[slug]\` | browser |
+| \`lever\` | \`lever\` | \`jobs.lever.co\` | \`https://api.lever.co/v0/postings/[slug]?mode=json\` | browser |
+| \`greenhouse\` | \`greenhouse\` | \`*.greenhouse.io\` | \`https://api.greenhouse.io/v1/boards/[slug]/jobs?content=true\` | browser |
+| \`workable\` | \`workable\` | \`apply.workable.com\` | \`https://apply.workable.com/[slug]/jobs.md\` | browser |
+| \`recruitee\` | \`recruitee\` | \`*.recruitee.com\` | \`https://[slug].recruitee.com/api/offers/\` | browser |
+| \`smartrecruiters\` | \`smartrecruiters\` | \`*.smartrecruiters.com\` | \`https://api.smartrecruiters.com/v1/companies/[slug]/postings?limit=[limit]&offset=[offset]&status=PUBLIC\` | browser |
+
+## ATS Probe Search Defaults
+
+### Keywords
+
+- frontend
+
+### Locations
+
+- europe
+
+## Browser-Required Sources
+
+| Source value | Host patterns / URLs | Why browser is required | Required access | Policy |
+|---|---|---|---|---|
+| \`linkedin\` | \`*.linkedin.com\` | login | Playwright MCP with the user's logged-in account/session | never use web search as a substitute |
+| \`djinni\` | \`djinni.co\` | login | Playwright MCP with the user's logged-in account/session | never use web search as a substitute |
+
+## Source Derivation
+
+| Host pattern | Source value |
+|---|---|
+| \`jobs.ashbyhq.com\` | \`ashby\` |
+| \`djinni.co\` | \`djinni\` |
+`);
+  writeFileSync(join(dir, 'scripts', 'ats-probe.js'), `export function normalizeRoles(provider) {
+  const mapper = {
+    ashby: roleFromAshby,
+    lever: roleFromLever,
+    greenhouse: roleFromGreenhouse,
+    workable: roleFromWorkable,
+    recruitee: roleFromRecruitee,
+    smartrecruiters: roleFromSmartRecruiters,
+  }[provider];
+  return mapper;
+}
 `);
   writeFileSync(join(dir, 'strategy', 'search-profiles', 'default.md'), '# Default profile\n');
   writeFileSync(join(dir, 'candidate', 'cv', 'cv-base.md'), '# Base CV\n');
@@ -91,6 +141,116 @@ test('warns when tracker schema aliases are missing', () => {
 
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /missing `## CLI Schema Aliases`/);
+});
+
+test('rejects missing source registry', () => {
+  const fixture = makeFixture();
+  rmSync(join(fixture, 'config', 'source-registry.md'));
+
+  const result = runCheck(fixture);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /config\/source-registry\.md is missing/);
+});
+
+test('rejects ATS provider registry drift', () => {
+  const fixture = makeFixture();
+  writeFileSync(join(fixture, 'config', 'source-registry.md'), `# Source Registry
+
+## ATS Probe Providers
+
+| Provider | Source value |
+|---|---|
+| \`ashby\` | \`ashby\` |
+
+## Browser-Required Sources
+
+| Source value | Host patterns / URLs |
+|---|---|
+| \`djinni\` | \`djinni.co\` |
+
+## Source Derivation
+
+| Host pattern | Source value |
+|---|---|
+| \`djinni.co\` | \`djinni\` |
+`);
+
+  const result = runCheck(fixture);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /ATS providers .* do not match scripts\/ats-probe\.js implemented providers/);
+});
+
+test('rejects source registry without Djinni browser policy and source derivation', () => {
+  const fixture = makeFixture();
+  writeFileSync(join(fixture, 'config', 'source-registry.md'), `# Source Registry
+
+## ATS Probe Providers
+
+| Provider | Source value |
+|---|---|
+| \`ashby\` | \`ashby\` |
+| \`lever\` | \`lever\` |
+| \`greenhouse\` | \`greenhouse\` |
+| \`workable\` | \`workable\` |
+| \`recruitee\` | \`recruitee\` |
+| \`smartrecruiters\` | \`smartrecruiters\` |
+
+## Browser-Required Sources
+
+| Source value | Host patterns / URLs |
+|---|---|
+| \`linkedin\` | \`*.linkedin.com\` |
+
+## Source Derivation
+
+| Host pattern | Source value |
+|---|---|
+| \`jobs.ashbyhq.com\` | \`ashby\` |
+`);
+
+  const result = runCheck(fixture);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /must define Djinni as browser-required/);
+});
+
+test('rejects LinkedIn or Djinni policy without Playwright user account session', () => {
+  const fixture = makeFixture();
+  writeFileSync(join(fixture, 'config', 'source-registry.md'), `# Source Registry
+
+## ATS Probe Providers
+
+| Provider | Source value |
+|---|---|
+| \`ashby\` | \`ashby\` |
+| \`lever\` | \`lever\` |
+| \`greenhouse\` | \`greenhouse\` |
+| \`workable\` | \`workable\` |
+| \`recruitee\` | \`recruitee\` |
+| \`smartrecruiters\` | \`smartrecruiters\` |
+
+## Browser-Required Sources
+
+| Source value | Host patterns / URLs | Why browser is required | Policy |
+|---|---|---|---|
+| \`linkedin\` | \`*.linkedin.com\` | login | open in browser |
+| \`djinni\` | \`djinni.co\` | login | open in browser |
+
+## Source Derivation
+
+| Host pattern | Source value |
+|---|---|
+| \`jobs.ashbyhq.com\` | \`ashby\` |
+| \`djinni.co\` | \`djinni\` |
+`);
+
+  const result = runCheck(fixture);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /must require Playwright MCP with the user's logged-in account\/session for `linkedin`/);
+  assert.match(result.stdout, /must require Playwright MCP with the user's logged-in account\/session for `djinni`/);
 });
 
 test('rejects tracker headers not covered by configured schema aliases', () => {

@@ -1,55 +1,131 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const providers = new Set(['ashby', 'lever', 'greenhouse', 'workable', 'recruitee', 'smartrecruiters']);
+const scriptPath = fileURLToPath(import.meta.url);
+const scriptRoot = resolve(dirname(scriptPath), '..');
 
-const defaultKeywords = [
-  'frontend',
-  'front-end',
-  'front end',
-  'product engineer',
-  'fullstack',
-  'full-stack',
-  'full stack',
-  'platform',
-  'react',
-  'typescript',
-  'javascript',
-  'design system',
-];
+function splitMarkdownRow(line) {
+  const stripped = line.trim();
+  if (!stripped.startsWith('|') || !stripped.endsWith('|')) return null;
+  return stripped.slice(1, -1).split('|').map((cell) => cell.trim());
+}
 
-const defaultLocations = [
-  'remote',
-  'europe',
-  'emea',
-  'eu',
-  'spain',
-  'barcelona',
-  'madrid',
-  'portugal',
-  'lisbon',
-  'uk',
-  'united kingdom',
-  'ireland',
-  'netherlands',
-  'germany',
-  'france',
-];
+function isSeparatorRow(cells) {
+  return cells.every((cell) => /^:?-{3,}:?$/.test(cell.replaceAll(' ', '')));
+}
+
+function labelsFromCell(cell) {
+  const labels = [...String(cell ?? '').matchAll(/`([^`]+)`/g)].map((match) => match[1].trim());
+  if (labels.length) return labels;
+  return String(cell ?? '').split(',').map((item) => item.trim()).filter(Boolean);
+}
+
+function tableRowsAfterHeading(markdown, heading) {
+  const lines = markdown.split(/\r?\n/);
+  const headingIndex = lines.findIndex((line) => line.trim() === heading);
+  if (headingIndex === -1) return [];
+  const rows = [];
+  for (let index = headingIndex + 1; index < lines.length; index += 1) {
+    const line = lines[index].trim();
+    if (line.startsWith('## ') && index > headingIndex + 1) break;
+    const cells = splitMarkdownRow(line);
+    if (!cells || cells.length < 2 || isSeparatorRow(cells) || cells[0].toLowerCase().includes('provider')) continue;
+    rows.push(cells);
+  }
+  return rows;
+}
+
+function bulletItemsAfterHeading(markdown, heading) {
+  const lines = markdown.split(/\r?\n/);
+  const headingIndex = lines.findIndex((line) => line.trim() === heading);
+  if (headingIndex === -1) return [];
+  const items = [];
+  for (let index = headingIndex + 1; index < lines.length; index += 1) {
+    const line = lines[index].trim();
+    if (/^#{2,3}\s+/.test(line) && index > headingIndex + 1) break;
+    const match = line.match(/^-\s+(.+)$/);
+    if (match) items.push(match[1].trim());
+  }
+  return items;
+}
+
+export function loadSourceRegistry(root = scriptRoot) {
+  const candidates = [
+    resolve(root, 'config', 'source-registry.md'),
+    resolve(scriptRoot, 'config', 'source-registry.md'),
+  ];
+  const path = candidates.find((candidate) => existsSync(candidate));
+  if (!path) throw new Error('config/source-registry.md is missing. Run job-tracker:setup to fill source registry settings.');
+  const markdown = readFileSync(path, 'utf8');
+  const providerRows = tableRowsAfterHeading(markdown, '## ATS Probe Providers');
+  const providerFeeds = new Map();
+  for (const cells of providerRows) {
+    const provider = labelsFromCell(cells[0])[0]?.toLowerCase();
+    const feed = labelsFromCell(cells[3])[0] ?? cells[3];
+    if (provider && feed) providerFeeds.set(provider, feed);
+  }
+  const registry = {
+    path,
+    providerIds: [...providerFeeds.keys()],
+    providerFeeds,
+    keywords: bulletItemsAfterHeading(markdown, '### Keywords'),
+    locations: bulletItemsAfterHeading(markdown, '### Locations'),
+    sourceDerivation: tableRowsAfterHeading(markdown, '## Source Derivation')
+      .flatMap((cells) => labelsFromCell(cells[0]).map((pattern) => ({
+        pattern: pattern.toLowerCase(),
+        source: labelsFromCell(cells[1])[0] ?? cells[1],
+      })))
+      .filter((entry) => entry.pattern && entry.source),
+  };
+  const missing = [];
+  if (!registry.providerIds.length) missing.push('ATS Probe Providers');
+  if (!registry.keywords.length) missing.push('ATS Probe Search Defaults / Keywords');
+  if (!registry.locations.length) missing.push('ATS Probe Search Defaults / Locations');
+  for (const provider of registry.providerIds) {
+    const feed = registry.providerFeeds.get(provider) ?? '';
+    if (!feed.includes('[slug]')) missing.push(`Discovery feed with [slug] for ${provider}`);
+  }
+  if (missing.length) {
+    throw new Error(`config/source-registry.md is incomplete: ${missing.join(', ')}. Run job-tracker:setup to fill source registry settings.`);
+  }
+  return registry;
+}
+
+function requireSourceRegistry(root = scriptRoot) {
+  return loadSourceRegistry(root);
+}
+
+export function getProviderIds(root = scriptRoot) {
+  return requireSourceRegistry(root).providerIds;
+}
+
+const roleMappers = {
+  ashby: roleFromAshby,
+  lever: roleFromLever,
+  greenhouse: roleFromGreenhouse,
+  workable: roleFromWorkable,
+  recruitee: roleFromRecruitee,
+  smartrecruiters: roleFromSmartRecruiters,
+};
+
+export const implementedProviderIds = Object.keys(roleMappers);
+export const providerIds = implementedProviderIds;
 
 function usage() {
   console.log(`Usage:
   node scripts/ats-probe.js batch <provider> <slug...> [--limit 10] [--json]
   node scripts/ats-probe.js discover <company-or-domain> [--providers ashby,lever] [--json]
+  node scripts/ats-probe.js derive-source <url> [--json]
   node scripts/ats-probe.js <provider> <slug> [--profile <slug>] [--json] [--strict-location]
   node scripts/ats-probe.js <provider> <slug> --file fixture.json [--json]
 
-Providers: ashby, lever, greenhouse, workable, recruitee, smartrecruiters
+Providers: ${getProviderIds().join(', ')}
 `);
 }
 
-function parseArgs(argv) {
+function parseArgs(argv, registry = requireSourceRegistry()) {
   if (argv[0] === '--help' || argv[0] === '-h') {
     usage();
     process.exit(0);
@@ -68,7 +144,7 @@ function parseArgs(argv) {
     slugs: [],
   };
 
-  const optionStart = opts.provider === 'batch' ? 2 : 2;
+  const optionStart = 2;
   for (let i = optionStart; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === '--help' || arg === '-h') {
@@ -98,7 +174,8 @@ function parseArgs(argv) {
   }
 
   if (!opts.provider || !opts.slug) throw new Error('provider and slug are required');
-  if (opts.provider === 'discover') return opts;
+  if (opts.provider === 'discover' || opts.provider === 'derive-source') return opts;
+  const providers = new Set(registry.providerIds);
   if (opts.provider === 'batch') {
     opts.slug = opts.slug?.toLowerCase();
     if (!providers.has(opts.slug)) throw new Error(`Unsupported provider: ${opts.slug}`);
@@ -126,6 +203,43 @@ function text(value) {
     ].filter(Boolean).join(', ');
   }
   return String(value);
+}
+
+function hostnameFromUrl(value) {
+  const raw = text(value).trim().toLowerCase();
+  if (!raw) return '';
+  try {
+    return new URL(raw.includes('://') ? raw : `https://${raw}`).hostname.replace(/^www\./, '');
+  } catch {
+    return raw.replace(/^https?:\/\//, '').split('/')[0].replace(/^www\./, '');
+  }
+}
+
+function hostMatchesPattern(host, pattern) {
+  const normalizedHost = host.toLowerCase().replace(/^www\./, '');
+  const normalizedPattern = pattern.toLowerCase().replace(/^www\./, '');
+  if (normalizedPattern.startsWith('*.')) {
+    const suffix = normalizedPattern.slice(2);
+    return normalizedHost !== suffix && normalizedHost.endsWith(`.${suffix}`);
+  }
+  if (normalizedPattern.includes('*')) {
+    const escaped = normalizedPattern
+      .split('*')
+      .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      .join('.*');
+    return new RegExp(`^${escaped}$`).test(normalizedHost);
+  }
+  return normalizedHost === normalizedPattern;
+}
+
+export function deriveSourceFromUrl(value, options = {}) {
+  const registry = options.registry ?? requireSourceRegistry(options.root);
+  const host = hostnameFromUrl(value);
+  if (!host) return '';
+  for (const entry of registry.sourceDerivation ?? []) {
+    if (hostMatchesPattern(host, entry.pattern)) return entry.source;
+  }
+  return rootDomain(host);
 }
 
 function stripHtml(value) {
@@ -260,14 +374,8 @@ function pickJobs(payload, provider) {
 }
 
 export function normalizeRoles(provider, slug, payload) {
-  const mapper = {
-    ashby: roleFromAshby,
-    lever: roleFromLever,
-    greenhouse: roleFromGreenhouse,
-    workable: roleFromWorkable,
-    recruitee: roleFromRecruitee,
-    smartrecruiters: roleFromSmartRecruiters,
-  }[provider];
+  const mapper = roleMappers[provider];
+  if (!mapper) throw new Error(`Unsupported provider normalizer: ${provider}`);
   return pickJobs(payload, provider)
     .map((job) => mapper(job, slug))
     .filter((role) => role.title && role.url);
@@ -280,7 +388,7 @@ function lowerHaystack(role) {
     .toLowerCase();
 }
 
-export function filterRoles(roles, keywords = defaultKeywords, locations = defaultLocations) {
+export function filterRoles(roles, keywords = requireSourceRegistry().keywords, locations = requireSourceRegistry().locations) {
   return roles.filter((role) => {
     const haystack = lowerHaystack(role);
     const keywordHit = keywords.some((keyword) => haystack.includes(keyword.toLowerCase()));
@@ -290,7 +398,7 @@ export function filterRoles(roles, keywords = defaultKeywords, locations = defau
   });
 }
 
-export function locationConfidence(role, locations = defaultLocations) {
+export function locationConfidence(role, locations = requireSourceRegistry().locations) {
   const locationText = [role.location, role.raw?.workplaceType, role.raw?.remote ? 'remote' : ''].map(text).join(' ').toLowerCase().trim();
   const descriptionText = [stripHtml(role.raw?.description), stripHtml(role.raw?.content)].join(' ').toLowerCase().trim();
   const blockedRemote = /\bremote\b/.test(locationText) && /\b(us|u\.s\.|usa|united states|canada|americas|north america)\b/.test(locationText);
@@ -309,8 +417,9 @@ export function locationConfidence(role, locations = defaultLocations) {
 }
 
 export function filterRolesWithOptions(roles, options = {}) {
-  const keywords = options.keywords ?? defaultKeywords;
-  const locations = options.locations ?? defaultLocations;
+  const registry = options.registry ?? requireSourceRegistry(options.root);
+  const keywords = options.keywords ?? registry.keywords;
+  const locations = options.locations ?? registry.locations;
   return roles
     .map((role) => ({ role, locationSignal: locationConfidence(role, locations) }))
     .filter(({ role, locationSignal }) => {
@@ -327,14 +436,13 @@ export function filterRolesWithOptions(roles, options = {}) {
 
 function providerUrl(provider, slug, params = {}) {
   const encoded = encodeURIComponent(slug);
-  if (provider === 'ashby') return `https://api.ashbyhq.com/posting-api/job-board/${encoded}?includeCompensation=true`;
-  if (provider === 'lever') return `https://api.lever.co/v0/postings/${encoded}?mode=json`;
-  if (provider === 'greenhouse') return `https://api.greenhouse.io/v1/boards/${encoded}/jobs?content=true`;
-  if (provider === 'workable') return `https://apply.workable.com/${encoded}/jobs.md`;
-  if (provider === 'recruitee') return `https://${encoded}.recruitee.com/api/offers/`;
-  const limit = params.limit ?? 100;
-  const offset = params.offset ?? 0;
-  return `https://api.smartrecruiters.com/v1/companies/${encoded}/postings?limit=${limit}&offset=${offset}&status=PUBLIC`;
+  const registry = params.registry ?? requireSourceRegistry(params.root);
+  const template = registry.providerFeeds.get(provider);
+  if (!template) throw new Error(`Provider ${provider} is missing a discovery feed in config/source-registry.md`);
+  return template
+    .replaceAll('[slug]', encoded)
+    .replaceAll('[limit]', String(params.limit ?? 100))
+    .replaceAll('[offset]', String(params.offset ?? 0));
 }
 
 async function fetchWithTimeout(fetcher, url, options, timeoutMs) {
@@ -349,8 +457,9 @@ async function fetchWithTimeout(fetcher, url, options, timeoutMs) {
 
 async function fetchPayload(provider, slug, fetcher = fetch, options = {}) {
   const timeoutMs = Number(options.timeoutMs ?? 8000);
-  if (provider === 'smartrecruiters') return fetchSmartRecruitersPayload(slug, fetcher, timeoutMs);
-  const response = await fetchWithTimeout(fetcher, providerUrl(provider, slug), { headers: { accept: 'application/json,text/markdown;q=0.8,*/*;q=0.5' } }, timeoutMs);
+  const registry = options.registry ?? requireSourceRegistry(options.root);
+  if (provider === 'smartrecruiters') return fetchSmartRecruitersPayload(slug, fetcher, timeoutMs, 5, registry);
+  const response = await fetchWithTimeout(fetcher, providerUrl(provider, slug, { registry }), { headers: { accept: 'application/json,text/markdown;q=0.8,*/*;q=0.5' } }, timeoutMs);
   if (!response.ok) throw new Error(`ATS request failed: ${response.status} ${response.statusText}`);
   const body = await response.text();
   try {
@@ -361,11 +470,11 @@ async function fetchPayload(provider, slug, fetcher = fetch, options = {}) {
   }
 }
 
-async function fetchSmartRecruitersPayload(slug, fetcher, timeoutMs, maxPages = 5) {
+async function fetchSmartRecruitersPayload(slug, fetcher, timeoutMs, maxPages = 5, registry = requireSourceRegistry()) {
   const content = [];
   for (let page = 0; page < maxPages; page += 1) {
     const offset = page * 100;
-    const response = await fetchWithTimeout(fetcher, providerUrl('smartrecruiters', slug, { offset, limit: 100 }), { headers: { accept: 'application/json' } }, timeoutMs);
+    const response = await fetchWithTimeout(fetcher, providerUrl('smartrecruiters', slug, { offset, limit: 100, registry }), { headers: { accept: 'application/json' } }, timeoutMs);
     if (!response.ok) throw new Error(`ATS request failed: ${response.status} ${response.statusText}`);
     const payload = JSON.parse(await response.text());
     const pageItems = pickJobs(payload, 'smartrecruiters');
@@ -438,6 +547,8 @@ export function profileHints(profileSlug, root = process.cwd()) {
 }
 
 export async function discoverBoards(companyOrDomain, options = {}) {
+  const registry = options.registry ?? requireSourceRegistry(options.root);
+  const providers = new Set(registry.providerIds);
   const selectedProviders = (options.providers?.length ? options.providers : [...providers])
     .map((provider) => provider.toLowerCase())
     .filter((provider) => providers.has(provider));
@@ -449,15 +560,15 @@ export async function discoverBoards(companyOrDomain, options = {}) {
   for (const provider of selectedProviders) {
     for (const slug of slugCandidates) {
       try {
-        const payload = await fetchPayload(provider, slug, fetcher, { timeoutMs });
+        const payload = await fetchPayload(provider, slug, fetcher, { timeoutMs, registry });
         const roles = filterRolesWithOptions(normalizeRoles(provider, slug, payload), options)
           .map(({ raw, ...role }) => role);
         if (roles.length) {
-          results.push({ provider, slug, url: providerUrl(provider, slug), count: roles.length, roles });
+          results.push({ provider, slug, url: providerUrl(provider, slug, { registry }), count: roles.length, roles });
           break;
         }
       } catch (err) {
-        results.push({ provider, slug, url: providerUrl(provider, slug), count: 0, roles: [], error: err.message });
+        results.push({ provider, slug, url: providerUrl(provider, slug, { registry }), count: 0, roles: [], error: err.message });
       }
     }
   }
@@ -501,13 +612,14 @@ function applyTitleRegex(roles, titleRegex) {
 }
 
 async function probeOne(provider, slug, options = {}) {
-  const payload = await fetchPayload(provider, slug, options.fetcher ?? fetch, { timeoutMs: Number(options.timeoutMs ?? 8000) });
+  const registry = options.registry ?? requireSourceRegistry(options.root);
+  const payload = await fetchPayload(provider, slug, options.fetcher ?? fetch, { timeoutMs: Number(options.timeoutMs ?? 8000), registry });
   let roles = filterRolesWithOptions(normalizeRoles(provider, slug, payload), options)
     .map(({ raw, ...role }) => role);
   roles = applyTitleRegex(roles, options.titleRegex);
   const limit = Number(options.limit ?? 0);
   if (limit > 0) roles = roles.slice(0, limit);
-  return { provider, slug, count: roles.length, url: providerUrl(provider, slug), roles };
+  return { provider, slug, count: roles.length, url: providerUrl(provider, slug, { registry }), roles };
 }
 
 export async function probeBatch(provider, slugs, options = {}) {
@@ -516,7 +628,7 @@ export async function probeBatch(provider, slugs, options = {}) {
     try {
       results.push(await probeOne(provider, slug, options));
     } catch (err) {
-      results.push({ provider, slug, count: 0, url: providerUrl(provider, slug), roles: [], error: err.message });
+      results.push({ provider, slug, count: 0, url: providerUrl(provider, slug, { registry: options.registry }), roles: [], error: err.message });
     }
   }
   return results;
@@ -536,10 +648,18 @@ function printBatch(results) {
 }
 
 async function main() {
-  const opts = parseArgs(process.argv.slice(2));
+  const registry = requireSourceRegistry();
+  const opts = parseArgs(process.argv.slice(2), registry);
+  if (opts.provider === 'derive-source') {
+    const source = deriveSourceFromUrl(opts.slug, { registry });
+    if (opts.json) console.log(JSON.stringify({ url: opts.slug, source }, null, 2));
+    else console.log(source);
+    return;
+  }
   const profile = profileHints(opts.profile, process.cwd());
-  const keywords = profile.keywords.length ? [...new Set([...defaultKeywords, ...profile.keywords])] : defaultKeywords;
+  const keywords = profile.keywords.length ? [...new Set([...registry.keywords, ...profile.keywords])] : registry.keywords;
   const options = {
+    registry,
     keywords,
     strictLocation: opts.strictLocation,
     timeoutMs: Number(opts.timeout),

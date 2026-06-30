@@ -1,8 +1,60 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { discoverBoards, discoverSlugCandidates, filterRoles, filterRolesWithOptions, locationConfidence, normalizeRoles, probeBatch, profileHints, rootDomain } from '../scripts/ats-probe.js';
+import { spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { deriveSourceFromUrl, discoverBoards, discoverSlugCandidates, filterRoles, filterRolesWithOptions, getProviderIds, loadSourceRegistry, locationConfidence, normalizeRoles, probeBatch, profileHints, providerIds, rootDomain } from '../scripts/ats-probe.js';
 
 const root = new URL('..', import.meta.url).pathname;
+const atsProbeScript = join(root, 'scripts', 'ats-probe.js');
+
+test('loads provider and search defaults from source registry config', () => {
+  const registry = loadSourceRegistry(root);
+
+  assert.deepEqual(getProviderIds(root), registry.providerIds);
+  assert.ok(registry.providerIds.includes('ashby'));
+  assert.ok(providerIds.includes('ashby'));
+  assert.ok(registry.keywords.includes('frontend'));
+  assert.ok(registry.locations.includes('europe'));
+  assert.match(registry.providerFeeds.get('smartrecruiters'), /\[limit\].*\[offset\]/);
+});
+
+test('source registry loader fails with setup guidance when required discovery defaults are missing', () => {
+  const fixture = mkdtempSync(join(tmpdir(), 'ats-probe-registry-'));
+  mkdirSync(join(fixture, 'config'), { recursive: true });
+  writeFileSync(join(fixture, 'config', 'source-registry.md'), `# Source Registry
+
+## ATS Probe Providers
+
+| Provider | Source value | Host patterns | Discovery feed | Liveness policy |
+|---|---|---|---|---|
+| \`ashby\` | \`ashby\` | \`jobs.ashbyhq.com\` | \`https://api.ashbyhq.com/posting-api/job-board/[slug]\` | browser |
+`);
+
+  assert.throws(
+    () => loadSourceRegistry(fixture),
+    /Run job-tracker:setup to fill source registry settings/,
+  );
+});
+
+test('deriveSourceFromUrl uses source registry exact, wildcard, and root-domain fallback rules', () => {
+  assert.equal(deriveSourceFromUrl('https://jobs.ashbyhq.com/acme/123'), 'ashby');
+  assert.equal(deriveSourceFromUrl('https://job-boards.greenhouse.io/acme/jobs/42'), 'greenhouse');
+  assert.equal(deriveSourceFromUrl('https://job-boards.eu.greenhouse.io/acme/jobs/42'), 'greenhouse');
+  assert.equal(deriveSourceFromUrl('https://acme.recruitee.com/o/frontend'), 'recruitee');
+  assert.equal(deriveSourceFromUrl('https://careers.example.co.uk/jobs/1'), 'example');
+});
+
+test('derive-source CLI uses the configured source derivation helper', () => {
+  const result = spawnSync(process.execPath, [atsProbeScript, 'derive-source', 'https://djinni.co/jobs/123'], {
+    cwd: tmpdir(),
+    encoding: 'utf8',
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout.trim(), 'djinni');
+});
 
 const samples = {
   ashby: {
@@ -69,7 +121,7 @@ test('rootDomain handles common careers subdomains and compound public suffixes'
 
 test('discoverBoards probes provider/slug candidates and returns filtered roles', async () => {
   const fetcher = async (url) => {
-    if (!url.includes('/posting-api/job-board/acme?')) {
+    if (!url.includes('/posting-api/job-board/acme')) {
       return { ok: false, status: 404, statusText: 'Not Found', text: async () => 'not found' };
     }
     return {

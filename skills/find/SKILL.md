@@ -20,6 +20,7 @@ Before starting, read:
 8. `config/tracker-schema.md`
 9. `config/next-actions.md`
 10. `config/browser-patterns.md`
+11. `config/source-registry.md`
 
 Also get the current date and timezone from the execution environment or system context before adding leads or dates to the tracker.
 
@@ -45,10 +46,10 @@ If this skill is called by `job-tracker:run`, its next-action footer is advisory
 1. Read the configured tracker and collect existing company/role URLs to avoid duplicates.
 2. Build a source checklist from `strategy/sources.md`.
 3. Search every required source group unless the user explicitly narrows the request.
-   - Use browser MCP, preferably Playwright MCP or Chrome DevTools MCP, for LinkedIn, Djinni, JavaScript-rendered boards, filters, login/session state, and sources marked Browser MCP in `strategy/sources.md`.
+   - Use browser MCP for sources listed in `config/source-registry.md` under `## Browser-Required Sources` and for sources marked Browser MCP in `strategy/sources.md`. Follow each source's `Required access` policy; LinkedIn and Djinni require Playwright MCP with the user's logged-in account/session.
    - For those browser-required sources, do not use plain web search as a fallback.
    - If login is required, open the source in the browser and wait for the user to authenticate manually.
-   - Use `node scripts/ats-probe.js <provider> <slug>` for known Ashby, Lever, Greenhouse, Workable, Recruitee, or SmartRecruiters slugs before writing ad hoc API calls. Use `--json` when structured output helps filtering decisions.
+   - Use `node scripts/ats-probe.js <provider> <slug>` for providers listed in `config/source-registry.md` under `## ATS Probe Providers` before writing ad hoc API calls. Use `--json` when structured output helps filtering decisions.
    - Use web search/API where that is faster and reliable, but do not write one-off inline JSON parsing when `scripts/ats-probe.js` supports the provider.
    - Do not silently skip a source. Mark it `checked`, `partial`, or `skipped` with a reason.
 4. For every promising lead, verify it at the source of truth:
@@ -76,7 +77,7 @@ Discovery flow:
    - **Company inaccessible / careers page down:** note in output summary as `unverified`; do not add to tracker.
 6. For qualifying companies **already in the tracker**: surface as warm intro opportunities in the summary — no tracker change.
 
-Network mode does not run the standard LinkedIn Jobs / ATS / VC board / Djinni pass. If the user wants both, they run `job-tracker:find` (standard) and `job-tracker:find network` separately.
+Network mode does not run the standard source checklist from `strategy/sources.md` and `config/source-registry.md`. If the user wants both, they run `job-tracker:find` (standard) and `job-tracker:find network` separately.
 
 Output includes: network sources read, total contacts found, companies verified, new Raw Pipeline entries, new Monitoring entries, warm intro opportunities at existing tracked companies, and the standard footer.
 

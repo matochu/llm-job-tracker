@@ -12,6 +12,6 @@ Use Browser MCP only for sources that need session state, JavaScript rendering, 
 
 ## Avoid
 
-- Do not replace LinkedIn, Djinni, or browser-required portfolio-board checks with plain web-search snippets.
-- Do not rely on brittle full class names from LinkedIn, Djinni, or generated ATS pages.
+- Do not replace sources marked browser-required in `config/source-registry.md` with plain web-search snippets.
+- Do not rely on brittle full class names from browser-required sources or generated ATS pages.
 - Do not click submit/apply/send/connect controls unless the active skill explicitly allows it and the user has confirmed the action in the same run.

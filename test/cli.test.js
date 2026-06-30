@@ -309,6 +309,20 @@ test('update preserves user-modified candidate/application-answers.md', () => {
   assert.equal(readFileSync(join(target, 'candidate', 'application-answers.md'), 'utf8'), '# My custom answers\n');
 });
 
+test('init scaffolds config/source-registry.md', () => {
+  const parent = makeTempDir();
+  const target = join(parent, 'workspace');
+
+  const result = runCli([target, '--no-install']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(existsSync(join(target, 'config', 'source-registry.md')), true);
+  const content = readFileSync(join(target, 'config', 'source-registry.md'), 'utf8');
+  assert.match(content, /Source Registry/);
+  assert.match(content, /ATS Probe Providers/);
+  assert.match(content, /ATS Probe Search Defaults/);
+});
+
 test('update removes stale skill directories from workspace skills/', () => {
   const parent = makeTempDir();
   const target = join(parent, 'workspace');
@@ -376,6 +390,25 @@ test('update does not overwrite existing candidate/application-answers.md', () =
 
   assert.equal(result.status, 0, result.stderr);
   assert.equal(readFileSync(join(target, 'candidate', 'application-answers.md'), 'utf8'), '# My answers\n');
+});
+
+test('update seeds missing config/source-registry.md without overwriting existing file', () => {
+  const parent = makeTempDir();
+  const target = join(parent, 'workspace');
+  const scaffold = runCli([target, '--no-install']);
+  assert.equal(scaffold.status, 0, scaffold.stderr);
+  rmSync(join(target, 'config', 'source-registry.md'));
+
+  const seedResult = runCli(['update', target, '--no-install']);
+
+  assert.equal(seedResult.status, 0, seedResult.stderr);
+  assert.equal(existsSync(join(target, 'config', 'source-registry.md')), true);
+
+  writeFileSync(join(target, 'config', 'source-registry.md'), '# My source registry\n');
+  const preserveResult = runCli(['update', target, '--no-install']);
+
+  assert.equal(preserveResult.status, 0, preserveResult.stderr);
+  assert.equal(readFileSync(join(target, 'config', 'source-registry.md'), 'utf8'), '# My source registry\n');
 });
 
 test('init writes config/.migrated-version equal to package version', () => {

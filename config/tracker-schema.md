@@ -34,7 +34,7 @@ Required job table shape for `Raw Pipeline`:
 | Example | frontend | Senior Frontend Engineer | https://example.com/job | YYYY-MM-DD | ⬜ | linkedin |
 ```
 
-The `Source` column records where the lead came from. Common values: `linkedin`, `ashby`, `greenhouse`, `lever`, `djinni`, `vc-board`, `network`, `hidden-market`, `watchlist`. Use `network` when the lead was discovered via `job-tracker:find network`. `job-tracker:import` derives the source automatically from the URL host (see `skills/import/SKILL.md` Source Derivation table). Leave blank or omit when the source is obvious from URL or ATS.
+The `Source` column records where the lead came from. Common source values and URL host derivation rules live in `config/source-registry.md`. Use `network` when the lead was discovered via `job-tracker:find network`. Leave blank or omit only when the source is obvious from URL or ATS.
 
 All active, staging, submitted, and archive job rows must preserve `Profile` when moved between sections.
 

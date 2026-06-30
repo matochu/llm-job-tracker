@@ -19,6 +19,7 @@ Before starting, read:
 7. `config/tracker-schema.md`
 8. `config/next-actions.md`
 9. `config/browser-patterns.md`
+10. `config/source-registry.md`
 
 Also get the current date and timezone from the execution environment or system context before writing verification or archive dates.
 
@@ -47,7 +48,7 @@ This skill re-checks liveness of tracked roles at source. It does not do job dis
    - do not use ATS board/listing APIs for liveness of a specific job ID; board APIs are discovery surfaces and may omit active roles that are paused, unlisted, hidden, or not featured
    - do not use WebFetch as a substitute for direct job URL liveness; it may miss rendered state, redirects, login/session behavior, or stale/cache-sensitive content
    - use `node scripts/ats-probe.js ...` only for new role discovery from supported ATS boards, never as the closing signal for a tracked direct job URL
-   - use browser MCP for tracked direct job URLs across Ashby, Lever, Greenhouse, Teamtailor, Personio, Breezy, Recruitee, Djinni, LinkedIn, and custom boards
+   - use browser MCP for tracked direct job URLs; source-specific browser/login policies live in `config/source-registry.md`
    - if login is required, open the site in the browser and wait for the user to authenticate manually
    - do not use plain web search as a fallback for browser-required checks
 4. Classify status:

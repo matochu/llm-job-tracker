@@ -18,6 +18,7 @@ Before starting, read:
 6. `strategy/criteria.md`
 7. `config/tracker-schema.md`
 8. `config/next-actions.md`
+9. `config/source-registry.md`
 
 Also get the current date and timezone from the execution environment or system context before judging stale Session Reports or date-sensitive tracker state.
 
@@ -102,6 +103,7 @@ If pending migrations exist:
    - `warning`: should be fixed soon but does not block
    - `info`: useful cleanup or drift notice
 6. Recommend narrow fixes. Do not apply fixes unless the user explicitly asks. (Exception: migrations and seeding, covered in the Version & Migration Check section above.)
+7. If `node scripts/check-workspace.js` reports missing or incomplete important config, classify the finding as `critical` and make `job-tracker:setup` the first next action. Do not suggest continuing `job-tracker:find`, `job-tracker:import`, `job-tracker:verify`, or `job-tracker:run` until setup fills the missing config.
 
 ## Checks
 
@@ -117,6 +119,8 @@ Check for:
 - `resume.md` without expected PDF, or PDF without `resume.md`
 - empty base CV or company CV files
 - active/listed profiles without profile files
+- missing or incomplete important config files such as `config/source-registry.md`
+- source registry drift: ATS providers without discovery feeds, missing ATS probe keywords/locations, browser-required source policy gaps, or LinkedIn/Djinni not requiring Playwright MCP with the user's logged-in account/session
 - `.sessions/` is gitignored
 - Session Report filenames use `[id].<skill>.md` (e.g. `[id].run.md`, `[id].import.md`)
 - Session Reports contain required sections and valid status values

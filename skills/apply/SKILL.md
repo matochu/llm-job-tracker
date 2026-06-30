@@ -20,6 +20,7 @@ Before starting, read:
 8. `config/tracker-schema.md`
 9. `style/cv-style.md`
 10. `config/next-actions.md`
+11. `config/source-registry.md`
 
 Also get the current date and timezone from the execution environment or system context before recording application, draft-state, or tracker update dates.
 
@@ -40,8 +41,9 @@ It is separate from `job-tracker:draft`: `job-tracker:draft` prepares manual Lin
 
 ## Browser Rules
 
-- Use browser MCP only, preferably Playwright MCP or Chrome DevTools MCP.
-- Use browser MCP for LinkedIn, JavaScript-rendered ATS pages, browser filters, and login/session-dependent pages.
+- Use browser MCP only.
+- Follow `config/source-registry.md` `## Browser-Required Sources` and each source's `Required access` policy.
+- Use browser MCP for JavaScript-rendered ATS pages, browser filters, and login/session-dependent pages.
 - If login is required, open the page and wait for the user to log in manually.
 - Never enter passwords, create accounts, solve CAPTCHA, or bypass access controls.
 - Never use web-search snippets instead of reading the actual form/source when browser access is required.
