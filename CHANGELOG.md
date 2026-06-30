@@ -4,6 +4,42 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## 0.4.2 - 2026-06-29
+
+### Added
+
+- `scripts/ats-probe.js` — reusable Node.js ATS probe for Ashby, Lever, Greenhouse, Workable, Recruitee, and SmartRecruiters. It normalizes role title/location/id/URL, filters frontend/product/fullstack/platform leads, and marks duplicates against `data/tracker.md`.
+- `scripts/tracker.js` — structured Markdown tracker CLI for listing rows, adding Raw Pipeline leads, moving rows between sections, setting status, and bumping date fields without brittle text replacement.
+- `scripts/ats-probe.js discover <company-or-domain>` — deterministic ATS slug discovery by probing supported provider APIs with normalized company/domain candidates.
+- `scripts/tracker.js validate`, `--dry-run`, `--json`, and section-scoped row updates.
+- Tracker CLI schema aliases for English and Ukrainian section/field labels, documented in `config/tracker-schema.md`.
+- `scripts/tracker.js` exports `setSchemaRootFromTracker()` for programmatic callers that run outside the workspace cwd.
+- `config/browser-patterns.md` — Browser MCP operational guide for stable evaluate calls, locator-based clicks, cookie overlays, login-required sources, and browser safety boundaries.
+- `migrations/0.4.2.md` — seeds Browser MCP patterns and adds ATS probe/browser guidance to protected existing workspaces.
+- Tests for ATS normalization/filtering/dedupe/discovery, tracker row operations/CLI flags, and run stop-check warnings.
+- `README.md` — `## Agent CLI Utilities` section documenting ATS probe and tracker CLI commands, options, and usage patterns for agents and maintainers.
+
+### Changed
+
+- `job-tracker:find`, `job-tracker:import`, and `job-tracker:verify` now prefer `scripts/ats-probe.js` for supported ATS sources before ad hoc API parsing or browser fallback.
+- `job-tracker:find` and `job-tracker:import` read `config/browser-patterns.md` at startup.
+- `job-tracker:verify` reads `config/browser-patterns.md` at startup and prefers `scripts/ats-probe.js` for supported ATS liveness checks before browser fallback.
+- `job-tracker:run` now explicitly prefers `scripts/tracker.js` for tracker row updates and requires profile switching through `job-tracker:profile use`.
+- `job-tracker:run` completion rules now forbid `Status: done` while internal queue work remains, background subagents are still running, or skipped selected leads lack tracker-recorded real reasons.
+- `job-tracker:run` orchestrator enforces "tool call before text" as a hard rule when state is `running`; a text-only response is invalid unless state is `paused-resumable`, `blocked`, or `done`. `Next internal step:` written without an accompanying tool call is now documented as a stop-point anti-pattern.
+- `job-tracker:fit` documents parallel batch fit-review behavior for `job-tracker:run` when subagents are available.
+- `strategy/sources.md` documents canonical `scripts/ats-probe.js` probe commands in the ATS section as the preferred alternative to ad hoc `curl`/`jq` parsing.
+- Stop hook now warns when a `job-tracker:run` response reports `done` without completion-guard evidence or mentions background/subagent work without `paused-resumable`, `Continue Run`, or `Next internal step:`.
+- Stop hook generic reminders now only appear for job-tracker-like outputs, and run-done detection is scoped to `job-tracker:run` context.
+- `scripts/llm-hooks/validate-skill-footers.js` now checks `skills/run/SKILL.md` for required run completion guards (`internal action queue is empty`, `no background subagent`, `every skipped selected lead has a reason recorded`, `never \`done\``, `Continue Run`).
+- `scripts/llm-hooks/codex-rules/default.rules` uses `npm run validate:skill-footers` instead of the direct node invocation.
+- `scripts/check-workspace.js` now loads tracker section and field aliases from `config/tracker-schema.md` before parsing `data/tracker.md`, enabling localized or custom column labels without code changes.
+
+### Fixed
+
+- Run orchestration now documents `paused-resumable` as the required visible state when a turn must end while background subagent work can continue automatically.
+- Angular/non-React stack assumptions are explicitly forbidden as invented skip reasons unless the active profile says so.
+
 ## 0.4.1 - 2026-06-16
 
 ### Fixed
