@@ -55,9 +55,9 @@ Do not add a LinkedIn-only lead directly. Open the company careers page or ATS p
 
 ## 2. ATS Direct Discovery
 
-Use web search and direct ATS URLs. Prefer current board/listing pages over old job IDs.
+Use web search and direct ATS URLs. Prefer current board/listing pages over old job IDs during discovery.
 
-Treat ATS APIs as the highest-signal verification layer. When a company has a known ATS slug, prefer the provider API/feed before browser search. Browser or web search is still required when the company uses a custom careers page, the ATS slug is unknown, or the provider API does not expose enough detail.
+Treat ATS APIs as the highest-signal discovery layer. When a company has a known ATS slug, prefer the provider API/feed before browser search. Browser or web search is still required when the company uses a custom careers page, the ATS slug is unknown, or the provider API does not expose enough detail.
 
 Canonical probe command:
 
@@ -69,6 +69,10 @@ node scripts/ats-probe.js [provider] [slug] --json
 ```
 
 Use this script for supported providers before writing one-off `curl`, shell loops, `jq`, or inline JSON parsing. It normalizes title, location, id, and URL.
+
+Warning: ATS board APIs are for discovery only, not liveness verification.
+
+Board listing endpoints such as `/posting-api/job-board/[slug]`, `/v0/postings/[slug]?mode=json`, and `/v1/boards/[slug]/jobs` return roles currently exposed on the public board. A role can still be active at its direct URL while absent from the board listing because it is paused, unlisted, hidden, or not featured. Never infer that a tracked job is closed because it is missing from a board API response. Use browser MCP, preferably Playwright, on the direct job URL to verify liveness.
 
 ### Ashby
 
@@ -289,6 +293,8 @@ When a watched company has a known ATS URL or slug, check the ATS directly befor
 | ExampleCo | company careers / ATS page | observability and dashboard-heavy frontend |
 
 Keep this table lightweight. It is a routing aid for `job-tracker:find`, not a complete company database.
+
+Known ATS slugs and URLs are reliable for discovery: finding new role IDs on the board. For liveness verification of a specific tracked job ID, always use browser MCP, preferably Playwright, on the direct job URL instead of the board API.
 
 ## 7. AI / DevEx Sources
 

@@ -40,10 +40,14 @@ This skill re-checks liveness of tracked roles at source. It does not do job dis
    - default: active pipeline
    - if requested: Raw Pipeline, Staging, one company, or one priority group
 3. For each role:
-   - open the URL or source board
-   - prefer company/ATS source of truth over search snippets
-   - for supported ATS boards, use `node scripts/ats-probe.js <provider> <slug> --json` as the preferred liveness check before browser fallback
-   - use browser MCP, preferably Playwright MCP or Chrome DevTools MCP, for LinkedIn, Djinni, JavaScript-rendered boards, and logged-in sites
+   - for liveness of an existing tracked role, open the direct job URL with browser MCP, preferably Playwright MCP
+   - read the live page title after navigation; common active signals include the full role title or `<Job Title> @ <Company>`
+   - classify closed when the direct URL returns a clear not-found page, redirects to a generic board/index, has an empty/non-job title, or shows closed text such as `Position Closed`
+   - take a browser snapshot or inspect visible page text only when the title/redirect is ambiguous
+   - do not use ATS board/listing APIs for liveness of a specific job ID; board APIs are discovery surfaces and may omit active roles that are paused, unlisted, hidden, or not featured
+   - do not use WebFetch as a substitute for direct job URL liveness; it may miss rendered state, redirects, login/session behavior, or stale/cache-sensitive content
+   - use `node scripts/ats-probe.js ...` only for new role discovery from supported ATS boards, never as the closing signal for a tracked direct job URL
+   - use browser MCP for tracked direct job URLs across Ashby, Lever, Greenhouse, Teamtailor, Personio, Breezy, Recruitee, Djinni, LinkedIn, and custom boards
    - if login is required, open the site in the browser and wait for the user to authenticate manually
    - do not use plain web search as a fallback for browser-required checks
 4. Classify status:
@@ -56,7 +60,8 @@ This skill re-checks liveness of tracked roles at source. It does not do job dis
    - move closed roles to Archive with date and reason
    - move companies with useful contacts but no active role to Monitoring
    - update checked/updated dates
-   - prefer `node scripts/tracker.js move`, `set-status`, or `bump-date` over manual Markdown table edits
+   - use `node scripts/tracker.js move`, `set-status`, or `bump-date` for supported tracker mutations
+   - direct Markdown table edits are allowed only when `node scripts/tracker.js ...` does not support the needed operation, such as restoring a moved row or complex multi-field updates
 6. Suggest `job-tracker:company [company]` when an active role has no prep notes.
 
 ## Output
