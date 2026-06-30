@@ -20,6 +20,7 @@ Before starting, read:
 8. `config/tracker-schema.md`
 9. `config/session-reports.md`
 10. `config/next-actions.md`
+11. `config/browser-patterns.md`
 
 Also get the current date and timezone from the execution environment before writing tracker rows or session reports.
 
@@ -73,10 +74,12 @@ No slug is passed. Import picks the best-fit profile among all configured profil
 2. Resolve URL from `$ARGUMENTS`. If missing, ask once. Canonicalize and derive `Source`.
 3. **Dedup check**: compare the canonical URL against all URLs in `data/tracker.md`. Also check recent `.sessions/reports/*.import.md` for a matching URL (best-effort). If a duplicate is found: write session report with `Status: done`, `Decision: duplicate` pointing to the existing tracker row; do not mutate the tracker; report the duplicate to the user and stop.
 4. **Verify at source of truth**: fetch the posting. Use browser MCP (Playwright MCP or Chrome DevTools MCP preferred) for JavaScript-rendered pages or pages requiring login. If login is required and unavailable: write session report with `Status: blocked` and the URL; report to user; stop. If the posting is dead or closed: write session report with `Status: done`, `Decision: dead`; do not add to tracker; stop.
+   - For supported ATS hosts (`ashby`, `lever`, `greenhouse`, `workable`, `recruitee`, `smartrecruiters`), prefer `node scripts/ats-probe.js <provider> <slug> --json` as the first verification layer, then open the specific posting only when the probe output is insufficient.
 5. **Normalize**: extract company name, role title, level, location/work mode, ATS/application URL.
 6. **Profile auto-selection** (see above): pick best-fit, switch active profile if needed or ask on tie.
 7. **Fit/reject filter**: apply the selected profile's reject rules. Clear reject → write session report with `Status: done`, `Decision: rejected` + reason; do not add to tracker; stop (same behavior as `job-tracker:find`).
 8. **Add to Raw Pipeline**: write one row to `data/tracker.md` Raw Pipeline using the `config/tracker-schema.md` shape: `Profile` = selected slug, `Source` = derived value, `Added` = today's date, `Status` = ⬜.
+   - Use `node scripts/tracker.js add-lead --company ... --profile ... --role ... --url ... --source ... --date YYYY-MM-DD` for the tracker write.
 9. **Write session report**: `.sessions/reports/[id].import.md`. Status is always `done` or `blocked` (login required); `dead`, `duplicate`, and `rejected` outcomes use `Status: done` with `Decision: <outcome>` in the report body. Record decision, profile selection, source, and tracker row in the report.
 10. Suggest `job-tracker:company [company]` as the next action.
 
@@ -92,7 +95,7 @@ Reply in the configured assistant language using this structure:
 - URL: <canonical url>
 - Source: <derived value>
 - Profile: <selected slug> [switched from <previous> | no switch]
-- Decision: added | duplicate | dead | rejected | blocked
+- Decision: added | dead | rejected | blocked
 
 ## What was added
 

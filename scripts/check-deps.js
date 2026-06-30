@@ -308,6 +308,8 @@ function main() {
   checkBrowserMcp();
 
   checkFile('scripts/generate_pdf.py', 'PDF generator');
+  checkFile('scripts/ats-probe.js', 'ATS probe CLI');
+  checkFile('scripts/tracker.js', 'Tracker row CLI');
   checkFile('scripts/cv.css', 'PDF CSS');
   checkFile('scripts/llm-hooks/pre-tool-guard.js', 'PreToolUse hook');
   checkFile('scripts/llm-hooks/post-tool-check.js', 'PostToolUse hook');

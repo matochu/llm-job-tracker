@@ -22,6 +22,8 @@
     "scripts/check-deps.js",
     "scripts/check-workspace.js",
     "scripts/generate_pdf.py",
+    "scripts/ats-probe.js",
+    "scripts/tracker.js",
     "scripts/install.js",
     "scripts/llm-hooks/",
     "scripts/cv.css",
@@ -37,8 +39,16 @@
     "check:public": "node scripts/check-public.js",
     "check:workspace": "node scripts/check-workspace.js",
     "check:deps": "node scripts/check-deps.js",
+    "validate:tracker-profiles": "node scripts/llm-hooks/validate-tracker-profiles.js",
+    "validate:skill-footers": "node scripts/llm-hooks/validate-skill-footers.js",
     "build:plugin": "node scripts/build-plugin.js",
-    "install:agents": "node scripts/install.js all"
+    "cli": "node bin/job-tracker.js",
+    "tracker": "node scripts/tracker.js",
+    "ats-probe": "node scripts/ats-probe.js",
+    "workspace:check": "node scripts/check-workspace.js",
+    "deps:check": "node scripts/check-deps.js",
+    "agents:install": "node scripts/install.js",
+    "install:agents": "npm run agents:install -- all"
   },
   "keywords": [
     "job-search",

@@ -252,7 +252,9 @@ try {
     installCodexProject(mode);
   }
 
-  console.log('Next: run job-tracker:setup in your LLM tool to verify workspace readiness.');
+  if (process.env.JOB_TRACKER_INSTALL_CONTEXT !== 'update') {
+    console.log('Next: run job-tracker:setup in your LLM tool to verify workspace readiness.');
+  }
 } catch (err) {
   console.error(`install: ${err.message}`);
   console.error('');

@@ -26,6 +26,23 @@ const sessionRequiredSections = [
   '## Summary',
 ];
 
+const defaultSectionAliases = {
+  active: ['Active Pipeline'],
+  monitoring: ['Monitoring'],
+  staging: ['Staging'],
+  raw: ['Raw Pipeline'],
+  submitted: ['Submitted / In Process', 'Submitted', 'In Process'],
+  archive: ['Archive'],
+};
+
+const defaultFieldAliases = {
+  company: ['Company'],
+  profile: ['Profile'],
+  role: ['Role', 'Position'],
+  url: ['URL', 'Url', 'Link', 'Links'],
+  status: ['Status'],
+};
+
 function usage() {
   console.log('Usage: node scripts/check-workspace.js [--root <path>]');
 }
@@ -95,7 +112,76 @@ function isSeparatorRow(cells) {
   return cells.every((cell) => /^:?-{3,}:?$/.test(cell.replaceAll(' ', '')));
 }
 
-function trackerRows(root) {
+function splitMarkdownRow(line) {
+  const stripped = line.trim();
+  if (!stripped.startsWith('|') || !stripped.endsWith('|')) return null;
+  return stripped.slice(1, -1).split('|').map((cell) => cell.trim());
+}
+
+function labelsFromCell(cell) {
+  const labels = [...String(cell ?? '').matchAll(/`([^`]+)`/g)].map((match) => match[1].trim());
+  if (labels.length) return labels;
+  return String(cell ?? '').split(',').map((item) => item.trim()).filter(Boolean);
+}
+
+function cloneAliases(aliases) {
+  return Object.fromEntries(Object.entries(aliases).map(([key, values]) => [key, [...values]]));
+}
+
+function mergeAlias(target, canonical, labels) {
+  if (!canonical) return;
+  target[canonical] ??= [];
+  for (const label of labels) {
+    if (label && !target[canonical].some((existing) => existing.toLowerCase() === label.toLowerCase())) {
+      target[canonical].push(label);
+    }
+  }
+}
+
+function parseAliasTable(markdown, heading, target) {
+  const lines = markdown.split(/\r?\n/);
+  const headingIndex = lines.findIndex((line) => line.trim() === heading);
+  if (headingIndex === -1) return;
+  for (let index = headingIndex + 1; index < lines.length; index += 1) {
+    const line = lines[index].trim();
+    if (line.startsWith('### ') && index > headingIndex + 1) break;
+    const cells = splitMarkdownRow(line);
+    if (!cells || cells.length < 2 || isSeparatorRow(cells) || cells[0].toLowerCase() === 'canonical') continue;
+    const canonical = labelsFromCell(cells[0])[0] ?? cells[0].trim();
+    mergeAlias(target, canonical, cells.slice(1).flatMap(labelsFromCell));
+  }
+}
+
+function loadTrackerSchema(root) {
+  const schema = {
+    sections: cloneAliases(defaultSectionAliases),
+    fields: cloneAliases(defaultFieldAliases),
+    issues: [],
+  };
+  const schemaPath = join(root, 'config', 'tracker-schema.md');
+  if (!existsSync(schemaPath)) {
+    schema.issues.push(issue('warning', 'config/tracker-schema.md is missing; run pending migrations or add tracker aliases before relying on tracker CLI checks'));
+    return schema;
+  }
+  const markdown = readText(schemaPath);
+  if (!markdown.includes('## CLI Schema Aliases')) {
+    schema.issues.push(issue('warning', 'config/tracker-schema.md is missing `## CLI Schema Aliases`; run pending migrations or add tracker aliases'));
+    return schema;
+  }
+  parseAliasTable(markdown, '### Section Aliases', schema.sections);
+  parseAliasTable(markdown, '### Field Aliases', schema.fields);
+  return schema;
+}
+
+function canonicalField(name, schema) {
+  const normalized = String(name ?? '').trim().toLowerCase();
+  for (const [canonical, aliases] of Object.entries(schema.fields)) {
+    if (aliases.some((alias) => alias.toLowerCase() === normalized)) return canonical;
+  }
+  return normalized;
+}
+
+function trackerRows(root, schema) {
   const tracker = join(root, 'data', 'tracker.md');
   const issues = [];
   const rows = [];
@@ -105,27 +191,37 @@ function trackerRows(root) {
   }
 
   let currentHeader = null;
+  let currentCanonicalHeader = null;
   readText(tracker).split(/\r?\n/).forEach((line, index) => {
     const lineNo = index + 1;
-    const stripped = line.trim();
-    if (!stripped.startsWith('|') || !stripped.endsWith('|')) return;
-
-    const cells = stripped.slice(1, -1).split('|').map((cell) => cell.trim());
+    const cells = splitMarkdownRow(line);
+    if (!cells) return;
     if (!cells.length || isSeparatorRow(cells)) return;
 
-    const lowered = cells.map((cell) => cell.toLowerCase());
-    if (lowered.includes('profile') && cells.some((cell) => ['company', 'компанія'].includes(cell.toLowerCase()))) {
+    const canonical = cells.map((cell) => canonicalField(cell, schema));
+    if (canonical.includes('profile') && !canonical.includes('company')) {
+      issues.push(issue('error', `data/tracker.md:${lineNo}: table has a configured Profile column but no configured Company column; add the company header label to config/tracker-schema.md`));
+    }
+    if (canonical.includes('company') && !canonical.includes('profile')) {
+      issues.push(issue('error', `data/tracker.md:${lineNo}: table has a configured Company column but no configured Profile column; add the profile header label to config/tracker-schema.md`));
+    }
+    if (canonical.includes('profile') && canonical.includes('company')) {
       currentHeader = cells;
-      const companyIdx = lowered.findIndex((cell) => ['company', 'компанія'].includes(cell));
-      const profileIdx = lowered.indexOf('profile');
+      currentCanonicalHeader = canonical;
+      const companyIdx = canonical.indexOf('company');
+      const profileIdx = canonical.indexOf('profile');
       if (companyIdx !== -1 && profileIdx !== companyIdx + 1) {
-        issues.push(issue('warning', `data/tracker.md:${lineNo}: Profile column should be immediately after Company/Компанія`));
+        issues.push(issue('warning', `data/tracker.md:${lineNo}: Profile column should be immediately after Company`));
       }
       return;
     }
 
-    if (currentHeader && cells.length === currentHeader.length) {
+    if (currentHeader && currentCanonicalHeader && cells.length === currentHeader.length) {
       const row = Object.fromEntries(currentHeader.map((header, cellIndex) => [header, cells[cellIndex]]));
+      for (let cellIndex = 0; cellIndex < currentCanonicalHeader.length; cellIndex += 1) {
+        const canonicalName = currentCanonicalHeader[cellIndex];
+        if (!row[canonicalName]) row[canonicalName] = cells[cellIndex];
+      }
       row._line = String(lineNo);
       rows.push(row);
     }
@@ -262,7 +358,9 @@ function main() {
   const root = parseArgs(process.argv.slice(2));
   const issues = [];
   const profiles = listedProfiles(root);
-  const { rows, issues: trackerIssues } = trackerRows(root);
+  const schema = loadTrackerSchema(root);
+  issues.push(...schema.issues);
+  const { rows, issues: trackerIssues } = trackerRows(root, schema);
   issues.push(...trackerIssues);
 
   if (!profiles.size) {
@@ -276,9 +374,10 @@ function main() {
   const urls = [];
 
   for (const row of rows) {
-    const company = row.Company || row['Компанія'] || '';
-    const profile = (row.Profile || '').trim();
+    const company = row.company || '';
+    const profile = (row.profile || '').trim();
     const line = row._line || '?';
+    const rowUrls = new Set();
 
     if (company) companyNames.push(company);
 
@@ -290,11 +389,12 @@ function main() {
 
     for (const [key, cell] of Object.entries(row)) {
       if (key.startsWith('_')) continue;
-      urls.push(...allMatches(cell, urlPattern));
+      for (const url of allMatches(cell, urlPattern)) rowUrls.add(url);
       for (const slug of allMatches(cell, companyLinkPattern)) {
         linkedSlugs.add(slug);
       }
     }
+    urls.push(...rowUrls);
   }
 
   for (const [url, count] of [...countValues(urls)].sort(([a], [b]) => a.localeCompare(b))) {

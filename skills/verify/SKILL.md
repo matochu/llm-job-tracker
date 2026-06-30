@@ -18,6 +18,7 @@ Before starting, read:
 6. `strategy/criteria.md`
 7. `config/tracker-schema.md`
 8. `config/next-actions.md`
+9. `config/browser-patterns.md`
 
 Also get the current date and timezone from the execution environment or system context before writing verification or archive dates.
 
@@ -41,6 +42,7 @@ This skill re-checks liveness of tracked roles at source. It does not do job dis
 3. For each role:
    - open the URL or source board
    - prefer company/ATS source of truth over search snippets
+   - for supported ATS boards, use `node scripts/ats-probe.js <provider> <slug> --json` as the preferred liveness check before browser fallback
    - use browser MCP, preferably Playwright MCP or Chrome DevTools MCP, for LinkedIn, Djinni, JavaScript-rendered boards, and logged-in sites
    - if login is required, open the site in the browser and wait for the user to authenticate manually
    - do not use plain web search as a fallback for browser-required checks
@@ -54,6 +56,7 @@ This skill re-checks liveness of tracked roles at source. It does not do job dis
    - move closed roles to Archive with date and reason
    - move companies with useful contacts but no active role to Monitoring
    - update checked/updated dates
+   - prefer `node scripts/tracker.js move`, `set-status`, or `bump-date` over manual Markdown table edits
 6. Suggest `job-tracker:company [company]` when an active role has no prep notes.
 
 ## Output

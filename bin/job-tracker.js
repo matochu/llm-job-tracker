@@ -56,9 +56,9 @@ const managedEntries = [
   'scripts',
   'templates',
   'migrations',
+  'config/browser-patterns.md',
   'config/agent-instructions.md',
   'config/next-actions.md',
-  'config/tracker-schema.md',
   'config/session-reports.md',
 ];
 
@@ -262,10 +262,14 @@ function updateWorkspace(target, dryRun = false) {
   }
 }
 
-function runInstall(target) {
+function runInstall(target, context = '') {
   const result = spawnSync(process.execPath, ['scripts/install.js'], {
     cwd: target,
     stdio: 'inherit',
+    env: {
+      ...process.env,
+      JOB_TRACKER_INSTALL_CONTEXT: context,
+    },
     shell: false,
   });
   if (result.error) throw result.error;
@@ -287,17 +291,20 @@ try {
     copyWorkspace(target, opts.force || isWorkspace(target));
     writeFileSync(resolve(target, 'config', '.installed-version'), pkgVersion);
     writeFileSync(resolve(target, 'config', '.migrated-version'), pkgVersion);
-    if (opts.install) runInstall(target);
+    if (opts.install) runInstall(target, 'init');
     console.log(`\nLLM job tracker workspace initialized:\n${target}`);
+    console.log(`\nNext steps:\n  1. Review candidate/candidate.md and candidate/cv/cv-base.md.\n  2. Review config/settings.md and strategy/search-profiles/default.md.\n  3. In your LLM tool, run: job-tracker:setup\n`);
   } else {
     updateWorkspace(target, opts.dryRun);
     if (!opts.dryRun) writeFileSync(resolve(target, 'config', '.installed-version'), pkgVersion);
-    if (opts.install && !opts.dryRun) runInstall(target);
+    if (opts.install && !opts.dryRun) runInstall(target, 'update');
     console.log(`\nLLM job tracker workspace ${opts.dryRun ? 'update plan checked' : 'updated'}:\n${target}`);
-    if (!opts.dryRun) console.log(`\nRun job-tracker:health to apply pending data migrations.`);
+    if (!opts.dryRun) {
+      console.log(`\nNext steps:\n  1. In your LLM tool, run: job-tracker:health\n`);
+    } else {
+      console.log(`\nNext steps:\n  1. Re-run without --dry-run to apply this update.\n  2. After update, run: job-tracker:health\n`);
+    }
   }
-
-  console.log(`\nNext steps:\n  1. Review candidate/candidate.md and candidate/cv/cv-base.md.\n  2. Review config/settings.md and strategy/search-profiles/default.md.\n  3. In your LLM tool, run: job-tracker:setup\n`);
 } catch (err) {
   console.error(`llm-job-tracker: ${err.message}`);
   console.error('');

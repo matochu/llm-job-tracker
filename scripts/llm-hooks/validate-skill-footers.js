@@ -45,6 +45,18 @@ function main() {
     if (!(text.includes('config/next-actions.md') && text.includes('job-tracker:action'))) {
       errors.push(`${rel}: missing \`job-tracker:action\` next-actions footer requirement`);
     }
+    if (skillDir === 'run') {
+      const requiredRunGuards = [
+        'internal action queue is empty',
+        'no background subagent',
+        'every skipped selected lead has a reason recorded in `data/tracker.md`',
+        'never `done`',
+        'Continue Run',
+      ];
+      for (const guard of requiredRunGuards) {
+        if (!text.includes(guard)) errors.push(`${rel}: missing run completion guard \`${guard}\``);
+      }
+    }
     text.split(/\r?\n/).forEach((line, index) => {
       const stripped = line.trim();
       if (!stripped) return;

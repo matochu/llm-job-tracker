@@ -37,6 +37,8 @@ Absence of these optional files is fine — affected dimensions use `Unknown` / 
 
 Run the CV/vacancy fit review in a subagent when the current tool supports subagents.
 
+When `job-tracker:run` needs multiple independent fit reviews, run them as a batch of parallel subagents when the tool runtime supports it. Each subagent receives only one CV/vacancy/profile context and must not edit files. If parallel subagents are unavailable, process the batch sequentially and state that batching was unavailable.
+
 Main agent responsibilities:
 
 1. Resolve the CV path, vacancy source, and profile context.

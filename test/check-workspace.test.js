@@ -23,6 +23,20 @@ function makeFixture() {
 
   writeFileSync(join(dir, '.gitignore'), '.sessions/\n');
   writeFileSync(join(dir, 'config', 'settings.md'), 'Active profile: `default`\n');
+  writeFileSync(join(dir, 'config', 'tracker-schema.md'), `# Tracker Schema
+
+## CLI Schema Aliases
+
+### Field Aliases
+
+| Canonical | Labels |
+|---|---|
+| \`company\` | \`Company\` |
+| \`profile\` | \`Profile\` |
+| \`role\` | \`Role\`, \`Position\` |
+| \`url\` | \`URL\`, \`Url\`, \`Link\`, \`Links\` |
+| \`status\` | \`Status\` |
+`);
   writeFileSync(join(dir, 'strategy', 'search-profiles', 'default.md'), '# Default profile\n');
   writeFileSync(join(dir, 'candidate', 'cv', 'cv-base.md'), '# Base CV\n');
   writeFileSync(join(dir, 'data', 'tracker.md'), `# Tracker\n\n| Company | Profile | Role | Link | Status |\n|---|---|---|---|---|\n| Example | default | Engineer | https://example.com/job | Raw Pipeline |\n`);
@@ -67,6 +81,27 @@ test('warns on duplicate URLs without failing', () => {
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /WARNING \(1\)/);
   assert.match(result.stdout, /duplicate URL appears 2 times/);
+});
+
+test('warns when tracker schema aliases are missing', () => {
+  const fixture = makeFixture();
+  writeFileSync(join(fixture, 'config', 'tracker-schema.md'), '# Tracker Schema\n');
+
+  const result = runCheck(fixture);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /missing `## CLI Schema Aliases`/);
+});
+
+test('rejects tracker headers not covered by configured schema aliases', () => {
+  const fixture = makeFixture();
+  writeFileSync(join(fixture, 'data', 'tracker.md'), `# Tracker\n\n| Org | Profile | Role | Link | Status |\n|---|---|---|---|---|\n| Example | default | Engineer | https://example.com/job | Raw Pipeline |\n`);
+
+  const result = runCheck(fixture);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /no configured Company column/);
+  assert.match(result.stdout, /add the company header label to config\/tracker-schema.md/);
 });
 
 test('warns on malformed session reports', () => {

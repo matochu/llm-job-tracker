@@ -2,6 +2,8 @@
 
 Use this file as the source checklist for `job-tracker:find`. Do not silently skip sources. If a source cannot be checked because of login, MCP/browser failure, rate limits, or network issues, record it in the final source report.
 
+For browser-specific interaction rules, read `config/browser-patterns.md` before using Browser MCP.
+
 ## Search Modes
 
 - **Web search:** good for discovering companies, job-board URLs, funding/news triggers, HN threads, and public ATS pages.
@@ -56,6 +58,17 @@ Do not add a LinkedIn-only lead directly. Open the company careers page or ATS p
 Use web search and direct ATS URLs. Prefer current board/listing pages over old job IDs.
 
 Treat ATS APIs as the highest-signal verification layer. When a company has a known ATS slug, prefer the provider API/feed before browser search. Browser or web search is still required when the company uses a custom careers page, the ATS slug is unknown, or the provider API does not expose enough detail.
+
+Canonical probe command:
+
+```bash
+node scripts/ats-probe.js [provider] [slug]
+node scripts/ats-probe.js batch [provider] [slug...] --limit 10
+node scripts/ats-probe.js discover [company-or-domain]
+node scripts/ats-probe.js [provider] [slug] --json
+```
+
+Use this script for supported providers before writing one-off `curl`, shell loops, `jq`, or inline JSON parsing. It normalizes title, location, id, and URL.
 
 ### Ashby
 

@@ -13,6 +13,7 @@ The npm package scaffolds the workspace and installs Claude and Codex integratio
 - [LLM hooks](#llm-hooks)
 - [Dependency check](#dependency-check)
 - [Typical workflow](#typical-workflow)
+- [Agent CLI utilities](#agent-cli-utilities)
 - [Hard rules](#hard-rules)
 - [Skills / commands](#skills--commands)
 - [Profile mechanics](#profile-mechanics)
@@ -214,6 +215,7 @@ The check verifies:
 - installed Codex hook/rules sync and Claude hook presence in local settings
 - active profile settings and target file existence
 - workspace integrity script availability
+- ATS probe and structured tracker CLI availability
 
 It reports missing dependencies without installing anything.
 
@@ -236,9 +238,64 @@ PDF export uses `scripts/generate_pdf.py`. The generator looks for `weasyprint` 
 7. `job-tracker:stories [Company]` maps factual interview stories to the role when interview preparation or fit gaps need coverage.
 8. `job-tracker:pdf data/companies/[company]/resume.md` generates the recruiter-ready PDF.
 9. `job-tracker:apply [Company|application-url]` scouts/fills an ATS form and submits only after explicit user confirmation.
-10. Update `data/tracker.md` after outreach, application, replies, interviews, closures, or deferrals.
+10. Update `data/tracker.md` after outreach, application, replies, interviews, closures, or deferrals. Agents should prefer `node scripts/tracker.js` for row updates instead of manual Markdown table surgery.
 
-During `job-tracker:run`, child-skill results are internal progress, not user-facing stop points. `job-tracker:run` should continue through its plan until the final summary or a hard blocker.
+During `job-tracker:run`, child-skill results are internal progress, not user-facing stop points. `job-tracker:run` should continue through its plan until the final summary or a hard blocker. It must not report `done` while selected leads remain in the internal queue, background subagents are running, or skipped selected leads lack tracker-recorded real reasons. If a turn must end while the run can continue automatically, it should return the `paused-resumable` state with the single `Continue Run` next action.
+
+## Agent CLI Utilities
+
+These scripts are for agents and maintainers. They are not separate user-facing workflows; skills call them when useful.
+
+### ATS Probe
+
+Use the ATS probe for supported provider boards before writing one-off `curl` or inline JSON parsing:
+
+```bash
+node scripts/ats-probe.js ashby langfuse
+node scripts/ats-probe.js batch ashby checkly sentry posthog --limit 10
+node scripts/ats-probe.js discover langfuse.com
+node scripts/ats-probe.js lever company-slug --json
+```
+
+Supported providers:
+
+- `ashby`
+- `lever`
+- `greenhouse`
+- `workable`
+- `recruitee`
+- `smartrecruiters`
+
+Default output is:
+
+```text
+title | location | id | url
+```
+
+`discover <company-or-domain>` derives likely ATS slugs from a company name or domain and probes the supported providers. It is deterministic provider probing, not web search.
+
+`batch <provider> <slug...>` probes multiple known ATS slugs without shell loops or `jq`.
+
+`--json` returns normalized records for filtering or tests. The probe filters for frontend/product/fullstack/platform-style roles in EU-compatible locations. `--profile <slug>` adds keyword hints from the configured profile; it is not a fit/reject engine. Final profile fit, work-mode, priority, and reject decisions still belong to the skills and profile rules.
+
+### Tracker CLI
+
+Use the tracker CLI for narrow, structured edits to `data/tracker.md`:
+
+```bash
+node scripts/tracker.js list --section raw
+node scripts/tracker.js validate --strict --json
+node scripts/tracker.js add-lead --company Acme --profile frontend --role "Senior Frontend Engineer" --url https://example.com/job --source ashby --date 2026-06-29
+node scripts/tracker.js move --company Acme --role "Senior Frontend Engineer" --from raw --to archive --date 2026-06-29 --reason closed
+node scripts/tracker.js set-status --company Acme --role "Senior Frontend Engineer" --section raw --status "🟡 unclear" --date 2026-06-29 --dry-run
+node scripts/tracker.js bump-date --company Acme --role "Senior Frontend Engineer" --field Updated --date 2026-06-29
+```
+
+The CLI parses Markdown tables structurally, preserves user notes outside the target row, treats emoji/status text as opaque strings, and refuses ambiguous updates unless an explicit `--url` identifies the row. Use `--dry-run` to inspect changes before writing, `--json` for `list`/`validate`, `--strict` to make validation warnings fail, and `--section` to narrow row matching for `set-status`, `bump-date`, and duplicate checks during `add-lead`.
+
+Tracker section and field aliases live in `config/tracker-schema.md`. The starter schema is English, and localized or custom labels are supported by adding them to that config instead of changing JavaScript code.
+
+Tables without a role or URL column, such as compact submitted/application-status tables, need a unique selector. Prefer `--url` when available; otherwise use section plus enough fields to avoid ambiguous company-only updates.
 
 ## Hard Rules
 
@@ -312,9 +369,10 @@ Do not pass profile slugs to other job commands. Two exceptions may switch the a
 - `config/settings.md` — active profile and profile selection rules.
 - `config/language.md` — assistant reply language and document language.
 - `config/paths.md` — tracker, company notes, CV, PDF generator paths.
+- `config/browser-patterns.md` — Browser MCP interaction rules for JavaScript-rendered and login-required sources.
 - `strategy/criteria.md` — shared scoring labels and tracker row format.
 - `strategy/sources.md` — job-search sources and verification rules.
-- `config/tracker-schema.md` — tracker sections and update rules.
+- `config/tracker-schema.md` — tracker sections, update rules, and CLI aliases for localized section/field labels.
 - `style/outreach-style.md` — outreach tone and message strategy.
 - `style/cv-style.md` — CV house style and review rules.
 - `candidate/stories.md` — factual STAR story bank for interview preparation.
@@ -337,6 +395,7 @@ All configured paths are relative to the repository root.
 │   ├── language.md
 │   ├── next-actions.md
 │   ├── agent-instructions.md
+│   ├── browser-patterns.md
 │   ├── tracker-schema.md
 │   └── session-reports.md
 ├── candidate/
@@ -360,10 +419,12 @@ All configured paths are relative to the repository root.
 │           ├── resume.md
 │           └── pr-backlog.md
 └── scripts/
+    ├── ats-probe.js
     ├── check-deps.js
     ├── check-workspace.js
     ├── generate_pdf.py
     ├── install.js
+    ├── tracker.js
     ├── llm-hooks/
     └── cv.css
 ```
@@ -378,6 +439,7 @@ All configured paths are relative to the repository root.
 - Move closed, disappeared, rejected, skipped, or dead roles to Archive with date and reason.
 - Move useful companies without active relevant roles to Monitoring.
 - Keep tracker edits narrow and preserve user-authored notes.
+- Prefer `node scripts/tracker.js` for tracker row updates when the target row can be identified structurally.
 - Do not duplicate companies across active pipeline and Raw Pipeline unless there are separate roles.
 
 ## Safety Rules

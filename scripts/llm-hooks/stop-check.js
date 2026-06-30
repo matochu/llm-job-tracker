@@ -5,6 +5,9 @@ import { resolve } from 'node:path';
 import { readEvent, repoRoot, warn } from './hooklib.js';
 
 const vagueNextStepRe = /^\s*(?:next step|next action|continue with|наступний крок|далі)\s*:?\s*`?job-tracker:[a-z-]+/im;
+const runDoneRe = /(?:run state:\s*`?done`?|^- Status:\s*done\s*$)/im;
+const backgroundWorkRe = /\b(background|subagent|fit-review|fit review|reviewer gate|in flight|running)\b/i;
+const jobTrackerOutputRe = /\b(job-tracker:|Active profile:|Run plan:|Run progress:|Next actions:)/i;
 
 function assistantText(event) {
   const candidates = [event.assistant_response, event.assistantResponse, event.response, event.message, event.text, event.content, event.raw_stdin];
@@ -31,7 +34,20 @@ function main() {
   if (hasVagueNextStep && !hasFrameworkContinuation) {
     warn('Job-search stop warning: vague `job-tracker:*` continuation detected. Use `Next internal step: run ...` for running `job-tracker:run`, or a proper `Next actions:` footer. For paused resumable `job-tracker:run`, show only `[n] Continue Run` with the compact run plan and resume point.');
   }
-  warn('Job-search stop reminder: final reply should be Ukrainian unless producing recruiter-facing English; mention changed files, verification status, `Active profile: <slug>`, and concise `job-tracker:action` Next actions when useful.');
+  const looksLikeJobTrackerOutput = jobTrackerOutputRe.test(text);
+  const looksLikeRunOutput = /job-tracker:run|Run plan:|Run progress:|Resume point:/i.test(text);
+  if (looksLikeRunOutput && runDoneRe.test(text)) {
+    const hasDoneGuards = /queue (?:is )?empty|no (?:pending|running)|no background|skipped .*reason|final reviewer/i.test(text);
+    if (!hasDoneGuards) {
+      warn('Job-search stop warning: `job-tracker:run` reported done. Before `done`, assert the internal queue is empty, no background subagents are running, and skipped selected leads have tracker-recorded real reasons.');
+    }
+  }
+  if (looksLikeJobTrackerOutput && backgroundWorkRe.test(text) && !/paused-resumable|Continue Run|Next internal step:/i.test(text)) {
+    warn('Job-search stop warning: background/subagent work mentioned without `paused-resumable`, `Continue Run`, or `Next internal step:`. Do not end silently while background work is in flight.');
+  }
+  if (looksLikeJobTrackerOutput) {
+    warn('Job-search stop reminder: final reply should follow config/language.md; mention changed files, verification status, `Active profile: <slug>`, and concise `job-tracker:action` Next actions when useful.');
+  }
   return 0;
 }
 

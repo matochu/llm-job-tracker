@@ -49,6 +49,8 @@ QA reviewer gates (intake / prep / final) are defined in `## Reviewer Gates` bel
 
 Do not bypass child skills by reconstructing their expected artifacts manually. `job-tracker:run` must call `job-tracker:company` for prep-note research, `job-tracker:draft` for `### Manual Message Drafts`, `job-tracker:cv` for CV tailoring, `job-tracker:fit` for fit review, `job-tracker:stories` for interview story mapping, and `job-tracker:pdf` for PDF export.
 
+When tracker row updates are needed inside the run, prefer `node scripts/tracker.js` commands (`add-lead`, `move`, `set-status`, `bump-date`) over direct Markdown table edits or shell text replacement. Profile switching must always go through `job-tracker:profile use`; do not edit `config/settings.md` directly from `job-tracker:run`.
+
 ## Reviewer Gates
 
 Three QA passes run inside `job-tracker:run` to keep the orchestrator honest. Each gate runs as a **fresh subagent** when subagent execution is available: give it a reviewer stance (inspect artifacts, produce a verdict, do not rewrite producing-step work), the criteria block from this section, and only the target artifacts/tracker scope. If subagent execution is unavailable, run in the current context but keep the reviewer stance.
@@ -119,6 +121,10 @@ Audit the full run result:
 
 - every changed tracker row has a `Profile`
 - statuses, prep notes, CV, fit, PDF, and next actions agree with each other
+- internal action queue has no `pending` or `running` items before `Status: done`
+- no background subagent or reviewer task is still running before `Status: done`
+- every skipped selected lead has a concrete reason recorded in `data/tracker.md`
+- skipped-lead reasons are grounded in the resolved profile, candidate constraints, source truth, or fit review; do not invent stack myths or treat Angular/non-React as a reject reason unless the profile explicitly says so
 - companies are not described as ready to apply, submit, send, or contact merely because artifacts exist
 - manual message drafts are represented as `manual message draft prepared`; the user still writes/sends manually outside the skill
 - prep notes and manual message drafts are not reported as produced by `job-tracker:run` directly; they must be attributed to `job-tracker:company` and `job-tracker:draft`
@@ -131,28 +137,28 @@ Return one reviewer verdict for the run and only the highest-signal issues.
 
 ## Orchestrator Mode
 
-During `job-tracker:run`, do not stop after child skills just to ask for the next action. Child-skill outputs are internal progress signals, not user-facing stop points.
+> **Hard rule**: When state is `running`, the FIRST action in any response must be a tool call — not text. Text may follow the tool call, never precede it. A text-only response is only valid when state is `paused-resumable`, `blocked`, or `done`.
+
+After every child skill, immediately call the next queued skill. A text-only response is not valid while `running`.
 
 Treat `job-tracker:run` as a resumable state machine. Every response from `job-tracker:run` must be one of these states:
 
 - `running`: internal work remains and no hard blocker exists. Continue executing; do not return control to the user.
 - `paused-resumable`: the turn must stop even though the run can continue automatically from the Session Report.
 - `blocked`: a hard blocker or required manual user action prevents the next internal step.
-- `done`: the run plan is complete and final verification/summary are done.
+- `done`: the run plan is complete, the final verification/summary are done, the internal action queue is empty, no background subagents are running, and all skipped selected leads have tracker-recorded real reasons.
 
 Use a run plan and progress updates instead of intermediate `Next actions`:
 
 - `Run plan`: the intended sequence for this run.
 - `Run progress`: completed internal steps, tracker/prep/CV/PDF updates, and current blockers.
-- `Next internal step`: the next child skill or tracker update that `job-tracker:run` will execute.
+- `Next internal step`: never write this as text unless a tool call for it appears in the same response, before any progress text. Writing `Next internal step: X` without a tool call for X is a stop-point anti-pattern.
 
-When a child skill returns a result inside `job-tracker:run`, rewrite that result as `Run progress` and continue with `Next internal step` whenever runnable internal work remains. Do not let child-skill result text become the final user-facing response unless the run is complete or blocked.
-
-Do not print a `Next actions:` footer after profile switching, `job-tracker:find`, the intake reviewer gate, or a per-company child step unless the response state is `paused-resumable`, `blocked`, or `done`.
+When a child skill returns a result inside `job-tracker:run`, rewrite it as `Run progress`.
 
 Only show user-facing `Next actions:` in the final summary, in a hard-blocker response, or in a `paused-resumable` response.
 
-If there is any runnable internal step remaining, do not output final `Next actions`; continue the run.
+Selected leads must not be deferred to "the next pass" while reporting `done`. A selected lead that still has company research, draft, CV, fit, stories, PDF, verification, or tracker update work remaining is a runnable internal step. If the current turn must end before that work runs, use `paused-resumable`, not `done`.
 
 When a reviewer gate returns `Continue: yes`, immediately execute its reported `Next internal step` or derive the next step from the internal action queue. A gate result that says `Continue: yes` is not a stopping point and must not become the final response.
 
@@ -169,13 +175,15 @@ Runnable internal steps include:
 - prep reviewer gate (see `## Reviewer Gates`)
 - final reviewer gate (see `## Reviewer Gates`)
 
-Never list `job-tracker:fit` or `job-tracker:pdf` as final `Next actions` when `job-tracker:run` has enough inputs to run them internally.
+Pending or running background subagents count as runnable internal work until their result has been collected and recorded. Do not end a turn silently after starting a background fit review, reviewer gate, or other subagent. Either wait for the result and continue the state machine, or return `paused-resumable` with the required single `Continue Run` next action.
 
 Never end a `job-tracker:run` response with vague continuation prose such as `Next step: job-tracker:fit`, `Наступний крок: job-tracker:fit`, or `Continue with job-tracker:cv`. Use `Next internal step: run ...` while continuing internally, or the `paused-resumable` footer below if control must return to the user.
 
 ## Resumable Pause UX
 
 Use `paused-resumable` only when the current turn must end even though the latest Session Report says `Can continue automatically: yes`. This is an interruption/resume state, not normal workflow completion.
+
+Use `paused-resumable` whenever a background subagent is still in flight and the response must return control to the user or harness. A response that launched background work must never have no visible output.
 
 A `paused-resumable` response must include:
 
@@ -228,6 +236,18 @@ For each queued item, track:
 Show the queue in progress updates when useful, but do not present it as user-facing `Next actions`.
 
 When a child skill output suggests a next action that is already part of `job-tracker:run`, add it to the internal action queue and continue. Do not ask the user to choose it.
+
+Do not remove a selected lead from the queue merely because it is inconvenient for the current turn. A skipped or deferred selected lead needs a tracker-recorded reason. Soft blockers keep the run moving to the next queue item; they do not make the run `done` unless the rest of the queue is also complete.
+
+Before setting `Status: done`, assert all of the following:
+
+- internal action queue is empty: no `pending` or `running` items
+- no background subagent, fit review, or reviewer gate is still running
+- every skipped selected lead has a reason recorded in `data/tracker.md`
+- every skip reason is grounded in the resolved profile, candidate constraints, verified source state, or fit review evidence
+- no lead was skipped only because of an invented stack assumption, such as treating Angular as disqualifying when the profile does not say so
+
+If any assertion is false, the state is `running`, `paused-resumable`, or `blocked`, never `done`.
 
 ## Plan Tracking
 

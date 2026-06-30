@@ -19,6 +19,7 @@ Before starting, read:
 7. `strategy/sources.md`
 8. `config/tracker-schema.md`
 9. `config/next-actions.md`
+10. `config/browser-patterns.md`
 
 Also get the current date and timezone from the execution environment or system context before adding leads or dates to the tracker.
 
@@ -47,7 +48,8 @@ If this skill is called by `job-tracker:run`, its next-action footer is advisory
    - Use browser MCP, preferably Playwright MCP or Chrome DevTools MCP, for LinkedIn, Djinni, JavaScript-rendered boards, filters, login/session state, and sources marked Browser MCP in `strategy/sources.md`.
    - For those browser-required sources, do not use plain web search as a fallback.
    - If login is required, open the source in the browser and wait for the user to authenticate manually.
-   - Use web search/API where that is faster and reliable.
+   - Use `node scripts/ats-probe.js <provider> <slug>` for known Ashby, Lever, Greenhouse, Workable, Recruitee, or SmartRecruiters slugs before writing ad hoc API calls. Use `--json` when structured output helps filtering decisions.
+   - Use web search/API where that is faster and reliable, but do not write one-off inline JSON parsing when `scripts/ats-probe.js` supports the provider.
    - Do not silently skip a source. Mark it `checked`, `partial`, or `skipped` with a reason.
 4. For every promising lead, verify it at the source of truth:
    - company careers page
@@ -56,6 +58,7 @@ If this skill is called by `job-tracker:run`, its next-action footer is advisory
 5. Apply the resolved profile's fit, reject, work-mode, and priority rules.
 6. Reject low-fit roles and noisy sources explicitly.
 7. Add each accepted lead to the configured `Raw Pipeline` table with the active profile in the `Profile` column.
+   - Prefer `node scripts/tracker.js add-lead --company ... --profile ... --role ... --url ... --source ... --date YYYY-MM-DD` over manual Markdown table edits.
 8. For new companies without a `data/companies/[slug]/prep-notes.md`, suggest `job-tracker:company [company]`.
 
 ## Network Mode

@@ -94,6 +94,7 @@ test('installs local agent integrations with JS installer', () => {
   });
 
   assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /job-tracker:setup/);
   assert.equal(existsSync(join(target, 'CLAUDE.md')), true);
   assert.equal(existsSync(join(target, 'AGENTS.md')), true);
   assert.equal(existsSync(join(target, '.claude', 'skills', 'setup', 'SKILL.md')), true);
@@ -122,6 +123,7 @@ test('updates an existing workspace by default and preserves protected files', (
   assert.equal(scaffold.status, 0, scaffold.stderr);
 
   writeFileSync(join(target, 'config', 'settings.md'), 'PRIVATE SETTINGS\n');
+  writeFileSync(join(target, 'config', 'tracker-schema.md'), 'PRIVATE TRACKER SCHEMA\n');
   writeFileSync(join(target, 'candidate', 'candidate.md'), 'PRIVATE CANDIDATE\n');
   writeFileSync(join(target, 'skills', 'setup', 'SKILL.md'), 'OLD MANAGED SKILL\n');
 
@@ -129,7 +131,10 @@ test('updates an existing workspace by default and preserves protected files', (
 
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /workspace updated/);
+  assert.match(result.stdout, /job-tracker:health/);
+  assert.doesNotMatch(result.stdout, /job-tracker:setup/);
   assert.equal(readFileSync(join(target, 'config', 'settings.md'), 'utf8'), 'PRIVATE SETTINGS\n');
+  assert.equal(readFileSync(join(target, 'config', 'tracker-schema.md'), 'utf8'), 'PRIVATE TRACKER SCHEMA\n');
   assert.equal(readFileSync(join(target, 'candidate', 'candidate.md'), 'utf8'), 'PRIVATE CANDIDATE\n');
   assert.notEqual(readFileSync(join(target, 'skills', 'setup', 'SKILL.md'), 'utf8'), 'OLD MANAGED SKILL\n');
 });
@@ -146,6 +151,8 @@ test('update dry-run does not write files', () => {
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /update skills/);
   assert.match(result.stdout, /preserve candidate/);
+  assert.match(result.stdout, /After update, run: job-tracker:health/);
+  assert.doesNotMatch(result.stdout, /job-tracker:setup/);
   assert.equal(readFileSync(join(target, 'skills', 'setup', 'SKILL.md'), 'utf8'), 'OLD MANAGED SKILL\n');
 });
 
