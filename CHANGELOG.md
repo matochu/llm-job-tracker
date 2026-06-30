@@ -4,26 +4,40 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## 0.4.3 - 2026-06-30
+
+### Added
+
+- `config/source-registry.md` — source values, host patterns, ATS probe providers, browser-required sources such as Djinni/LinkedIn, and URL-to-Source derivation rules.
+- `migrations/0.4.3.md` — seeds `config/source-registry.md` for existing workspaces that already completed `0.4.2`, and adds source-registry references to protected `strategy/sources.md` and `config/tracker-schema.md`.
+- Health checks for source-registry drift: `scripts/check-workspace.js` now verifies that configured ATS providers match `scripts/ats-probe.js` and that Djinni has both browser-required and source-derivation policy.
+
+### Changed
+
+- `job-tracker:find`, `job-tracker:import`, and `job-tracker:verify` read `config/source-registry.md` instead of hardcoding provider/source policy in skill files.
+- `scripts/ats-probe.js` now reads provider IDs, discovery feed templates, default keywords, and default locations from `config/source-registry.md`; JavaScript keeps only provider-specific payload normalization.
+- `strategy/sources.md`, `config/tracker-schema.md`, `config/browser-patterns.md`, and `config/agent-instructions.md` now delegate source values and browser-required source policy to `config/source-registry.md`.
+- `job-tracker:verify` liveness strategy clarified: Browser MCP on the direct job URL is the primary liveness check for tracked roles; `scripts/ats-probe.js` and ATS board APIs are discovery surfaces only and must not be used as the closing signal for a specific tracked job ID.
+
 ## 0.4.2 - 2026-06-29
 
 ### Added
 
-- `scripts/ats-probe.js` — reusable Node.js ATS probe for Ashby, Lever, Greenhouse, Workable, Recruitee, and SmartRecruiters. It normalizes role title/location/id/URL, filters frontend/product/fullstack/platform leads, and marks duplicates against `data/tracker.md`.
+- `scripts/ats-probe.js` — reusable Node.js ATS discovery probe for Ashby, Lever, Greenhouse, Workable, Recruitee, and SmartRecruiters. It normalizes role title/location/id/URL and filters frontend/product/fullstack/platform leads without mutating or deduplicating against the tracker.
 - `scripts/tracker.js` — structured Markdown tracker CLI for listing rows, adding Raw Pipeline leads, moving rows between sections, setting status, and bumping date fields without brittle text replacement.
 - `scripts/ats-probe.js discover <company-or-domain>` — deterministic ATS slug discovery by probing supported provider APIs with normalized company/domain candidates.
 - `scripts/tracker.js validate`, `--dry-run`, `--json`, and section-scoped row updates.
-- Tracker CLI schema aliases for English and Ukrainian section/field labels, documented in `config/tracker-schema.md`.
+- Tracker CLI schema aliases for custom/localized section and field labels, documented in `config/tracker-schema.md`.
 - `scripts/tracker.js` exports `setSchemaRootFromTracker()` for programmatic callers that run outside the workspace cwd.
 - `config/browser-patterns.md` — Browser MCP operational guide for stable evaluate calls, locator-based clicks, cookie overlays, login-required sources, and browser safety boundaries.
-- `migrations/0.4.2.md` — seeds Browser MCP patterns and adds ATS probe/browser guidance to protected existing workspaces.
-- Tests for ATS normalization/filtering/dedupe/discovery, tracker row operations/CLI flags, and run stop-check warnings.
+- `migrations/0.4.2.md` — seeds Browser MCP patterns and adds ATS discovery/browser guidance to protected existing workspaces.
+- Tests for ATS normalization/filtering/discovery, tracker row operations/CLI flags, and run stop-check warnings.
 - `README.md` — `## Agent CLI Utilities` section documenting ATS probe and tracker CLI commands, options, and usage patterns for agents and maintainers.
 
 ### Changed
 
-- `job-tracker:find`, `job-tracker:import`, and `job-tracker:verify` now prefer `scripts/ats-probe.js` for supported ATS sources before ad hoc API parsing or browser fallback.
 - `job-tracker:find` and `job-tracker:import` read `config/browser-patterns.md` at startup.
-- `job-tracker:verify` reads `config/browser-patterns.md` at startup and prefers `scripts/ats-probe.js` for supported ATS liveness checks before browser fallback.
+- `job-tracker:verify` reads `config/browser-patterns.md` at startup and uses Browser MCP on direct job URLs as the primary liveness check. ATS board APIs and `scripts/ats-probe.js` are discovery/enrichment only, not closure proof for tracked roles.
 - `job-tracker:run` now explicitly prefers `scripts/tracker.js` for tracker row updates and requires profile switching through `job-tracker:profile use`.
 - `job-tracker:run` completion rules now forbid `Status: done` while internal queue work remains, background subagents are still running, or skipped selected leads lack tracker-recorded real reasons.
 - `job-tracker:run` orchestrator enforces "tool call before text" as a hard rule when state is `running`; a text-only response is invalid unless state is `paused-resumable`, `blocked`, or `done`. `Next internal step:` written without an accompanying tool call is now documented as a stop-point anti-pattern.
@@ -32,7 +46,6 @@ This project follows semantic versioning.
 - Stop hook now warns when a `job-tracker:run` response reports `done` without completion-guard evidence or mentions background/subagent work without `paused-resumable`, `Continue Run`, or `Next internal step:`.
 - Stop hook generic reminders now only appear for job-tracker-like outputs, and run-done detection is scoped to `job-tracker:run` context.
 - `scripts/llm-hooks/validate-skill-footers.js` now checks `skills/run/SKILL.md` for required run completion guards (`internal action queue is empty`, `no background subagent`, `every skipped selected lead has a reason recorded`, `never \`done\``, `Continue Run`).
-- `scripts/llm-hooks/codex-rules/default.rules` uses `npm run validate:skill-footers` instead of the direct node invocation.
 - `scripts/check-workspace.js` now loads tracker section and field aliases from `config/tracker-schema.md` before parsing `data/tracker.md`, enabling localized or custom column labels without code changes.
 
 ### Fixed
