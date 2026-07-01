@@ -112,6 +112,7 @@ function printTable(roles) {
 function printDiscover(results) {
   for (const result of results) {
     console.log([result.provider, result.slug, result.count, result.url].join(' | '));
+    if (result.error) { console.log(`  error | ${result.error}`); continue; }
     for (const role of result.roles) {
       console.log(`  ${role.title} | ${role.location || '-'} | ${role.url}`);
     }

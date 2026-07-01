@@ -241,6 +241,44 @@ test('rejects LinkedIn or Djinni policy without Playwright user account session'
   assert.match(result.stdout, /must require Playwright MCP with the user's logged-in account\/session for `djinni`/);
 });
 
+test('rejects a login-gated browser-required source whose Required access omits Playwright entirely', () => {
+  const fixture = makeFixture();
+  writeFileSync(join(fixture, 'config', 'source-registry.md'), `# Source Registry
+
+## ATS Probe Providers
+
+| Provider | Source value |
+|---|---|
+| \`ashby\` | \`ashby\` |
+| \`lever\` | \`lever\` |
+| \`greenhouse\` | \`greenhouse\` |
+| \`workable\` | \`workable\` |
+| \`recruitee\` | \`recruitee\` |
+| \`smartrecruiters\` | \`smartrecruiters\` |
+
+## Browser-Required Sources
+
+| Source value | Host patterns / URLs | Why browser is required | Required access | Policy |
+|---|---|---|---|---|
+| \`linkedin\` | \`*.linkedin.com\` | login | Browser MCP | never use web search as a substitute |
+| \`vc-board\` | portfolio boards with JavaScript filters | dynamic filters and stale aggregate listings | Browser MCP when filters/rendering require it | use Browser MCP for discovery |
+
+## Source Derivation
+
+| Host pattern | Source value |
+|---|---|
+| \`jobs.ashbyhq.com\` | \`ashby\` |
+| \`*.linkedin.com\` | \`linkedin\` |
+| \`vc-board.example.com\` | \`vc-board\` |
+`);
+
+  const result = runCheck(fixture);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /must require Playwright MCP with the user's logged-in account\/session for `linkedin`/);
+  assert.doesNotMatch(result.stdout, /for `vc-board`/);
+});
+
 test('rejects tracker headers not covered by configured schema aliases', () => {
   const fixture = makeFixture();
   writeFileSync(join(fixture, 'data', 'tracker.md'), `# Tracker\n\n| Org | Profile | Role | Link | Status |\n|---|---|---|---|---|\n| Example | default | Engineer | https://example.com/job | Raw Pipeline |\n`);

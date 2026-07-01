@@ -51,10 +51,11 @@ export function checkSourceRegistry(root, readText) {
     }
   }
 
-  for (const { source, requiredAccess, policy } of parsed.browserRequiredSources) {
+  for (const { source, why, requiredAccess, policy } of parsed.browserRequiredSources) {
+    const needsLoginSession = /\blogin\b|\bsession\b/i.test(why);
+    if (!needsLoginSession) continue;
     const access = requiredAccess.toLowerCase();
-    if (!access.includes('playwright')) continue;
-    if (!access.includes('user') || !access.includes('account') || !access.includes('session')) {
+    if (!access.includes('playwright') || !access.includes('user') || !access.includes('account') || !access.includes('session')) {
       issues.push({ level: 'error', message: `config/source-registry.md must require Playwright MCP with the user's logged-in account/session for \`${source}\`; run job-tracker:setup to review source registry settings` });
     }
     const pol = policy.toLowerCase();
