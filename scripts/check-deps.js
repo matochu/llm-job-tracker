@@ -1,4 +1,4 @@
 #!/usr/bin/env node
-import { main } from './lib/deps.js';
+import { main } from './deps/check.js';
 
 process.exitCode = main();

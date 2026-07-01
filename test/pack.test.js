@@ -27,6 +27,7 @@ test('npm tarball contains all CLI entry-point dependencies', () => {
     assert.ok(existsSync(join(pkg, 'scripts', 'tracker', 'index.js')), 'scripts/tracker/index.js missing from tarball');
     assert.ok(existsSync(join(pkg, 'scripts', 'workspace', 'check.js')), 'scripts/workspace/check.js missing from tarball');
     assert.ok(existsSync(join(pkg, 'scripts', 'publish', 'check-public.js')), 'scripts/publish/check-public.js missing from tarball');
+    assert.ok(existsSync(join(pkg, 'scripts', 'deps', 'check.js')), 'scripts/deps/check.js missing from tarball');
 
     // verify each CLI entry point resolves its imports (no Cannot find module)
     for (const [script, args] of [
@@ -34,6 +35,7 @@ test('npm tarball contains all CLI entry-point dependencies', () => {
       ['scripts/tracker.js', ['--help']],
       ['scripts/check-workspace.js', ['--help']],
       ['scripts/check-public.js', ['--help']],
+      ['scripts/check-deps.js', ['--help']],
     ]) {
       const result = spawnSync(process.execPath, [join(pkg, script), ...args], { encoding: 'utf8' });
       assert.ok(result.status === 0 || result.status === 1, `${script} crashed with import error: ${result.stderr}`);
