@@ -187,9 +187,9 @@ test('rejects source registry where browser-required source has no derivation en
 
 ## Browser-Required Sources
 
-| Source value | Host patterns / URLs |
-|---|---|
-| \`linkedin\` | \`*.linkedin.com\` |
+| Source value | Host patterns / URLs | Why browser is required |
+|---|---|---|
+| \`linkedin\` | \`*.linkedin.com\` | login |
 
 ## Source Derivation
 

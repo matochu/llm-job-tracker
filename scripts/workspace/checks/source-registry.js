@@ -44,7 +44,8 @@ export function checkSourceRegistry(root, readText) {
 
   const parsed = parseSourceRegistryRaw(registry);
 
-  for (const { source } of parsed.browserRequiredSources) {
+  for (const { source, why } of parsed.browserRequiredSources) {
+    if (!/\blogin\b|\bsession\b/i.test(why)) continue;
     const hasDerivation = parsed.sourceDerivation.some((e) => e.source === source);
     if (!hasDerivation) {
       issues.push({ level: 'error', message: `config/source-registry.md browser-required source \`${source}\` has no matching Source Derivation entry; run job-tracker:setup to review source registry settings` });

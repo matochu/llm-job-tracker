@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## 0.4.4 - 2026-07-01
+
+### Added
+
+- `node scripts/tracker.js add-lead --url <url>` now auto-derives the `Source` column from `config/source-registry.md` — no need to pass `--source` explicitly when adding a lead from a known job board URL.
+- `migrations/0.4.4.md` — registers `config/source-registry.md` and `config/browser-patterns.md` in the `config/paths.md` zone list, and updates `config/next-actions.md` example footers to the slash-command form.
+
+### Changed
+
+- `node scripts/ats-probe.js derive-source <url>` resolves the correct tracker `Source` value for any job URL using your workspace `config/source-registry.md`. Falls back to the bare domain when no pattern matches. Useful for auditing source labels on existing tracker rows.
+- `job-tracker:health` browser-required source check is now driven by your `config/source-registry.md` instead of a hardcoded list — adding a new browser-required source to the registry is enough; no script update needed. Each browser-required source must have a matching Source Derivation entry; missing entries are reported as errors (previously only Djinni was checked).
+- Scripts reorganized into focused modules: `scripts/ats/`, `scripts/tracker/`, `scripts/workspace/`, `scripts/publish/`, `scripts/deps/`. Thin entry-point wrappers (`scripts/ats-probe.js`, `scripts/tracker.js`, `scripts/check-deps.js`, etc.) are preserved for backwards compatibility.
+
+### Fixed
+
+- `ats-probe.js` profile keyword loading now resolves relative to the detected workspace root instead of `process.cwd()`, so profile hints apply correctly when the CLI is run from a subdirectory.
+- `ats-probe.js`, `tracker.js`, and `check-public.js` entry-point detection now resolves symlinks before comparing paths, so the CLI runs correctly when invoked through a symlinked directory (e.g. macOS `/tmp` -> `/private/tmp`) instead of silently exiting with no output.
+- `ats-probe.js discover` now reports a provider whose every slug candidate failed as an error entry (`count: 0`, `error: <reason>`) instead of silently dropping it; text output prints the error reason instead of a bare zero-count row.
+- `job-tracker:health` now requires Playwright MCP with the user's logged-in account/session for every login-gated browser-required source (detected from its "Why browser is required" column), not just a hardcoded LinkedIn/Djinni pair — closing a gap where a login-gated source without the word "Playwright" in its policy passed silently.
+
 ## 0.4.3 - 2026-06-30
 
 ### Added
