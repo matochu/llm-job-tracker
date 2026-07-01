@@ -9,11 +9,15 @@ This project follows semantic versioning.
 ### Added
 
 - `config/profile-resolution.md` — the shared profile-resolution rule now lives in one file that skills reference, instead of being restated inline in every skill. `job-tracker:import` and `job-tracker:run` keep their own profile logic.
-- `migrations/next.md` — seeds `config/profile-resolution.md` for existing workspaces and registers it in the `config/paths.md` zone list.
+- `migrations/next.md` — registers `config/profile-resolution.md` in the `config/paths.md` zone list. The file itself is delivered by `npx llm-job-tracker update` (managed entry) or a plugin reinstall, not by this migration.
 
 ### Changed
 
-- Skill `Next actions` footers are now presented via `AskUserQuestion` (clickable options) with letter shortcuts still shown for typed replies; shortcut/free-text mapping, freshness, and confirm-before-acting rules are centralized in `config/next-actions.md`.
+- Skill `Next actions` footers are now presented via `AskUserQuestion` (clickable options) with letter shortcuts still shown for typed replies; shortcut/free-text mapping, freshness, and confirm-before-acting rules are centralized in `config/next-actions.md`. `AskUserQuestion` options are capped at 4 per question (was documented as up to 5).
+
+### Fixed
+
+- `node scripts/tracker.js move --from raw --to active` no longer throws `cannot preserve columns` when the Raw Pipeline row has `Added`/`Source` values and the Active Pipeline table has no `Notes`/`Detail` column — those two fields are intake-only metadata and are now dropped silently instead of blocking the move. Other genuinely unmapped columns still raise the error.
 
 ## 0.4.4 - 2026-07-01
 

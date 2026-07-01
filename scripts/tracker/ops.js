@@ -29,6 +29,10 @@ function rowForHeader(header, values) {
   });
 }
 
+// Raw-intake-only metadata: meaningful while a lead is unverified, but not
+// required once a row moves on — dropping it silently is not data loss.
+const DROPPABLE_ON_MOVE = new Set(['added', 'source']);
+
 function moveCellsForHeader(fromTable, row, toTable, values) {
   const source = rowObjectByCanonical(fromTable, row);
   const used = new Set();
@@ -46,7 +50,7 @@ function moveCellsForHeader(fromTable, row, toTable, values) {
 
   const leftovers = fromTable.header
     .map((header, index) => ({ header, canonical: canonicalField(header), value: row.cells[index] ?? '' }))
-    .filter((item) => item.value && !used.has(item.canonical) && !['company', 'profile', 'role'].includes(item.canonical));
+    .filter((item) => item.value && !used.has(item.canonical) && !['company', 'profile', 'role'].includes(item.canonical) && !DROPPABLE_ON_MOVE.has(item.canonical));
   if (leftovers.length) {
     const detailIndex = toTable.header.findIndex((header) => ['detail', 'notes'].includes(canonicalField(header)));
     if (detailIndex === -1) {

@@ -120,6 +120,59 @@ test('move preserves profile URL and source while archiving with reason', () => 
   assert.equal(archived.Status, '2026-06-29: closed');
 });
 
+test('move from raw to active drops Added/Source when destination has no Notes/Detail column', () => {
+  const tracker = `# Tracker
+
+## Active Pipeline
+
+| Company | Profile | Role | Location | Fit | Pri | Status | Contact / Channel | Updated | Links |
+|---|---|---|---|---|---|---|---|---|---|
+
+## Raw Pipeline
+
+| Company | Profile | Role | URL | Added | Status | Source |
+|---|---|---|---|---|---|---|
+| Flamingo | frontend | Senior Front-End Engineer | https://example.com/job | 2026-06-25 | new | linkedin |
+`;
+
+  const next = moveRow(tracker, {
+    company: 'Flamingo',
+    role: 'Senior Front-End Engineer',
+    from: 'raw',
+    to: 'active',
+    date: '2026-07-01',
+  });
+
+  assert.equal(listRows(next, 'raw').length, 0);
+  const active = listRows(next, 'active')[0];
+  assert.equal(active.Company, 'Flamingo');
+  assert.equal(active.Role, 'Senior Front-End Engineer');
+  assert.equal(active.Links, 'https://example.com/job');
+  assert.equal(active.Status, 'new');
+  assert.equal(active.Updated, '2026-07-01');
+});
+
+test('move still throws when a genuinely unmapped column has no Notes/Detail destination', () => {
+  const tracker = `# Tracker
+
+## Active Pipeline
+
+| Company | Profile | Role | Location | Fit | Pri | Status | Contact / Channel | Updated | Links |
+|---|---|---|---|---|---|---|---|---|---|
+| Acme | frontend | Eng | Remote | 45 | P1 | active | recruiter | 2026-06-01 | https://x.com |
+
+## Submitted / In Process
+
+| Company | Profile | Date | Status | Next Step |
+|---|---|---|---|---|
+`;
+
+  assert.throws(
+    () => moveRow(tracker, { company: 'Acme', role: 'Eng', from: 'active', to: 'submitted', date: '2026-07-01' }),
+    /cannot preserve columns/,
+  );
+});
+
 test('setStatus treats emoji status as opaque text', () => {
   const next = setStatus(fixture(), {
     company: 'Beta',
