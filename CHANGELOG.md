@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
+## Unreleased
+
+### Added
+
+- `config/profile-resolution.md` — the shared profile-resolution rule now lives in one file that skills reference, instead of being restated inline in every skill. `job-tracker:import` and `job-tracker:run` keep their own profile logic.
+- `migrations/next.md` — seeds `config/profile-resolution.md` for existing workspaces and registers it in the `config/paths.md` zone list.
+
+### Changed
+
+- Skill `Next actions` footers are now presented via `AskUserQuestion` (clickable options) with letter shortcuts still shown for typed replies; shortcut/free-text mapping, freshness, and confirm-before-acting rules are centralized in `config/next-actions.md`.
+
 ## 0.4.4 - 2026-07-01
 
 ### Added

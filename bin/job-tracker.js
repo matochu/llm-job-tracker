@@ -59,6 +59,7 @@ const managedEntries = [
   'config/browser-patterns.md',
   'config/agent-instructions.md',
   'config/next-actions.md',
+  'config/profile-resolution.md',
   'config/session-reports.md',
 ];
 

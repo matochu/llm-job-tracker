@@ -13,7 +13,7 @@ Before starting, read:
 1. `candidate/candidate.md`
 2. `candidate/application-answers.md` (if present)
 3. `config/settings.md`
-4. the resolved profile from the Profile Resolution rules below
+4. `config/profile-resolution.md`, then the profile it resolves to
 5. `config/language.md`
 6. `config/paths.md`
 7. `style/outreach-style.md`
@@ -21,10 +21,7 @@ Before starting, read:
 
 ## Profile Resolution
 
-1. Read the active profile from `config/settings.md`.
-2. For new job discovery or untracked targets, use the active profile from settings.
-3. For existing tracked vacancies, use the `Profile` value from the matching `data/tracker.md` row.
-4. Treat all arguments as normal skill arguments; profiles are not passed in commands.
+Follow `config/profile-resolution.md`.
 
 ## Workflow
 

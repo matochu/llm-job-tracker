@@ -43,7 +43,7 @@ Do not assign shortcut letters to `Manual user actions`. They are reminders/chec
 When a skill run ends and hands control back to the user (i.e. not an internal `job-tracker:run` child-skill step, see `## Core Rule` above), present the `Next actions` list using the `AskUserQuestion` tool instead of only printing it as plain Markdown:
 
 - Print `Active profile: <slug>` and any `Manual user actions` section as plain text first — those are not selectable and must not become AskUserQuestion options.
-- Call `AskUserQuestion` with one question (`header` such as `"Next actions"`), listing the same 2-5 actions as options in the same priority order.
+- Call `AskUserQuestion` with one question (`header` such as `"Next actions"`), listing the same actions as options in the same priority order.
 - Each option `label` is the short action name (e.g. `"Company Research"`); `description` is the underlying `job-tracker:action` command and what it changes.
 - Put the `Recommended` action first and note it in the option's `description`.
 - Still assign the shortcut letters from `## Shortcut Generation` and show them in the printed text before the question (e.g. `[r] Company Research`), so a user who prefers typing a letter instead of clicking can still do so — see `## Action Handling`.
@@ -62,7 +62,7 @@ A user reply can arrive as an `AskUserQuestion` selection, a typed shortcut lett
 ## Selection Rules
 
 - Always include the active profile before the action list, using `Active profile: <slug>`.
-- Show 2-5 actions, ordered by practical priority.
+- Show 2-4 actions, ordered by practical priority. `AskUserQuestion` accepts at most 4 options per question, so this list must never exceed 4.
 - Generate shortcuts dynamically for the actions shown.
 - Use letters close to the action meaning, preferring the first distinct meaningful letter.
 - Avoid duplicate shortcuts within the same footer. If two actions want the same letter, choose the next recognizable letter.
