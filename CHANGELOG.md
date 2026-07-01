@@ -9,15 +9,18 @@ This project follows semantic versioning.
 ### Added
 
 - `config/profile-resolution.md` — the shared profile-resolution rule now lives in one file that skills reference, instead of being restated inline in every skill. `job-tracker:import` and `job-tracker:run` keep their own profile logic.
-- `migrations/next.md` — registers `config/profile-resolution.md` in the `config/paths.md` zone list. The file itself is delivered by `npx llm-job-tracker update` (managed entry) or a plugin reinstall, not by this migration.
+- `migrations/next.md` — registers `config/profile-resolution.md` in the `config/paths.md` zone list, and replaces the now-superseded inline profile-resolution wording in existing `config/settings.md` and `config/tracker-schema.md` with a delegation to `config/profile-resolution.md`. The new file itself is delivered by `npx llm-job-tracker update` (managed entry) or a plugin reinstall, not by this migration.
 
 ### Changed
 
-- Skill `Next actions` footers are now presented via `AskUserQuestion` (clickable options) with letter shortcuts still shown for typed replies; shortcut/free-text mapping, freshness, and confirm-before-acting rules are centralized in `config/next-actions.md`. `AskUserQuestion` options are capped at 4 per question (was documented as up to 5).
+- Skill `Next actions` footers now always print as plain Markdown (letter shortcuts + commands), and additionally call `AskUserQuestion` for a clickable choice when that tool is available in the current session — plugin/npx installs running in hosts without `AskUserQuestion` (e.g. Codex) fall back to the plain-text footer instead of failing. Shortcut/free-text mapping, freshness, and confirm-before-acting rules are centralized in `config/next-actions.md`. `AskUserQuestion` options are capped at 4 per question (was documented as up to 5).
+- `config/settings.md`'s `## Profile Rules` and `config/tracker-schema.md`'s `## Update Rules` no longer restate the profile-resolution logic; both defer to `config/profile-resolution.md`. `job-tracker:run` now reads `config/profile-resolution.md` for per-stage resolution instead of `config/settings.md`.
+- `config/profile-resolution.md` now specifies how to find the "matching" tracked row: by URL when available, otherwise Company + Role, asking the user to disambiguate on multiple matches.
 
 ### Fixed
 
 - `node scripts/tracker.js move --from raw --to active` no longer throws `cannot preserve columns` when the Raw Pipeline row has `Added`/`Source` values and the Active Pipeline table has no `Notes`/`Detail` column — those two fields are intake-only metadata and are now dropped silently instead of blocking the move. Other genuinely unmapped columns still raise the error.
+- That same drop no longer applies when the destination table *does* have a `Notes`/`Detail` column (e.g. `raw` → `archive`/`monitoring`): `Added`/`Source` are stashed there as before. The intake-metadata drop only kicks in as a last resort, when there is truly nowhere to preserve the value.
 
 ## 0.4.4 - 2026-07-01
 

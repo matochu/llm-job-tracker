@@ -118,6 +118,8 @@ test('move preserves profile URL and source while archiving with reason', () => 
   assert.equal(archived.Profile, 'frontend');
   assert.equal(archived.URL, 'https://jobs.ashbyhq.com/acme/1');
   assert.equal(archived.Status, '2026-06-29: closed');
+  assert.equal(archived.Source, 'ashby');
+  assert.equal(archived.Added, '2026-06-20');
 });
 
 test('move from raw to active drops Added/Source when destination has no Notes/Detail column', () => {
@@ -152,6 +154,33 @@ test('move from raw to active drops Added/Source when destination has no Notes/D
   assert.equal(active.Updated, '2026-07-01');
 });
 
+test('move from raw to active preserves Source when the destination has a matching column', () => {
+  const tracker = `# Tracker
+
+## Active Pipeline
+
+| Company | Profile | Role | Source | Status | Updated | Links |
+|---|---|---|---|---|---|---|
+
+## Raw Pipeline
+
+| Company | Profile | Role | URL | Added | Status | Source |
+|---|---|---|---|---|---|---|
+| Flamingo | frontend | Senior Front-End Engineer | https://example.com/job | 2026-06-25 | new | linkedin |
+`;
+
+  const next = moveRow(tracker, {
+    company: 'Flamingo',
+    role: 'Senior Front-End Engineer',
+    from: 'raw',
+    to: 'active',
+    date: '2026-07-01',
+  });
+
+  const active = listRows(next, 'active')[0];
+  assert.equal(active.Source, 'linkedin');
+});
+
 test('move still throws when a genuinely unmapped column has no Notes/Detail destination', () => {
   const tracker = `# Tracker
 
@@ -171,6 +200,35 @@ test('move still throws when a genuinely unmapped column has no Notes/Detail des
     () => moveRow(tracker, { company: 'Acme', role: 'Eng', from: 'active', to: 'submitted', date: '2026-07-01' }),
     /cannot preserve columns/,
   );
+});
+
+test('move from raw to archive still stashes Added/Source into Detail when the column exists', () => {
+  const tracker = `# Tracker
+
+## Raw Pipeline
+
+| Company | Profile | Role | URL | Added | Status | Source |
+|---|---|---|---|---|---|---|
+| Acme | frontend | Eng | https://x.com/1 | 2026-06-01 | new | linkedin |
+
+## Archive
+
+| Company | Profile | Role | Status | Detail |
+|---|---|---|---|---|
+`;
+
+  const next = moveRow(tracker, {
+    company: 'Acme',
+    role: 'Eng',
+    from: 'raw',
+    to: 'archive',
+    date: '2026-07-01',
+    reason: 'closed',
+  });
+
+  const archived = listRows(next, 'archive')[0];
+  assert.match(archived.Detail, /Added: 2026-06-01/);
+  assert.match(archived.Detail, /Source: linkedin/);
 });
 
 test('setStatus treats emoji status as opaque text', () => {

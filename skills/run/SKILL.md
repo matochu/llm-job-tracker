@@ -12,7 +12,7 @@ Before starting, read:
 
 1. `candidate/candidate.md`
 2. `config/settings.md`
-3. the resolved profile from the Profile Resolution rules below
+3. `config/profile-resolution.md`, then the profile it resolves to (see `## Profile Resolution` below for the `job-tracker:run` exception)
 4. `config/language.md`
 5. `config/paths.md`
 6. `strategy/criteria.md`
@@ -27,13 +27,13 @@ Do not read `candidate/stories.md` directly in `job-tracker:run`. Story-bank ins
 
 ## Profile Resolution
 
-The first argument is an optional profile slug. Passing it here is a deliberate exception to the no-profile-argument rule: `job-tracker:run` does not honor a per-command profile silently, it switches the global active profile via `job-tracker:profile use`.
+The first argument is an optional profile slug. Passing it here is a deliberate exception to the no-profile-argument rule in `config/profile-resolution.md`: `job-tracker:run` does not honor a per-command profile silently, it switches the global active profile via `job-tracker:profile use`.
 
 1. Read available profile slugs from `config/settings.md`.
 2. If the first argument matches an available profile slug, run `job-tracker:profile use <slug>` before any other step.
 3. After switching, re-read `config/settings.md` and the resolved profile file.
 4. Treat remaining arguments as a company name, section, vacancy URL, or search filter.
-5. For profile resolution per stage, follow the Profile Rules in `config/settings.md` (new discovery uses the active profile; tracked jobs use the row-level `Profile`).
+5. For profile resolution per stage (new discovery vs. tracked jobs), follow `config/profile-resolution.md`.
 
 ## Scope
 

@@ -40,15 +40,14 @@ Do not assign shortcut letters to `Manual user actions`. They are reminders/chec
 
 ## Presenting Next Actions
 
-When a skill run ends and hands control back to the user (i.e. not an internal `job-tracker:run` child-skill step, see `## Core Rule` above), present the `Next actions` list using the `AskUserQuestion` tool instead of only printing it as plain Markdown:
+When a skill run ends and hands control back to the user (i.e. not an internal `job-tracker:run` child-skill step, see `## Core Rule` above), present the `Next actions` list as follows:
 
-- Print `Active profile: <slug>` and any `Manual user actions` section as plain text first — those are not selectable and must not become AskUserQuestion options.
-- Call `AskUserQuestion` with one question (`header` such as `"Next actions"`), listing the same actions as options in the same priority order.
-- Each option `label` is the short action name (e.g. `"Company Research"`); `description` is the underlying `job-tracker:action` command and what it changes.
-- Put the `Recommended` action first and note it in the option's `description`.
-- Still assign the shortcut letters from `## Shortcut Generation` and show them in the printed text before the question (e.g. `[r] Company Research`), so a user who prefers typing a letter instead of clicking can still do so — see `## Action Handling`.
+- Print `Active profile: <slug>` and any `Manual user actions` section as plain text first — those are not selectable and must not become `AskUserQuestion` options.
+- Always print the same footer as plain Markdown too: `Next actions:` followed by one `- [letter] Label — command` line per action, using the shortcut letters from `## Shortcut Generation`. This is the baseline output every runtime (Claude Code, Codex, or any other host) can render and that a user can reply to by typing a letter or free text — see `## Action Handling`.
+- If the `AskUserQuestion` tool is available in the current session, also call it in the same turn: one question (`header` such as `"Next actions"`), listing the same actions as options in the same priority order. Each option `label` is the short action name (e.g. `"Company Research"`); `description` is the underlying `job-tracker:action` command and what it changes. Put the `Recommended` action first and note it in the option's `description`.
+- If `AskUserQuestion` is not available (not listed among the current session's tools) or the call fails for any reason, rely on the plain-text footer alone — do not fail the skill run or retry the tool call.
 - Do not call `AskUserQuestion` when `Next actions: No immediate next action` — there is nothing to choose.
-- Internal child-skill next actions inside `job-tracker:run` stay plain text; they are advisory for the orchestrator, not a user decision point, and must never trigger `AskUserQuestion`.
+- Internal child-skill next actions inside `job-tracker:run` stay plain text only; they are advisory for the orchestrator, not a user decision point, and must never trigger `AskUserQuestion`.
 
 ## Action Handling
 

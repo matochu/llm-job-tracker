@@ -50,14 +50,22 @@ function moveCellsForHeader(fromTable, row, toTable, values) {
 
   const leftovers = fromTable.header
     .map((header, index) => ({ header, canonical: canonicalField(header), value: row.cells[index] ?? '' }))
-    .filter((item) => item.value && !used.has(item.canonical) && !['company', 'profile', 'role'].includes(item.canonical) && !DROPPABLE_ON_MOVE.has(item.canonical));
+    .filter((item) => item.value && !used.has(item.canonical) && !['company', 'profile', 'role'].includes(item.canonical));
+
   if (leftovers.length) {
     const detailIndex = toTable.header.findIndex((header) => ['detail', 'notes'].includes(canonicalField(header)));
     if (detailIndex === -1) {
-      throw new Error(`Destination section ${toTable.section} cannot preserve columns: ${leftovers.map((item) => item.header).join(', ')}`);
+      // No Detail/Notes column to stash into. Raw-intake-only metadata (Added,
+      // Source) is meaningless once a row moves on, so drop it silently instead
+      // of blocking the move; anything else is a genuine, reportable conflict.
+      const blocking = leftovers.filter((item) => !DROPPABLE_ON_MOVE.has(item.canonical));
+      if (blocking.length) {
+        throw new Error(`Destination section ${toTable.section} cannot preserve columns: ${blocking.map((item) => item.header).join(', ')}`);
+      }
+    } else {
+      const suffix = leftovers.map((item) => `${item.header}: ${item.value}`).join('; ');
+      next[detailIndex] = [next[detailIndex], suffix].filter(Boolean).join('; ');
     }
-    const suffix = leftovers.map((item) => `${item.header}: ${item.value}`).join('; ');
-    next[detailIndex] = [next[detailIndex], suffix].filter(Boolean).join('; ');
   }
 
   return next;

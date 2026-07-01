@@ -16,8 +16,7 @@ The tracker is `data/tracker.md`.
 - Keep edits narrow and preserve existing user notes.
 - Every job table must include a `Profile` column immediately after `Company`.
 - `Profile` values must match a slug listed in `config/settings.md`.
-- New leads added by `job-tracker:find` must use the active profile from `config/settings.md`. `job-tracker:import` writes the row under its auto-selected best-fit profile (it switches the active profile first, so the row always matches the active profile at write time).
-- Existing tracked vacancies must be processed using their row-level `Profile`, not the active profile.
+- Skills follow `config/profile-resolution.md` to decide which profile a lead/row uses (active profile for new leads, row-level `Profile` for tracked vacancies).
 - Do not duplicate companies across active pipeline and Raw Pipeline unless there are separate roles.
 - Move closed roles to Archive with the verification date and reason.
 - Move companies with useful contacts but no role to Monitoring.

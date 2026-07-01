@@ -25,4 +25,54 @@ Stop on first failure; do not update `config/.migrated-version` until all steps 
 
 ---
 
+## Step 2 — Delegate `config/settings.md` Profile Rules to profile-resolution.md
+
+**Target file:** `config/settings.md`.
+
+**Check:** this step is satisfied when the `## Profile Rules` section body contains the exact string `config/profile-resolution.md`.
+- If found -> skip.
+- If not found -> apply.
+
+**Apply:** replace the entire body of the `## Profile Rules` section (everything between the `## Profile Rules` heading and the next `## ` heading), regardless of its current wording, with:
+
+```md
+
+For which profile a skill should use (active profile vs. a tracked row's `Profile` value, and the argument exceptions for `job-tracker:import`/`job-tracker:run`), see `config/profile-resolution.md`. This section covers what profiles are allowed to affect, not how one is selected.
+
+- Profiles refine positioning, keywords, source priorities, and fit signals.
+- Profiles do not override truthfulness rules, candidate identity, language rules, or tracker schema.
+
+```
+
+Do not touch `## Active Profile` or `## Available Profiles` — only the `## Profile Rules` body.
+
+**Success condition:** `config/settings.md`'s `## Profile Rules` section contains `config/profile-resolution.md`.
+
+**Failure condition:** `config/settings.md` is missing, the `## Profile Rules` heading cannot be found, or the marker is absent after the write. Stop and report. Do not bump `.migrated-version`.
+
+---
+
+## Step 3 — Delegate `config/tracker-schema.md` profile bullets to profile-resolution.md
+
+**Target file:** `config/tracker-schema.md`.
+
+**Check:** this step is satisfied when the `## Update Rules` section contains the exact bullet `- Skills follow \`config/profile-resolution.md\` to decide which profile a lead/row uses (active profile for new leads, row-level \`Profile\` for tracked vacancies).`.
+- If found -> skip.
+- If not found -> apply.
+
+**Apply:** within `## Update Rules`:
+
+1. Remove the bullet starting with "New leads added by `job-tracker:find` must use the active profile" if present.
+2. Remove the bullet starting with "Existing tracked vacancies must be processed using their row-level `Profile`" if present.
+3. If neither of those two bullets was found (e.g. already hand-edited), that is not a failure — proceed to step 4 anyway.
+4. If the delegation bullet from the Check above is not already present, insert it in place of the first removed bullet (or, if none were removed, immediately after the `- \`Profile\` values must match a slug listed in \`config/settings.md\`.` bullet).
+
+Do not touch other bullets in `## Update Rules`.
+
+**Success condition:** the `## Update Rules` section contains the exact delegation bullet from the Check above.
+
+**Failure condition:** `config/tracker-schema.md` is missing, the `## Update Rules` heading cannot be found, or the delegation bullet is absent after the write. Stop and report. Do not bump `.migrated-version`.
+
+---
+
 <!-- Add migration steps here -->
