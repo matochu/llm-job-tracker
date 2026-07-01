@@ -38,6 +38,27 @@ Exception: `job-tracker:apply` may submit an ATS/job application only after expl
 
 Do not assign shortcut letters to `Manual user actions`. They are reminders/checklist items, not commands.
 
+## Presenting Next Actions
+
+When a skill run ends and hands control back to the user (i.e. not an internal `job-tracker:run` child-skill step, see `## Core Rule` above), present the `Next actions` list using the `AskUserQuestion` tool instead of only printing it as plain Markdown:
+
+- Print `Active profile: <slug>` and any `Manual user actions` section as plain text first — those are not selectable and must not become AskUserQuestion options.
+- Call `AskUserQuestion` with one question (`header` such as `"Next actions"`), listing the same 2-5 actions as options in the same priority order.
+- Each option `label` is the short action name (e.g. `"Company Research"`); `description` is the underlying `job-tracker:action` command and what it changes.
+- Put the `Recommended` action first and note it in the option's `description`.
+- Still assign the shortcut letters from `## Shortcut Generation` and show them in the printed text before the question (e.g. `[r] Company Research`), so a user who prefers typing a letter instead of clicking can still do so — see `## Action Handling`.
+- Do not call `AskUserQuestion` when `Next actions: No immediate next action` — there is nothing to choose.
+- Internal child-skill next actions inside `job-tracker:run` stay plain text; they are advisory for the orchestrator, not a user decision point, and must never trigger `AskUserQuestion`.
+
+## Action Handling
+
+A user reply can arrive as an `AskUserQuestion` selection, a typed shortcut letter, or free text naming the action. In every case, map it to the action shown in the most recently printed `Next actions`.
+
+- **Freshness**: a shortcut/action is valid only for the reply that immediately follows it. If anything else was printed after that footer (a new footer, a new skill's output), the old shortcut is stale — do not search backward through earlier footers to reinterpret it. Treat a reply that no longer matches any current footer as a new request instead.
+- **Source of truth under ambiguity**: if the conversation contains a recent `AskUserQuestion` tool result, prefer it over prose footers as the record of what was offered and chosen — a structured tool result survives context handling more reliably than plain Markdown text.
+- **Confirm before acting on free text**: when the action is recognized from typed/free text rather than a direct `AskUserQuestion` selection, state the matched action in one short line before running it (e.g. "Розумію: [r] Company Research для Acme — запускаю"), so the user can correct a misread before anything runs or mutates state.
+- **Ambiguous or no match**: when the reply doesn't clearly match any action in the current footer and isn't obviously a new unrelated request, don't guess — re-show the same short list of options and ask which one, rather than picking silently.
+
 ## Selection Rules
 
 - Always include the active profile before the action list, using `Active profile: <slug>`.

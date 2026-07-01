@@ -62,9 +62,7 @@ Do not generate ad hoc `for company in ...; do ...; done` shell loops for status
 
 ## Action Handling
 
-If the user replies with a shortcut letter, map it to the action shown in the most recent `Next actions` footer. Shortcuts are generated per response and are not globally fixed.
-
-When the selected action is ambiguous, ask one concise follow-up question. When it is clear, run or propose the named skill/action.
+Follow `## Presenting Next Actions` and `## Action Handling` in `config/next-actions.md` for how to deliver the footer and interpret the user's reply.
 
 ## Output
 
