@@ -20,6 +20,7 @@ Before starting, read:
 8. `style/outreach-style.md`
 9. `config/next-actions.md`
 10. `config/source-registry.md`
+11. `config/browser-patterns.md`
 
 ## Profile Resolution
 
@@ -50,7 +51,7 @@ Before starting, read:
    - Do not send messages, connection requests, emails, LinkedIn messages, or applications.
    - If the current tool cannot run another skill in the same turn, make `job-tracker:draft [company]` the first recommended next action.
 
-If this skill is called by `job-tracker:run`, its output is an internal company-prep result for the orchestrator. Do not use a user-facing `Next actions` footer for runnable `job-tracker:run` work. Report `Run progress` and the exact `Next internal step:` instead, such as `run job-tracker:draft [company]`, `run job-tracker:cv [company]`, or a tracker update.
+If this skill is called by `job-tracker:run`, its output is an internal company-prep result for the orchestrator. Do not use a user-facing `Next actions` footer for runnable `job-tracker:run` work. Report `Run progress` and the exact `Next internal step:` instead, such as `job-tracker:draft [company]`, `job-tracker:cv [company]`, or a tracker update.
 
 ## Enforcement
 

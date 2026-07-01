@@ -1,10 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { deriveSourceFromUrl, discoverBoards, discoverSlugCandidates, filterRoles, filterRolesWithOptions, getProviderIds, loadSourceRegistry, locationConfidence, normalizeRoles, probeBatch, profileHints, providerIds, rootDomain } from '../scripts/ats-probe.js';
+import { clearRegistryCache, deriveSourceFromUrl, discoverBoards, discoverSlugCandidates, filterRoles, filterRolesWithOptions, getProviderIds, loadSourceRegistry, locationConfidence, normalizeRoles, probeBatch, profileHints, providerIds, providerUrl, rootDomain } from '../scripts/ats-probe.js';
+import { parseSourceRegistryRaw } from '../scripts/lib/source-registry.js';
+import { makeFixtureDir } from './helpers/fixtures.js';
 
 const root = new URL('..', import.meta.url).pathname;
 const atsProbeScript = join(root, 'scripts', 'ats-probe.js');
@@ -21,7 +23,7 @@ test('loads provider and search defaults from source registry config', () => {
 });
 
 test('source registry loader fails with setup guidance when required discovery defaults are missing', () => {
-  const fixture = mkdtempSync(join(tmpdir(), 'ats-probe-registry-'));
+  const fixture = makeFixtureDir('ats-probe-registry-');
   mkdirSync(join(fixture, 'config'), { recursive: true });
   writeFileSync(join(fixture, 'config', 'source-registry.md'), `# Source Registry
 
@@ -250,7 +252,7 @@ test('Workable markdown feed parsing is covered through discovery', async () => 
   assert.equal(results[0].roles[0].title, 'Frontend Engineer');
 });
 
-test('fetch timeout is surfaced during discovery', async () => {
+test('fetch timeout is returned as an error entry, not silently dropped', async () => {
   const fetcher = async (_url, options = {}) => new Promise((_resolve, reject) => {
     options.signal?.addEventListener('abort', () => reject(new Error('aborted')));
   });
@@ -262,5 +264,92 @@ test('fetch timeout is surfaced during discovery', async () => {
     timeoutMs: 1,
   });
 
-  assert.deepEqual(results, []);
+  assert.equal(results.length, 1);
+  assert.equal(results[0].provider, 'ashby');
+  assert.equal(results[0].count, 0);
+  assert.ok(results[0].error, 'error field is set');
+});
+
+test('providerUrl interpolates [slug], [limit], [offset] with defaults', () => {
+  const registry = loadSourceRegistry(root);
+
+  const ashbyUrl = providerUrl('ashby', 'acme corp', { registry });
+  assert.ok(ashbyUrl.includes('acme%20corp'), 'slug is URL-encoded');
+  assert.ok(!ashbyUrl.includes('[slug]'), '[slug] is replaced');
+
+  const srUrl = providerUrl('smartrecruiters', 'acme', { registry });
+  assert.ok(srUrl.includes('100'), 'default limit=100 applied');
+  assert.ok(srUrl.includes('0') && !srUrl.includes('[offset]'), 'default offset=0 applied');
+
+  const srCustomUrl = providerUrl('smartrecruiters', 'acme', { registry, limit: 25, offset: 50 });
+  assert.ok(srCustomUrl.includes('25'), 'custom limit applied');
+  assert.ok(srCustomUrl.includes('50'), 'custom offset applied');
+});
+
+test('providerUrl throws for unknown provider', () => {
+  const registry = loadSourceRegistry(root);
+  assert.throws(
+    () => providerUrl('nonexistent', 'acme', { registry }),
+    /missing a discovery feed/,
+  );
+});
+
+test('parseSourceRegistryRaw parses providers, keywords, locations, sourceDerivation, and browserRequiredSources', () => {
+  const markdown = `# Source Registry
+
+## ATS Probe Providers
+
+| Provider | Source value | Host patterns | Discovery feed | Liveness policy |
+|---|---|---|---|---|
+| \`ashby\` | \`ashby\` | \`jobs.ashbyhq.com\` | \`https://api.ashbyhq.com/posting-api/job-board/[slug]\` | browser |
+| \`lever\` | \`lever\` | \`jobs.lever.co\` | \`https://api.lever.co/v0/postings/[slug]?mode=json\` | browser |
+
+## ATS Probe Search Defaults
+
+### Keywords
+
+- frontend
+- react
+
+### Locations
+
+- europe
+- remote
+
+## Browser-Required Sources
+
+| Source value | Host patterns / URLs | Why browser is required | Required access | Policy |
+|---|---|---|---|---|
+| \`linkedin\` | \`*.linkedin.com\` | login | Playwright MCP with the user's logged-in account/session | never use web search as a substitute |
+| \`djinni\` | \`djinni.co\` | login | Playwright MCP with the user's logged-in account/session | never use web search as a substitute |
+
+## Source Derivation
+
+| Host pattern | Source value |
+|---|---|
+| \`jobs.ashbyhq.com\` | \`ashby\` |
+| \`djinni.co\` | \`djinni\` |
+`;
+
+  const result = parseSourceRegistryRaw(markdown);
+
+  assert.deepEqual(result.providerIds, ['ashby', 'lever']);
+  assert.equal(result.providerFeeds.get('ashby'), 'https://api.ashbyhq.com/posting-api/job-board/[slug]');
+  assert.deepEqual(result.keywords, ['frontend', 'react']);
+  assert.deepEqual(result.locations, ['europe', 'remote']);
+  assert.equal(result.sourceDerivation.length, 2);
+  assert.deepEqual(result.sourceDerivation[0], { pattern: 'jobs.ashbyhq.com', source: 'ashby' });
+  assert.equal(result.browserRequiredSources.length, 2);
+  assert.equal(result.browserRequiredSources[0].source, 'linkedin');
+  assert.deepEqual(result.browserRequiredSources[0].hostPatterns, ['*.linkedin.com']);
+  assert.equal(result.browserRequiredSources[1].source, 'djinni');
+});
+
+test('loadSourceRegistry memoizes by root — second call returns same object', () => {
+  const a = loadSourceRegistry(root);
+  const b = loadSourceRegistry(root);
+  assert.equal(a, b, 'same reference returned from cache');
+  clearRegistryCache();
+  const c = loadSourceRegistry(root);
+  assert.notEqual(a, c, 'fresh load after cache clear');
 });

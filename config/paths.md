@@ -7,7 +7,7 @@ path registry; skills embed literal paths but must match the values listed here.
 
 ## Configuration Zones
 
-- **Config (`config/`):** `config/settings.md`, `config/paths.md`, `config/language.md`, `config/next-actions.md`, `config/agent-instructions.md`, `config/tracker-schema.md`, `config/session-reports.md`
+- **Config (`config/`):** `config/settings.md`, `config/paths.md`, `config/language.md`, `config/next-actions.md`, `config/agent-instructions.md`, `config/tracker-schema.md`, `config/session-reports.md`, `config/source-registry.md`, `config/browser-patterns.md`
 - **Candidate (`candidate/`):** `candidate/candidate.md`, `candidate/stories.md`, `candidate/application-answers.md`, base CVs under `candidate/cv/`
 - **Strategy (`strategy/`):** `strategy/search-profiles/*.md`, `strategy/sources.md`, `strategy/criteria.md`
 - **Style (`style/`):** `style/cv-style.md`, `style/outreach-style.md`

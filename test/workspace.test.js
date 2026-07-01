@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
+import { makeFixtureDir } from './helpers/fixtures.js';
 
 const root = new URL('..', import.meta.url).pathname;
 const script = join(root, 'scripts', 'check-workspace.js');
@@ -15,12 +15,11 @@ function runCheck(fixture) {
 }
 
 function makeFixture() {
-  const dir = mkdtempSync(join(tmpdir(), 'llm-job-tracker-workspace-check-'));
+  const dir = makeFixtureDir('llm-job-tracker-workspace-check-');
   mkdirSync(join(dir, 'config'), { recursive: true });
   mkdirSync(join(dir, 'strategy', 'search-profiles'), { recursive: true });
   mkdirSync(join(dir, 'candidate', 'cv'), { recursive: true });
   mkdirSync(join(dir, 'data', 'companies'), { recursive: true });
-  mkdirSync(join(dir, 'scripts'), { recursive: true });
 
   writeFileSync(join(dir, '.gitignore'), '.sessions/\n');
   writeFileSync(join(dir, 'config', 'settings.md'), 'Active profile: `default`\n');
@@ -73,19 +72,8 @@ function makeFixture() {
 | Host pattern | Source value |
 |---|---|
 | \`jobs.ashbyhq.com\` | \`ashby\` |
+| \`*.linkedin.com\` | \`linkedin\` |
 | \`djinni.co\` | \`djinni\` |
-`);
-  writeFileSync(join(dir, 'scripts', 'ats-probe.js'), `export function normalizeRoles(provider) {
-  const mapper = {
-    ashby: roleFromAshby,
-    lever: roleFromLever,
-    greenhouse: roleFromGreenhouse,
-    workable: roleFromWorkable,
-    recruitee: roleFromRecruitee,
-    smartrecruiters: roleFromSmartRecruiters,
-  }[provider];
-  return mapper;
-}
 `);
   writeFileSync(join(dir, 'strategy', 'search-profiles', 'default.md'), '# Default profile\n');
   writeFileSync(join(dir, 'candidate', 'cv', 'cv-base.md'), '# Base CV\n');
@@ -182,7 +170,7 @@ test('rejects ATS provider registry drift', () => {
   assert.match(result.stdout, /ATS providers .* do not match scripts\/ats-probe\.js implemented providers/);
 });
 
-test('rejects source registry without Djinni browser policy and source derivation', () => {
+test('rejects source registry where browser-required source has no derivation entry', () => {
   const fixture = makeFixture();
   writeFileSync(join(fixture, 'config', 'source-registry.md'), `# Source Registry
 
@@ -213,7 +201,7 @@ test('rejects source registry without Djinni browser policy and source derivatio
   const result = runCheck(fixture);
 
   assert.equal(result.status, 1);
-  assert.match(result.stdout, /must define Djinni as browser-required/);
+  assert.match(result.stdout, /browser-required source `linkedin` has no matching Source Derivation entry/);
 });
 
 test('rejects LinkedIn or Djinni policy without Playwright user account session', () => {
@@ -233,10 +221,10 @@ test('rejects LinkedIn or Djinni policy without Playwright user account session'
 
 ## Browser-Required Sources
 
-| Source value | Host patterns / URLs | Why browser is required | Policy |
-|---|---|---|---|
-| \`linkedin\` | \`*.linkedin.com\` | login | open in browser |
-| \`djinni\` | \`djinni.co\` | login | open in browser |
+| Source value | Host patterns / URLs | Why browser is required | Required access | Policy |
+|---|---|---|---|---|
+| \`linkedin\` | \`*.linkedin.com\` | login | Playwright MCP | open in browser |
+| \`djinni\` | \`djinni.co\` | login | Playwright MCP | open in browser |
 
 ## Source Derivation
 

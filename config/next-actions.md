@@ -16,7 +16,7 @@ If `job-tracker:run` pauses while unfinished and the latest Session Report says 
 Active profile: ai
 
 Next actions:
-- [n] Continue Run (Recommended) — resume `job-tracker:run` from the latest Session Report and execute the next internal step
+- [n] Continue Run (Recommended) — resume `/job-tracker:run` from the latest Session Report and execute the next internal step
 ```
 
 Do not list child skills such as `job-tracker:company`, `job-tracker:draft`, `job-tracker:cv`, `job-tracker:fit`, `job-tracker:stories`, or `job-tracker:pdf` in that resumable pause footer. The user chose the run plan; the child step belongs in `Run plan`, `Resume point`, or `Next internal step`.
@@ -26,7 +26,7 @@ Reviewer outputs inside `job-tracker:run` should make continuation explicit with
 ```md
 Verdict: pass
 Continue: yes
-Next internal step: run `job-tracker:company ExampleCo`
+Next internal step: `/job-tracker:company ExampleCo`
 Active profile: ai
 ```
 
@@ -113,8 +113,8 @@ Manual user actions:
 Active profile: frontend
 
 Next actions:
-- [r] Company Research (Recommended) — run `job-tracker:company Acme`
-- [d] Draft Messages — prepare and save drafts with `job-tracker:draft Acme`
+- [r] Company Research (Recommended) — `/job-tracker:company Acme`
+- [d] Draft Messages — prepare and save drafts with `/job-tracker:draft Acme`
 - [o] Defer — move Acme to Monitoring
 ```
 

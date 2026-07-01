@@ -59,7 +59,7 @@ If this skill is called by `job-tracker:run`, its next-action footer is advisory
 5. Apply the resolved profile's fit, reject, work-mode, and priority rules.
 6. Reject low-fit roles and noisy sources explicitly.
 7. Add each accepted lead to the configured `Raw Pipeline` table with the active profile in the `Profile` column.
-   - Prefer `node scripts/tracker.js add-lead --company ... --profile ... --role ... --url ... --source ... --date YYYY-MM-DD` over manual Markdown table edits.
+   - Prefer `node scripts/tracker.js add-lead --company ... --profile ... --role ... --url ... --date YYYY-MM-DD` over manual Markdown table edits. `--source` is auto-derived from `--url` via `config/source-registry.md`; pass `--source` explicitly only to override.
 8. For new companies without a `data/companies/[slug]/prep-notes.md`, suggest `job-tracker:company [company]`.
 
 ## Network Mode

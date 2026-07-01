@@ -55,7 +55,7 @@ First detect the mode by checking whether the `CLAUDE_PLUGIN_ROOT` environment v
 4. Compare versions. If installed < latest:
    - Report as `warning` in the issue table.
    - Show relevant sections from `CHANGELOG.md` between the installed version and latest.
-   - Propose: `npx llm-job-tracker update .`
+   - Add `npx llm-job-tracker update .` to Next actions. When the user selects it, run it via Bash, then re-run `job-tracker:health` to verify the updated workspace.
 
 ### Seed missing protected-zone files
 

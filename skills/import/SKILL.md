@@ -37,7 +37,7 @@ If this skill is called by `job-tracker:run`, its next-action footer is advisory
 
 ## Source Derivation
 
-Before anything else, canonicalize the URL: lowercase the host, strip tracking parameters (`utm_*`, `ref`, `gh_src`, `source`, `rl`), and remove trailing slashes. Derive the tracker `Source` value from `config/source-registry.md` under `## Source Derivation`.
+Before anything else, canonicalize the URL: lowercase the host, strip tracking parameters (`utm_*`, `ref`, `gh_src`, `source`, `rl`), and remove trailing slashes. Derive the tracker `Source` value from `config/source-registry.md` under `## Source Derivation`. Matching is first-row-wins — more specific patterns (e.g. `job-boards.eu.greenhouse.io`) must appear before broader wildcards (e.g. `*.greenhouse.io`) in the registry table.
 
 If no configured host pattern matches, use the bare root domain, for example `careers.acme.com` -> `acme`.
 
@@ -69,7 +69,7 @@ No slug is passed. Import picks the best-fit profile among all configured profil
 6. **Profile auto-selection** (see above): pick best-fit, switch active profile if needed or ask on tie.
 7. **Fit/reject filter**: apply the selected profile's reject rules. Clear reject → write session report with `Status: done`, `Decision: rejected` + reason; do not add to tracker; stop (same behavior as `job-tracker:find`).
 8. **Add to Raw Pipeline**: write one row to `data/tracker.md` Raw Pipeline using the `config/tracker-schema.md` shape: `Profile` = selected slug, `Source` = derived value, `Added` = today's date, `Status` = ⬜.
-   - Use `node scripts/tracker.js add-lead --company ... --profile ... --role ... --url ... --source ... --date YYYY-MM-DD` for the tracker write.
+   - Use `node scripts/tracker.js add-lead --company ... --profile ... --role ... --url ... --date YYYY-MM-DD` for the tracker write. `--source` is auto-derived from `--url` via `config/source-registry.md`; pass `--source` explicitly only to override.
 9. **Write session report**: `.sessions/reports/[id].import.md`. Status is always `done` or `blocked` (login required); `dead`, `duplicate`, and `rejected` outcomes use `Status: done` with `Decision: <outcome>` in the report body. Record decision, profile selection, source, and tracker row in the report.
 10. Suggest `job-tracker:company [company]` as the next action.
 
@@ -99,7 +99,7 @@ Reply in the configured assistant language using this structure:
 
 (include only when Decision: blocked)
 - Reason: login required at <host>
-- Next step: log in to <host>, then re-run `job-tracker:import <url>`
+- Next step: log in to <host>, then re-run `/job-tracker:import <url>`
 
 ## Profile Selection
 
@@ -110,7 +110,7 @@ Reply in the configured assistant language using this structure:
 
 Active profile: <slug>
 
-## Next actions
+Next actions:
 
 - context-specific `job-tracker:action` next actions using `config/next-actions.md`
 ```

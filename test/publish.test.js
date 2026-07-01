@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
+import { makeFixtureDir } from './helpers/fixtures.js';
 
 const root = new URL('..', import.meta.url).pathname;
 const script = join(root, 'scripts', 'check-public.js');
@@ -15,7 +15,7 @@ function runCheck(fixture) {
 }
 
 function makeFixture() {
-  const dir = mkdtempSync(join(tmpdir(), 'llm-job-tracker-public-check-'));
+  const dir = makeFixtureDir('llm-job-tracker-public-check-');
   mkdirSync(join(dir, 'data', 'companies'), { recursive: true });
   mkdirSync(join(dir, 'candidate', 'cv'), { recursive: true });
   mkdirSync(join(dir, 'strategy', 'search-profiles'), { recursive: true });

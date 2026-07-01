@@ -56,9 +56,9 @@ Example inside `job-tracker:run`:
 
 ```md
 Run progress:
-- `job-tracker:draft ExampleCo` done; manual message drafts prepared, not sent.
+- `/job-tracker:draft ExampleCo` done; manual message drafts prepared, not sent.
 
-Next internal step: run `job-tracker:cv ExampleCo`
+Next internal step: `/job-tracker:cv ExampleCo`
 
 Active profile: ai
 ```

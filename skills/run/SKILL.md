@@ -62,7 +62,7 @@ Verdict vocabulary: `pass` / `warning` / `needs_fix` / `blocked`. Include `Conti
 ```md
 Verdict: pass
 Continue: yes
-Next internal step: run `job-tracker:company ExampleCo`
+Next internal step: `/job-tracker:company ExampleCo`
 ```
 
 ### Intake Gate
@@ -88,7 +88,7 @@ Do not create prep notes, draft messages, tailor CVs, or export PDFs in this gat
 
 ### Prep Gate
 
-Run after `job-tracker:run` has processed a company or batch.
+Run after a company or batch has gone through `job-tracker:company`, `job-tracker:draft`, and related internal steps.
 
 Review prepared state for each company:
 
@@ -177,7 +177,7 @@ Runnable internal steps include:
 
 Pending or running background subagents count as runnable internal work until their result has been collected and recorded. Do not end a turn silently after starting a background fit review, reviewer gate, or other subagent. Either wait for the result and continue the state machine, or return `paused-resumable` with the required single `Continue Run` next action.
 
-Never end a `job-tracker:run` response with vague continuation prose such as `Next step: job-tracker:fit`, `Наступний крок: job-tracker:fit`, or `Continue with job-tracker:cv`. Use `Next internal step: run ...` while continuing internally, or the `paused-resumable` footer below if control must return to the user.
+Never end a `job-tracker:run` response with vague continuation prose such as `Next step: job-tracker:fit`, `Наступний крок: job-tracker:fit`, or `Continue with job-tracker:cv`. Use `Next internal step: job-tracker:X` while continuing internally, or the `paused-resumable` footer below if control must return to the user.
 
 ## Resumable Pause UX
 
@@ -210,15 +210,15 @@ Run plan:
 8. [pending] Final verification
 
 Resume point:
-- Last completed step: `job-tracker:cv ExampleCo`
-- Next safe step: `job-tracker:fit data/companies/exampleco/resume.md ExampleCo`
+- Last completed step: `/job-tracker:cv ExampleCo`
+- Next safe step: `/job-tracker:fit data/companies/exampleco/resume.md ExampleCo`
 - Required input: none
 - Can continue automatically: yes
 
 Active profile: ai
 
 Next actions:
-- [n] Continue Run (Recommended) — resume `job-tracker:run` from the latest Session Report and execute the next internal step
+- [n] Continue Run (Recommended) — resume `/job-tracker:run` from the latest Session Report and execute the next internal step
 ```
 
 ## Internal Action Queue

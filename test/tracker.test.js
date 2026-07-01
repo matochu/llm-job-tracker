@@ -1,13 +1,53 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
 import { addLead, bumpDate, listRows, moveRow, setSchemaRootFromTracker, setStatus, validateTracker } from '../scripts/tracker.js';
+import { clearRegistryCache } from '../scripts/lib/source-registry.js';
+import { makeFixtureDir } from './helpers/fixtures.js';
 
 const root = new URL('..', import.meta.url).pathname;
 const trackerCli = join(root, 'scripts', 'tracker.js');
+
+function makeTrackerFixtureDir() {
+  const dir = makeFixtureDir('tracker-test-');
+  const configDir = join(dir, 'config');
+  const dataDir = join(dir, 'data');
+  mkdirSync(configDir, { recursive: true });
+  mkdirSync(dataDir, { recursive: true });
+  writeFileSync(join(configDir, 'source-registry.md'), `# Source Registry
+
+## ATS Probe Providers
+
+| Provider | Source value | Host patterns | Discovery feed | Liveness policy |
+|---|---|---|---|---|
+| \`ashby\` | \`ashby\` | \`jobs.ashbyhq.com\` | \`https://api.ashbyhq.com/posting-api/job-board/[slug]\` | browser |
+
+## ATS Probe Search Defaults
+
+### Keywords
+
+- frontend
+
+### Locations
+
+- europe
+
+## Browser-Required Sources
+
+| Source value | Host patterns / URLs | Why browser is required | Required access | Policy |
+|---|---|---|---|---|
+| \`djinni\` | \`djinni.co\` | login | Playwright MCP with the user's logged-in account/session | never use web search as a substitute |
+
+## Source Derivation
+
+| Host pattern | Source value |
+|---|---|
+| \`jobs.ashbyhq.com\` | \`ashby\` |
+`);
+  return dir;
+}
 
 function fixture() {
   return `# Tracker
@@ -147,7 +187,7 @@ test('validateTracker reports duplicate URLs and table counts', () => {
 });
 
 test('CLI dry-run prints updated tracker without writing file', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'tracker-cli-test-'));
+  const dir = makeFixtureDir('tracker-cli-test-');
   const tracker = join(dir, 'tracker.md');
   writeFileSync(tracker, fixture());
 
@@ -168,7 +208,7 @@ test('CLI dry-run prints updated tracker without writing file', () => {
 });
 
 test('CLI validate --json returns structured validation result', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'tracker-cli-test-'));
+  const dir = makeFixtureDir('tracker-cli-test-');
   const tracker = join(dir, 'tracker.md');
   writeFileSync(tracker, fixture());
 
@@ -197,7 +237,7 @@ function ukrainianFixture() {
 }
 
 function useLocalizedTrackerSchema() {
-  const dir = mkdtempSync(join(tmpdir(), 'tracker-localized-schema-test-'));
+  const dir = makeFixtureDir('tracker-localized-schema-test-');
   const configDir = join(dir, 'config');
   const dataDir = join(dir, 'data');
   mkdirSync(configDir, { recursive: true });
@@ -238,45 +278,51 @@ function resetTrackerSchema() {
 
 test('setStatus and bumpDate work with Ukrainian sections and field aliases', () => {
   useLocalizedTrackerSchema();
-  const statusUpdated = setStatus(ukrainianFixture(), {
-    company: 'Acme',
-    role: 'Senior Frontend Engineer',
-    section: 'active',
-    status: 'closed',
-    date: '2026-06-29',
-  });
-  const row = listRows(statusUpdated, 'active')[0];
-  assert.equal(row['Статус'], 'closed');
-  assert.equal(row['Оновлено'], '2026-06-29');
+  try {
+    const statusUpdated = setStatus(ukrainianFixture(), {
+      company: 'Acme',
+      role: 'Senior Frontend Engineer',
+      section: 'active',
+      status: 'closed',
+      date: '2026-06-29',
+    });
+    const row = listRows(statusUpdated, 'active')[0];
+    assert.equal(row['Статус'], 'closed');
+    assert.equal(row['Оновлено'], '2026-06-29');
 
-  const dateUpdated = bumpDate(statusUpdated, {
-    url: 'https://jobs.ashbyhq.com/acme/1',
-    section: 'active',
-    field: 'Оновлено',
-    date: '2026-06-30',
-  });
-  assert.equal(listRows(dateUpdated, 'active')[0]['Оновлено'], '2026-06-30');
-  resetTrackerSchema();
+    const dateUpdated = bumpDate(statusUpdated, {
+      url: 'https://jobs.ashbyhq.com/acme/1',
+      section: 'active',
+      field: 'Оновлено',
+      date: '2026-06-30',
+    });
+    assert.equal(listRows(dateUpdated, 'active')[0]['Оновлено'], '2026-06-30');
+  } finally {
+    resetTrackerSchema();
+  }
 });
 
 test('move maps Ukrainian active row into archive Detail without losing custom columns', () => {
   useLocalizedTrackerSchema();
-  const next = moveRow(ukrainianFixture(), {
-    url: 'https://jobs.ashbyhq.com/acme/1',
-    from: 'active',
-    to: 'archive',
-    date: '2026-06-29',
-    reason: 'closed',
-  });
+  try {
+    const next = moveRow(ukrainianFixture(), {
+      url: 'https://jobs.ashbyhq.com/acme/1',
+      from: 'active',
+      to: 'archive',
+      date: '2026-06-29',
+      reason: 'closed',
+    });
 
-  const archived = listRows(next, 'archive')[0];
-  assert.equal(archived['Компанія'], 'Acme');
-  assert.equal(archived['Профіль'], 'frontend');
-  assert.equal(archived['Статус'], '2026-06-29: closed');
-  assert.match(archived['Деталь'], /Fit: 45/);
-  assert.match(archived['Деталь'], /Контакт: referral/);
-  assert.match(archived['Деталь'], /Лінки: \[job\]\(https:\/\/jobs\.ashbyhq\.com\/acme\/1\)/);
-  resetTrackerSchema();
+    const archived = listRows(next, 'archive')[0];
+    assert.equal(archived['Компанія'], 'Acme');
+    assert.equal(archived['Профіль'], 'frontend');
+    assert.equal(archived['Статус'], '2026-06-29: closed');
+    assert.match(archived['Деталь'], /Fit: 45/);
+    assert.match(archived['Деталь'], /Контакт: referral/);
+    assert.match(archived['Деталь'], /Лінки: \[job\]\(https:\/\/jobs\.ashbyhq\.com\/acme\/1\)/);
+  } finally {
+    resetTrackerSchema();
+  }
 });
 
 test('validate --strict exits non-zero on warnings', () => {
@@ -284,7 +330,7 @@ test('validate --strict exits non-zero on warnings', () => {
     'https://jobs.ashbyhq.com/acme/1',
     'https://jobs.lever.co/beta/1'
   );
-  const dir = mkdtempSync(join(tmpdir(), 'tracker-cli-test-'));
+  const dir = makeFixtureDir('tracker-cli-test-');
   const tracker = join(dir, 'tracker.md');
   writeFileSync(tracker, duplicated);
 
@@ -320,7 +366,7 @@ test('setStatus matches first URL inside multi-link cell and bold company names'
 });
 
 test('CLI loads tracker schema aliases relative to --tracker path', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'tracker-schema-root-test-'));
+  const dir = makeFixtureDir('tracker-schema-root-test-');
   const configDir = join(dir, 'config');
   const dataDir = join(dir, 'data');
   mkdirSync(configDir, { recursive: true });
@@ -369,7 +415,7 @@ test('CLI loads tracker schema aliases relative to --tracker path', () => {
 });
 
 test('programmatic API can load schema aliases from explicit tracker path', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'tracker-programmatic-root-test-'));
+  const dir = makeFixtureDir('tracker-programmatic-root-test-');
   const configDir = join(dir, 'config');
   const dataDir = join(dir, 'data');
   mkdirSync(configDir, { recursive: true });
@@ -404,12 +450,41 @@ test('programmatic API can load schema aliases from explicit tracker path', () =
 `;
 
   setSchemaRootFromTracker(tracker);
-  const next = setStatus(markdown, {
-    section: 'active',
-    company: 'Acme',
-    role: 'Frontend Engineer',
-    status: 'closed',
-  });
+  try {
+    const next = setStatus(markdown, {
+      section: 'active',
+      company: 'Acme',
+      role: 'Frontend Engineer',
+      status: 'closed',
+    });
 
-  assert.match(next, /closed/);
+    assert.match(next, /closed/);
+  } finally {
+    resetTrackerSchema();
+  }
+});
+
+test('addLead auto-derives source from URL when --source is omitted', () => {
+  const dir = makeTrackerFixtureDir();
+  const tracker = join(dir, 'data', 'tracker.md');
+  setSchemaRootFromTracker(tracker);
+  clearRegistryCache();
+  try {
+    const next = addLead(fixture(), {
+      company: 'Delta',
+      profile: 'frontend',
+      role: 'Frontend Engineer',
+      url: 'https://jobs.ashbyhq.com/delta/abc',
+      date: '2026-06-30',
+      // no source — should be derived as 'ashby'
+    });
+
+    const rows = listRows(next, 'raw');
+    const added = rows.find((r) => r.Company === 'Delta');
+    assert.ok(added, 'row was inserted');
+    assert.equal(added.Source, 'ashby');
+  } finally {
+    resetTrackerSchema();
+    clearRegistryCache();
+  }
 });

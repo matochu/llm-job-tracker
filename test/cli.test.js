@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
+import { makeFixtureDir } from './helpers/fixtures.js';
 
 const root = new URL('..', import.meta.url).pathname;
 const bin = join(root, 'bin', 'job-tracker.js');
@@ -16,7 +16,7 @@ function runCli(args, options = {}) {
 }
 
 function makeTempDir() {
-  return mkdtempSync(join(tmpdir(), 'llm-job-tracker-test-'));
+  return makeFixtureDir('llm-job-tracker-test-');
 }
 
 test('prints help', () => {

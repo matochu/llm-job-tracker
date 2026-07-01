@@ -21,6 +21,7 @@ Before starting, read:
 9. `style/cv-style.md`
 10. `config/next-actions.md`
 11. `config/source-registry.md`
+12. `config/browser-patterns.md`
 
 Also get the current date and timezone from the execution environment or system context before recording application, draft-state, or tracker update dates.
 
@@ -62,7 +63,7 @@ The skill may click the final submit/apply button only when all conditions are t
 
 If any condition is missing, stop before submit and list the exact manual user action.
 
-Do not submit LinkedIn connection requests, LinkedIn messages, emails, or referral outreach. This skill is only for ATS/job application forms.
+Do not submit LinkedIn connection requests, LinkedIn messages, emails, or referral outreach. This skill is only for ATS/job application forms. LinkedIn Easy Apply and Djinni applications require Playwright MCP with the user's logged-in account/session; open the page in Playwright and wait for the user to log in when needed.
 
 ## Workflow
 

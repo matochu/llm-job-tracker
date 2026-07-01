@@ -155,7 +155,7 @@ Reply in the configured assistant language using this structure:
 
 Active profile: <slug>
 
-## Next actions
+Next actions:
 
 - context-specific `job-tracker:action` next actions from `config/next-actions.md`
 ```

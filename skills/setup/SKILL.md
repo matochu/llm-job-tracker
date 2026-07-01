@@ -115,7 +115,7 @@ Dialog order (highest to lowest priority):
 9. **Dependencies** — run `node scripts/check-deps.js` and report results.
 10. **Version check** — detect install mode via `echo "$CLAUDE_PLUGIN_ROOT"`.
    - Plugin mode (`CLAUDE_PLUGIN_ROOT` set): read version from `$CLAUDE_PLUGIN_ROOT/.claude-plugin/plugin.json`, compare with the latest GitHub release (`gh release list --repo matochu/llm-job-tracker --limit 1`). If outdated, show what changed from `CHANGELOG.md` and tell the user to re-upload the latest plugin zip in Cowork (the agent cannot self-update a plugin).
-   - Workspace mode (not set): read `config/.installed-version`, compare with `npm view llm-job-tracker version --json`. If outdated, show changes and suggest `npx llm-job-tracker update .` If `.installed-version` is missing, note as warning but do not block setup.
+   - Workspace mode (not set): read `config/.installed-version`, compare with `npm view llm-job-tracker version --json`. If outdated, show changes and add `npx llm-job-tracker update .` to Next actions; when the user selects it, run it via Bash, then re-run `job-tracker:health` to verify. If `.installed-version` is missing, note as warning but do not block setup.
 
 Do not ask more than three questions in one response. After writing, always confirm: "Saved to `<path>`. Moving to next item."
 

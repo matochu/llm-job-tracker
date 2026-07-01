@@ -255,7 +255,11 @@ node scripts/ats-probe.js ashby langfuse
 node scripts/ats-probe.js batch ashby checkly sentry posthog --limit 10
 node scripts/ats-probe.js discover langfuse.com
 node scripts/ats-probe.js lever company-slug --json
+node scripts/ats-probe.js derive-source https://jobs.lever.co/acme/123
+node scripts/ats-probe.js derive-source https://boards.greenhouse.io/acme --json
 ```
+
+`derive-source <url>` resolves the tracker `Source` value from a canonical job URL using the `## Source Derivation` table in `config/source-registry.md`. Pass `--json` to get `{ url, source }`. Falls back to the bare root domain when no pattern matches.
 
 Supported provider IDs, discovery feed templates, default search keywords, and default locations live in `config/source-registry.md`. `node scripts/check-workspace.js` checks that the registry matches the providers implemented by `scripts/ats-probe.js`.
 
@@ -278,6 +282,7 @@ Use the tracker CLI for narrow, structured edits to `data/tracker.md`:
 ```bash
 node scripts/tracker.js list --section raw
 node scripts/tracker.js validate --strict --json
+node scripts/tracker.js add-lead --company Acme --profile frontend --role "Senior Frontend Engineer" --url https://example.com/job --date 2026-06-29
 node scripts/tracker.js add-lead --company Acme --profile frontend --role "Senior Frontend Engineer" --url https://example.com/job --source ashby --date 2026-06-29
 node scripts/tracker.js move --company Acme --role "Senior Frontend Engineer" --from raw --to archive --date 2026-06-29 --reason closed
 node scripts/tracker.js set-status --company Acme --role "Senior Frontend Engineer" --section raw --status "🟡 unclear" --date 2026-06-29 --dry-run
@@ -285,6 +290,8 @@ node scripts/tracker.js bump-date --company Acme --role "Senior Frontend Enginee
 ```
 
 The CLI parses Markdown tables structurally, preserves user notes outside the target row, treats emoji/status text as opaque strings, and refuses ambiguous updates unless an explicit `--url` identifies the row. Use `--dry-run` to inspect changes before writing, `--json` for `list`/`validate`, `--strict` to make validation warnings fail, and `--section` to narrow row matching for `set-status`, `bump-date`, and duplicate checks during `add-lead`.
+
+`add-lead` derives `--source` automatically from `--url` using `config/source-registry.md` when `--source` is omitted. Pass `--source` explicitly to override.
 
 Tracker section and field aliases live in `config/tracker-schema.md`. The starter schema is English, and localized or custom labels are supported by adding them to that config instead of changing JavaScript code.
 
