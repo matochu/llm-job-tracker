@@ -4,12 +4,12 @@ All notable changes to this project will be documented in this file.
 
 This project follows semantic versioning.
 
-## Unreleased
+## 0.4.5 - 2026-07-01
 
 ### Added
 
 - `config/profile-resolution.md` — the shared profile-resolution rule now lives in one file that skills reference, instead of being restated inline in every skill. `job-tracker:import` and `job-tracker:run` keep their own profile logic.
-- `migrations/next.md` — registers `config/profile-resolution.md` in the `config/paths.md` zone list, and replaces the now-superseded inline profile-resolution wording in existing `config/settings.md` and `config/tracker-schema.md` with a delegation to `config/profile-resolution.md`. The new file itself is delivered by `npx llm-job-tracker update` (managed entry) or a plugin reinstall, not by this migration.
+- `migrations/0.4.5.md` — registers `config/profile-resolution.md` in the `config/paths.md` zone list, and replaces the now-superseded inline profile-resolution wording in existing `config/settings.md` and `config/tracker-schema.md` with a delegation to `config/profile-resolution.md`. The new file itself is delivered by `npx llm-job-tracker update` (managed entry) or a plugin reinstall, not by this migration.
 
 ### Changed
 
